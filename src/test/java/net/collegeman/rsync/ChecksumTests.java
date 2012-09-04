@@ -9,16 +9,17 @@ public class ChecksumTests extends TestCase {
 		
 		String phrase = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 		
-		int blockSize = 3000;
+		int blockSize = 100;
 		
-		RollingChecksum checksum = new RollingChecksum(phrase, blockSize);
+		RollingChecksum checksum = new RollingChecksum(phrase.getBytes(), blockSize);
 		
 		int i=0;
 		while (checksum.next()) {
 			long c = checksum.weak();
-			String expected = Long.toHexString(RollingChecksum.sum(phrase, i, i+blockSize));
+			String expected = Long.toHexString(RollingChecksum.sum(phrase.getBytes()));
 			String found = Long.toHexString(c);
 			assertTrue("checksum " + i + ": expecting " + expected + ", found: " + found, found.endsWith(expected));
+			System.out.println("checksum " + i + ": expecting " + expected + ", found: " + found);
 			i++;
 		}
 		
