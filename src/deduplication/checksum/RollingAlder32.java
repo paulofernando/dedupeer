@@ -1,24 +1,39 @@
 package deduplication.checksum;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
 public class RollingAlder32 {
 	
-	public static void rollingIn(byte[] data, long offset, int window) {
+	/**
+	 * Rolling checksum with Alder32 algorithm
+	 * @param data Data to rolling
+	 * @param offset Initial position in the byte array
+	 * @param window Amount of bytes in array to compute a hash 
+	 */
+	public static HashSet<Long> rollingIn(byte[] data, int offset, int window) {				
+		Checksum checksum = new Adler32();
+		HashSet<Long> hashes = new HashSet<Long>();
 		
+		if(window > data.length) {
+			checksum.update(data, offset, data.length);
+			hashes.add(checksum.getValue());
+		} else {
+			while (offset <= data.length - window) {
+				
+				byte[] partial = Arrays.copyOfRange(data, offset, offset + window);
+				System.out.println((new String(partial)) + " " + Hashing.getAlder32(partial));
+				
+				checksum.update(data, offset, window);
+				hashes.add(checksum.getValue());
+				offset++;
+			}
+		}
 		
-		Checksum checksum = new Adler32();        
-        checksum.update(data, 0, bytes.length);
-       
-        /*
-         * Get the generated checksum using
-         * getValue method of Adler32 class.
-         */
-        long lngChecksum = checksum.getValue();
-		
-		
-		System.out.println();
+		return hashes;
 	}
 	
 }
