@@ -5,7 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-import deduplication.Utils;
+import deduplication.utils.GeneralUtils;
 
 public class Hashing {
 	
@@ -21,7 +21,7 @@ public class Hashing {
 			sha1hash = new byte[40];
 			md.update(data);
 			sha1hash = md.digest();
-			return Utils.toHex(sha1hash);
+			return GeneralUtils.toHex(sha1hash);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}		
@@ -41,7 +41,7 @@ public class Hashing {
 			sha1hash = new byte[40];
 			md.update(data);
 			sha1hash = md.digest();
-			return Utils.toHex(sha1hash);
+			return GeneralUtils.toHex(sha1hash);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}		

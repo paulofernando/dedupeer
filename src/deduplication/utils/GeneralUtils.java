@@ -1,6 +1,6 @@
-package deduplication;
+package deduplication.utils;
 
-public class Utils {
+public class GeneralUtils {
 
 	public static String toHex(byte[] data) {
 		StringBuilder s = new StringBuilder();
