@@ -21,14 +21,15 @@ public class RollingAlder32 {
 		if(window > data.length) {
 			checksum.update(data, offset, data.length);
 			hashes.add(checksum.getValue());
+			checksum.reset();
 		} else {
-			while (offset <= data.length - window) {
-				
+			while (offset <= data.length - window) {				
 				byte[] partial = Arrays.copyOfRange(data, offset, offset + window);
 				System.out.println((new String(partial)) + " " + Hashing.getAlder32(partial));
 				
 				checksum.update(data, offset, window);
 				hashes.add(checksum.getValue());
+				checksum.reset();
 				offset++;
 			}
 		}
