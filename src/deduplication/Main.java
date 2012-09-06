@@ -1,5 +1,6 @@
 package deduplication;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 import deduplication.checksum.Hashing;
@@ -36,10 +37,10 @@ public class Main {
         System.out.println("Rabin-Karp executado em " + (System.currentTimeMillis() - time) + "ms");*/
         //-------------------------------------------------------------------------------------------------------------
         
-		byte[] txt = FileUtils.getBytesFromFile("D:/teste/lorem.txt");
-		Long hash = RollingChecksum.sum(txt);
+		byte[] txt = FileUtils.getBytesFromFile("E:/teste/lorem.txt");
+		Long hash = RollingChecksum.sum(Arrays.copyOfRange(txt, 32, 64));
 		//HashSet<Long> hashes = new HashSet<Long>();
-		RollingChecksum checksum = new RollingChecksum(txt, 3000);
+		RollingChecksum checksum = new RollingChecksum(txt, 32);
 		
 		int i = 0;
 		while (checksum.next()) {
