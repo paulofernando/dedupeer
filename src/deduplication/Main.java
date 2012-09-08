@@ -37,23 +37,22 @@ public class Main {
         System.out.println("Rabin-Karp executado em " + (System.currentTimeMillis() - time) + "ms");*/
         //-------------------------------------------------------------------------------------------------------------
         
-		byte[] txt = FileUtils.getBytesFromFile("E:/teste/lorem.txt");
-		Long hash = RollingChecksum.sum(Arrays.copyOfRange(txt, 32, 64));
+		byte[] txt = FileUtils.getBytesFromFile("D:/teste/lorem.txt");
+		byte[] chunk = FileUtils.getBytesFromFile("D:/teste/chunk.txt");
+		Long hash = RollingChecksum.sum(chunk);
 		//HashSet<Long> hashes = new HashSet<Long>();
-		RollingChecksum checksum = new RollingChecksum(txt, 32);
+		RollingChecksum checksum = new RollingChecksum(txt, chunk.length);
 		
 		int i = 0;
 		while (checksum.next()) {
 			long cs = checksum.weak();
-			if(cs == hash) {
-				System.out.println("Achou!");
-			}			
-			System.out.println(cs);
+			
+			if(cs == hash) {				
+				System.out.println("************************************* Achou! [index = " + i +"]");
+				System.out.println(cs);
+			}
 			i++;
 		}
-		
-		System.out.println(hash);
-        
 	}
 	
 }

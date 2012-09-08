@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 
 import org.apache.log4j.Logger;
@@ -12,26 +13,16 @@ import org.springframework.util.Assert;
 
 public class RollingChecksum {
 	
-	private static final Logger log = Logger.getLogger(RollingChecksum.class);
-	
-	private byte[] data;
-	
-	private InputStream stream;
-	
-	private File f;
-	
-	private boolean eofReached = false;
-	
-	private int readOffset = 0;
-	
-	private int blockSize;
-	
-	private int index = -1;
-	
-	private long a = 0;
-	
-	private long b = 0;
-	
+	private static final Logger log = Logger.getLogger(RollingChecksum.class);	
+	private byte[] data;	
+	private InputStream stream;	
+	private File f;	
+	private boolean eofReached = false;	
+	private int readOffset = 0;	
+	private int blockSize;	
+	private int index = -1;	
+	private long a = 0;	
+	private long b = 0;	
 	private static long M = (long) Math.pow(2, 16);
 	
 	public RollingChecksum(File f, int blockSize) {
@@ -134,6 +125,8 @@ public class RollingChecksum {
 			byte[] firstBlock = new byte[Math.min(blockSize, data.length)];
 			System.arraycopy(data, 0, firstBlock, 0, Math.min(blockSize, data.length));
 			
+			//System.out.println("Bloco: " + new String(Arrays.copyOfRange(data, index, index + blockSize)));		
+			
 			// initialize alpha and beta summations
 			for (int i=0; i<firstBlock.length; i++) {
 				a += (long) firstBlock[i];
@@ -159,6 +152,8 @@ public class RollingChecksum {
 			int lastByteAt = index - 1;
 			int nextByteAt = index + blockSize - 1;
 			
+			//System.out.println("Bloco: " + new String(Arrays.copyOfRange(data, index, index + blockSize)));
+			
 			byte lastByte = data[lastByteAt];
 			byte nextByte = data[nextByteAt];
 			
@@ -174,6 +169,11 @@ public class RollingChecksum {
 		}
 		
 		return checksum;
+	}
+	
+	/** Shifts the pointer by an amount of bytes */
+	public void shiftPointer(int shift) {
+		index += shift;
 	}
 	
 	/*public byte[] strong() {
