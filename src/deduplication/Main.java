@@ -1,14 +1,9 @@
 package deduplication;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.io.File;
+import java.io.IOException;
 
-import deduplication.checksum.Hashing;
-import deduplication.checksum.RabinKarp;
-import deduplication.checksum.RollingAlder32;
-import deduplication.checksum.RollingChecksum;
-import deduplication.processing.EagleEye;
-import deduplication.utils.FileUtils;
+import deduplication.processing.file.Chunking;
 
 public class Main {
 	
@@ -37,7 +32,7 @@ public class Main {
         System.out.println("Rabin-Karp executado em " + (System.currentTimeMillis() - time) + "ms");*/
         //-------------------------------------------------------------------------------------------------------------
         
-		byte[] txt = FileUtils.getBytesFromFile("D:/teste/LH_30s.mp3");
+		/*byte[] txt = FileUtils.getBytesFromFile("D:/teste/LH_30s.mp3");
 		byte[] chunk = FileUtils.getBytesFromFile("D:/teste/LH_chunk.mp3");
 		Long hash = RollingChecksum.sum(chunk);
 		RollingChecksum checksum = new RollingChecksum(txt, chunk.length);
@@ -52,6 +47,15 @@ public class Main {
 			}
 			i++;
 		}
+		*/
+		//-------------------------------------------------------------------------------------------------------------
+		
+		try {
+			Chunking.slicingAndDicing(new File("D:/teste/matchless.flac"), new String("D:\\teste\\chunks\\"), 16000);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 }
