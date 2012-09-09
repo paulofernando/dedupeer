@@ -50,11 +50,16 @@ public class Main {
 		*/
 		//-------------------------------------------------------------------------------------------------------------
 		
-		try {
+		/*try {
 			Chunking.slicingAndDicing(new File("D:/teste/matchless.flac"), new String("D:\\teste\\chunks\\"), 16000);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
+		
+		
+		//-------------------------------------------------------------------------------------------------------------
+		
+		Chunking.restoreFile("D:\\teste\\chunks\\", "chunk");
 		
 	}
 	

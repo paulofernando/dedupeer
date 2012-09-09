@@ -6,7 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import org.apache.log4j.Logger;
+
+import deduplication.utils.FileUtils;
+
 import java.nio.ByteBuffer;
+import java.util.Vector;
 
 public class Chunking {
 	
@@ -50,5 +54,21 @@ public class Chunking {
 		} finally {
 			fOut.close();
 		}
+	}
+	
+	/**
+	 * Retrieves the chunks of the file system and stores them in a vector of bytes
+	 * @param path Path of the folder with the chunks
+	 * @param initalNameOfCHunk The initial name of the chunks 
+	 */
+	public static void restoreFile(String path, String initalNameOfCHunk) {
+		Vector<byte[]> chunks = new Vector<byte[]>();
+		int i = 0;
+		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
+			chunks.addElement(FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i));
+			i++;
+		}
+		
+		System.out.println("---------------------------------------------> " + chunks.size() + " chunks");
 	}
 }
