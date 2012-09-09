@@ -37,10 +37,9 @@ public class Main {
         System.out.println("Rabin-Karp executado em " + (System.currentTimeMillis() - time) + "ms");*/
         //-------------------------------------------------------------------------------------------------------------
         
-		byte[] txt = FileUtils.getBytesFromFile("D:/teste/lorem.txt");
-		byte[] chunk = FileUtils.getBytesFromFile("D:/teste/chunk.txt");
+		byte[] txt = FileUtils.getBytesFromFile("D:/teste/LH_30s.mp3");
+		byte[] chunk = FileUtils.getBytesFromFile("D:/teste/LH_chunk.mp3");
 		Long hash = RollingChecksum.sum(chunk);
-		//HashSet<Long> hashes = new HashSet<Long>();
 		RollingChecksum checksum = new RollingChecksum(txt, chunk.length);
 		
 		int i = 0;
