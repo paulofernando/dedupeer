@@ -3,7 +3,9 @@ package deduplication;
 import java.io.File;
 import java.io.IOException;
 
+import deduplication.checksum.RollingChecksum;
 import deduplication.processing.file.Chunking;
+import deduplication.utils.FileUtils;
 
 public class Main {
 	
@@ -59,7 +61,27 @@ public class Main {
 		
 		//-------------------------------------------------------------------------------------------------------------
 		
-		Chunking.restoreFile("D:\\teste\\chunks\\", "chunk");
+		try {
+			Chunking.slicingAndDicing(new File("D:/teste/matchless.flac"), new String("D:\\teste\\chunks\\"), 16000);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Chunking.restoreFile("D:\\teste\\chunks\\", "chunk", "D:\\teste\\restored\\restored.flac");
+		byte[] flac = FileUtils.getBytesFromFile("D:\\teste\\restored\\restored.flac");
+		byte[] chunk = FileUtils.getBytesFromFile("D:\\teste\\matchless_chunk.flac");
+		Long hash = RollingChecksum.sum(chunk);
+		RollingChecksum checksum = new RollingChecksum(flac, chunk.length);
+		
+		int i = 0;
+		while (checksum.next()) {
+			long cs = checksum.weak();
+			
+			if(cs == hash) {				
+				System.out.println("************************************* Achou! [index = " + i +"]");
+				System.out.println(cs);
+			}
+			i++;
+		}
 		
 	}
 	
