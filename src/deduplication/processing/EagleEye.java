@@ -1,40 +1,36 @@
 package deduplication.processing;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.ArrayList;
 
-import deduplication.checksum.Hashing;
-import deduplication.checksum.RollingAlder32;
+import deduplication.checksum.RollingChecksum;
 
-/**
- * Responsible to identify a specific chunk into the block of data
- * @author Paulo Fernando
- *
- */
 public class EagleEye {
 	
 	/**
-	 * Identifies if the chunk is duplicated in the file
-	 * @param block Block of the data 
-	 * @param chunk Chunk to find in the block of file
+	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
+	 * @param file File where the block will be searched
+	 * @param chunk Data block to find in {@code file}
+	 * @return Indexes on the {@code file} where the pattern matches
 	 */
-	public static void duplicationIdentification(byte[] block, byte[] chunk) {
+	public static ArrayList<Integer> searchDuplication(byte[] file, byte[] chunk) {
+		ArrayList<Integer> indexes = new ArrayList<Integer>();
 		
-		if(block.length < chunk.length) {
-			System.out.println("ERROR!");
-			return;
+		Long hash = RollingChecksum.sum(chunk);
+		RollingChecksum checksum = new RollingChecksum(file, chunk.length);
+		
+		int i = 0;
+		while (checksum.next()) {
+			long cs = checksum.weak();			
+			if(cs == hash) {				
+				System.out.println("\nAchou! [index = " + i +"]");
+				indexes.add(i);
+				System.out.println(cs);
+			}
+			i++;
 		}
 		
-		HashSet<Long> rollingHashes = RollingAlder32.rollingIn(block, 0, chunk.length);
-		long chunkHash = Hashing.getAlder32(chunk);
-					
-		System.out.println("--------- \nChunk: " + (new String(chunk)) + "\nHash: " + chunkHash);
+		if(indexes.size() == 0) System.out.println("Bloco não duplicado");
 		
-		if(rollingHashes.contains(chunkHash)) {
-			System.out.println("achou!");
-		} else {
-			System.out.println("não achou!");
-		}
-		
+		return indexes;
 	}
 }

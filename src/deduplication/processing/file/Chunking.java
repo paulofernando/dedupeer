@@ -38,10 +38,11 @@ public class Chunking {
 		
 		System.out.println("Starting the slicing and dicing...");
 		long time = System.currentTimeMillis();
+		String prefix = FileUtils.getOnlyName(file);
 		while (fc.read(bb) >= 0) {
 			bb.flip();
 			bytes = bb.array();
-			storeByteArrayToFile(bytes, destination + "chunk" + "." + chunkCount);
+			storeByteArrayToFile(bytes, destination + prefix + "_chunk" + "." + chunkCount);
 			chunkCount++;
 			bb.clear();
 		}
@@ -73,7 +74,7 @@ public class Chunking {
 			i++;
 		}
 		
-		System.out.println("---------------------------------------------> " + chunks.size() + " chunks");
+		System.out.println(chunks.size() + " chunks restored");
 		new File(to.substring(0, to.lastIndexOf("\\"))).mkdir();
 		write(chunks, to);
 	}

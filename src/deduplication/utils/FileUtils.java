@@ -10,9 +10,9 @@ public class FileUtils {
 	 * @return Bytes of the file
 	 */
 	public static byte[] getBytesFromFile(String filePath) {
-		System.out.println("--------------------\nReading in binary file named : " + filePath);
+		//System.out.println("--------------------\nReading in binary file named : " + filePath);
 		File file = new File(filePath);
-		System.out.println("File size: " + file.length());
+		//System.out.println("File size: " + file.length());
 		byte[] result = new byte[(int) file.length()];
 
 		InputStream input = null;
@@ -27,7 +27,7 @@ public class FileUtils {
 					totalBytesRead = totalBytesRead + bytesRead;
 				}
 			}
-			System.out.println("Num bytes read: " + totalBytesRead);
+			//System.out.println("Num bytes read: " + totalBytesRead);
 		} catch (FileNotFoundException ex) {
 			System.out.println("File not found.");
 		} catch (IOException ex) {
@@ -39,7 +39,11 @@ public class FileUtils {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("--------------------");
+		//System.out.println("--------------------");
 		return result;
+	}
+	
+	public static String getOnlyName(File file) {
+		return (file.getName().indexOf(".") != -1 ? file.getName().substring(0, file.getName().lastIndexOf(".")) : file.getName());
 	}
 }

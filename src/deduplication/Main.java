@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import deduplication.checksum.RollingChecksum;
+import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
@@ -12,8 +13,8 @@ public class Main {
 	public static void main (String[] args) {
 		//System.out.println(Hashing.getSHA1("Testando!".getBytes()));
 		//RollingAlder32.rollingIn("Testando a parada aqui pra ver se está na paz de Jah".getBytes(), 0, 10);
-		//EagleEye.duplicationIdentification(FileUtils.getBytesFromFile("D:/dedup.txt"), "tando a".getBytes());
-		//EagleEye.duplicationIdentification(FileUtils.getBytesFromFile("D:/teste/teddy_picker_5s.mp3"), FileUtils.getBytesFromFile("D:/teste/teddy_picker_chunk.mp3"));
+		//RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/dedup.txt"), "tando a".getBytes());
+		//RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/teste/teddy_picker_5s.mp3"), FileUtils.getBytesFromFile("D:/teste/teddy_picker_chunk.mp3"));
 		/*Rolling.rollingTeste("Testando".getBytes());
 		Rolling.rollingTeste("estando!".getBytes());
 		Rolling.rollingTeste("stando ".getBytes());*/
@@ -23,7 +24,7 @@ public class Main {
 		byte[] pat = FileUtils.getBytesFromFile("D:/teste/chunk.txt");		
 		
 		long time = System.currentTimeMillis();		
-		EagleEye.duplicationIdentification(txt,  pat);
+		RollingInBruteForce.duplicationIdentification(txt,  pat);
 		System.out.println("Básico executado em " + (System.currentTimeMillis() - time) + "ms");
 				
 		time = System.currentTimeMillis();
@@ -61,28 +62,19 @@ public class Main {
 		
 		//-------------------------------------------------------------------------------------------------------------
 		
+		File file = new File("E:/teste/matchless.flac");
 		try {
-			Chunking.slicingAndDicing(new File("D:/teste/matchless.flac"), new String("D:\\teste\\chunks\\"), 16000);
+			
+			Chunking.slicingAndDicing(file, new String("E:\\teste\\chunks\\"), 16000);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		Chunking.restoreFile("D:\\teste\\chunks\\", "chunk", "D:\\teste\\restored\\restored.flac");
-		byte[] flac = FileUtils.getBytesFromFile("D:\\teste\\restored\\restored.flac");
-		byte[] chunk = FileUtils.getBytesFromFile("D:\\teste\\matchless_chunk.flac");
-		Long hash = RollingChecksum.sum(chunk);
-		RollingChecksum checksum = new RollingChecksum(flac, chunk.length);
+		Chunking.restoreFile("E:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk", "E:\\teste\\restored\\restored.flac");
 		
-		int i = 0;
-		while (checksum.next()) {
-			long cs = checksum.weak();
-			
-			if(cs == hash) {				
-				System.out.println("************************************* Achou! [index = " + i +"]");
-				System.out.println(cs);
-			}
-			i++;
-		}
+		byte[] flac = FileUtils.getBytesFromFile("E:\\teste\\restored\\restored.flac");
+		byte[] chunk = FileUtils.getBytesFromFile("E:\\teste\\matchless_chunk.flac");
 		
+		EagleEye.searchDuplication(flac, chunk);
 	}
 	
 }
