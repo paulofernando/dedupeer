@@ -92,14 +92,14 @@ public class Main {
 		for(Long hash: hashes) {
 			index = EagleEye.searchDuplicationWithoutRollingChecksum(flac, index, hash, (int)sizeOfChunk);
 			if(index != -1) {
-				System.out.println("\nAchou: [index: " + index + "]");
+				System.out.println("Achou: [index: " + index + "]");
 				count++;
 			} else {
-				System.out.println("\nNão achou o chunk com hash: " + hash);
+				System.out.println("Não achou o chunk com hash: " + hash);
 			}
 		}
 		
-		System.out.println("File " + ((count * 100)/hashes.size()) + "% duplicated\nProcess finished in " + 
+		System.out.println("\nFile " + ((count * 100)/hashes.size()) + "% duplicated\nProcess finished in " + 
 				((System.currentTimeMillis() - time)/1000) + " seconds");
 		
 		//----------------------------------------------------------------------------------------------------------------
