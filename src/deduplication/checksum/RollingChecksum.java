@@ -94,12 +94,12 @@ public class RollingChecksum {
 		
 		long checksum = a + M * b;
 		
-		if (log.isTraceEnabled()) {
+		/*if (log.isTraceEnabled()) {
 			StringBuilder hex = new StringBuilder();
 			for (int i=0; i<chunk.length; i++)
 				hex.append(Long.toHexString((long) chunk[i]));
 			log.trace("sum("+hex.toString()+"): " + Long.toHexString(checksum));
-		}
+		}*/
 		
 		return checksum;
 	}
@@ -170,12 +170,7 @@ public class RollingChecksum {
 		
 		return checksum;
 	}
-	
-	/** Shifts the pointer by an amount of bytes */
-	public void shiftPointer(int shift) {
-		index += shift;
-	}
-	
+		
 	/*public byte[] strong() {
 		if (data.length-index < 1) { // data was smaller than blockSize
 			return MD5.digest(data);

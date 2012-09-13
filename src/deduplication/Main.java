@@ -84,14 +84,25 @@ public class Main {
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
 		long sizeOfChunk = (new File("E:\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.1")).length();
+		
+		long time = System.currentTimeMillis();
+		
+		int index = 0;
+		int count = 0;
 		for(Long hash: hashes) {
-			int index = EagleEye.searchDuplication(flac, hash, (int)sizeOfChunk);
+			index = EagleEye.searchDuplicationWithoutRollingChecksum(flac, index, hash, (int)sizeOfChunk);
 			if(index != -1) {
 				System.out.println("\nAchou: [index: " + index + "]");
+				count++;
 			} else {
 				System.out.println("\nNão achou o chunk com hash: " + hash);
 			}
 		}
+		
+		System.out.println("File " + ((count * 100)/hashes.size()) + "% duplicated\nProcess finished in " + 
+				((System.currentTimeMillis() - time)/1000) + " seconds");
+		
+		//----------------------------------------------------------------------------------------------------------------
 	}
 	
 }

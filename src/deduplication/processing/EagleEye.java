@@ -1,6 +1,7 @@
 package deduplication.processing;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import deduplication.checksum.RollingChecksum;
 
@@ -51,6 +52,35 @@ public class EagleEye {
 				return i;
 			}
 			i++;
+		}
+				
+		return -1;
+	}
+	
+	/**
+	 * Try find a data block in {@code file} with same bytes as the {@code chunk} without checksum
+	 * @param file File where the block will be searched
+	 * @param hash Hash computed of a chunk
+	 * @param start Initial byte to search
+	 * @param sizeOfChunk Size of the chunk from which the {@code hash} was computed
+	 * @return index on the {@code file} where the pattern matches. -1 if not found it.
+	 */
+	@Deprecated
+	public static int searchDuplicationWithoutRollingChecksum(byte[] file, int start, long hash, int sizeOfChunk) {
+		file = Arrays.copyOfRange(file, start, file.length);
+		RollingChecksum checksum = new RollingChecksum(file, sizeOfChunk);
+		
+		int i = 0;
+		while (checksum.next()) {
+			if(i + sizeOfChunk < file.length) {
+				long cs = RollingChecksum.sum(Arrays.copyOfRange(file, i, i + sizeOfChunk));
+				if(cs == hash) {
+					return i;
+				}
+				
+				//FIXME Byte did not jump one by one. 
+				i += sizeOfChunk;
+			}
 		}
 				
 		return -1;
