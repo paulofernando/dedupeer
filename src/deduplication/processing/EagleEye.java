@@ -33,4 +33,26 @@ public class EagleEye {
 		
 		return indexes;
 	}
+	
+	/**
+	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
+	 * @param file File where the block will be searched
+	 * @param hash Hash computed of a chunk
+	 * @param sizeOfChunk Size of the chunk from which the {@code hash} was computed
+	 * @return index on the {@code file} where the pattern matches. -1 if not found it.
+	 */
+	public static int searchDuplication(byte[] file, long hash, int sizeOfChunk) {					
+		RollingChecksum checksum = new RollingChecksum(file, sizeOfChunk);
+		
+		int i = 0;
+		while (checksum.next()) {
+			long cs = checksum.weak();			
+			if(cs == hash) {
+				return i;
+			}
+			i++;
+		}
+				
+		return -1;
+	}
 }

@@ -2,6 +2,8 @@ package deduplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 import deduplication.checksum.RollingChecksum;
 import deduplication.processing.EagleEye;
@@ -61,8 +63,8 @@ public class Main {
 		
 		
 		//-------------------------------------------------------------------------------------------------------------
-		
-		File file = new File("E:/teste/matchless.flac");
+				
+		/*File file = new File("E:/teste/matchless.flac");
 		try {
 			
 			Chunking.slicingAndDicing(file, new String("E:\\teste\\chunks\\"), 16000);
@@ -74,7 +76,22 @@ public class Main {
 		byte[] flac = FileUtils.getBytesFromFile("E:\\teste\\restored\\restored.flac");
 		byte[] chunk = FileUtils.getBytesFromFile("E:\\teste\\matchless_chunk.flac");
 		
-		EagleEye.searchDuplication(flac, chunk);
+		EagleEye.searchDuplication(flac, chunk);*/
+		
+		//-------------------------------------------------------------------------------------------------------------
+		File file = new File("E:/teste/matchless.flac");
+		ArrayList<Long> hashes = Chunking.computeHashes("E:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
+		
+		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
+		long sizeOfChunk = (new File("E:\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.1")).length();
+		for(Long hash: hashes) {
+			int index = EagleEye.searchDuplication(flac, hash, (int)sizeOfChunk);
+			if(index != -1) {
+				System.out.println("\nAchou: [index: " + index + "]");
+			} else {
+				System.out.println("\nNão achou o chunk com hash: " + hash);
+			}
+		}
 	}
 	
 }

@@ -9,10 +9,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
 
+import deduplication.checksum.RollingChecksum;
 import deduplication.utils.FileUtils;
 
 public class Chunking {
@@ -77,6 +80,27 @@ public class Chunking {
 		System.out.println(chunks.size() + " chunks restored");
 		new File(to.substring(0, to.lastIndexOf("\\"))).mkdir();
 		write(chunks, to);
+	}
+	
+	/**
+	 * Computes the hashes of all chunks in a directory
+	 * @param path Directory where the chunks are
+	 * @param initalNameOfCHunk Initial name of the chunks
+	 * @return Collection of hashes
+	 */
+	public static ArrayList<Long> computeHashes(String path, String initalNameOfCHunk) {
+		ArrayList<Long> hashes = new ArrayList<Long>();
+		
+		System.out.println("Computing hashes...");
+		long time = System.currentTimeMillis();
+		
+		int i = 0;
+		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
+			hashes.add(RollingChecksum.sum(FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i)));
+			i++;
+		}
+		System.out.println("Computed hashes of " + i + " chunks in " + (System.currentTimeMillis() - time) + " miliseconds");
+		return hashes;
 	}
 	
 	/**
