@@ -11,9 +11,9 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 import org.springframework.util.Assert;
 
-public class RollingChecksum {
+public class RollingChecksumOlder {
 	
-	private static final Logger log = Logger.getLogger(RollingChecksum.class);	
+	private static final Logger log = Logger.getLogger(RollingChecksumOlder.class);	
 	private byte[] data;	
 	private InputStream stream;	
 	private File f;	
@@ -25,7 +25,7 @@ public class RollingChecksum {
 	private long b = 0;	
 	private static long M = (long) Math.pow(2, 16);
 	
-	public RollingChecksum(File f, int blockSize) {
+	public RollingChecksumOlder(File f, int blockSize) {
 		this.f = f;
 		this.blockSize = Math.min((int) f.length(), blockSize);
 		this.data = new byte[(int) f.length()]; // maximum filesize: 2,147,483,647 (
@@ -36,13 +36,13 @@ public class RollingChecksum {
 		}
 	}
 	
-	public RollingChecksum(String string, int blockSize) {
+	public RollingChecksumOlder(String string, int blockSize) {
 		Assert.notNull(string);
 		this.data = string.getBytes();
 		this.blockSize = Math.min(data.length, blockSize);
 	}
 	
-	public RollingChecksum(byte[] data, int blockSize) {
+	public RollingChecksumOlder(byte[] data, int blockSize) {
 		this.data = data;
 		this.blockSize = Math.min(data.length, blockSize);
 	}
