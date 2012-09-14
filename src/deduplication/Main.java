@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import deduplication.checksum.RollingChecksum;
+import deduplication.checksum.RollingChecksumOlder;
+import deduplication.checksum.rsync.Checksum32;
 import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
@@ -39,8 +40,8 @@ public class Main {
         
 		/*byte[] txt = FileUtils.getBytesFromFile("D:/teste/LH_30s.mp3");
 		byte[] chunk = FileUtils.getBytesFromFile("D:/teste/LH_chunk.mp3");
-		Long hash = RollingChecksum.sum(chunk);
-		RollingChecksum checksum = new RollingChecksum(txt, chunk.length);
+		Long hash = RollingChecksumOlder.sum(chunk);
+		RollingChecksumOlder checksum = new RollingChecksumOlder(txt, chunk.length);
 		
 		int i = 0;
 		while (checksum.next()) {
@@ -79,7 +80,7 @@ public class Main {
 		EagleEye.searchDuplication(flac, chunk);*/
 		
 		//-------------------------------------------------------------------------------------------------------------
-		File file = new File("E:/teste/matchless.flac");
+		/*File file = new File("E:/teste/matchless.flac");
 		ArrayList<Long> hashes = Chunking.computeHashes("E:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -100,9 +101,45 @@ public class Main {
 		}
 		
 		System.out.println("\nFile " + ((count * 100)/hashes.size()) + "% duplicated\nProcess finished in " + 
-				((System.currentTimeMillis() - time)/1000) + " seconds");
+				((System.currentTimeMillis() - time)/1000) + " seconds");*/
 		
 		//----------------------------------------------------------------------------------------------------------------
+		File file = new File("E:/teste/matchless.flac");	
+		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
+		
+		File file2 = new File("E:\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0");
+		byte[] chunk = FileUtils.getBytesFromFile(file2.getAbsolutePath());
+		
+		ArrayList<Integer> hashes = Chunking.computeHashes("E:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
+				
+		Checksum32 c32 = new Checksum32();
+		c32.check(flac, 0, chunk.length);
+		Integer hash = c32.getValue();
+		if(hashes.contains(hash)) {
+			System.out.println("Achou " + hash);
+		}
+		
+		int index = 0;
+		int count = 0;
+		while(index < flac.length - chunk.length) {
+			
+			if(index % chunk.length == 0) {
+				c32.check(flac, index, chunk.length);
+			} else {			
+				c32.roll((byte)1);
+			}
+			
+			hash = c32.getValue();
+			if(hashes.contains(hash)) {
+				System.out.println("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
+				index += chunk.length;
+				count++;
+				continue;
+			}			
+			
+			index++;
+		}
+		
 	}
 	
 }

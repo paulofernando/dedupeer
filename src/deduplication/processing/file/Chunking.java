@@ -15,7 +15,8 @@ import java.util.Vector;
 
 import org.apache.log4j.Logger;
 
-import deduplication.checksum.RollingChecksum;
+import deduplication.checksum.RollingChecksumOlder;
+import deduplication.checksum.rsync.Checksum32;
 import deduplication.utils.FileUtils;
 
 public class Chunking {
@@ -88,7 +89,7 @@ public class Chunking {
 	 * @param initalNameOfCHunk Initial name of the chunks
 	 * @return Collection of hashes
 	 */
-	public static ArrayList<Long> computeHashes(String path, String initalNameOfCHunk) {
+	/*public static ArrayList<Long> computeHashes(String path, String initalNameOfCHunk) {
 		ArrayList<Long> hashes = new ArrayList<Long>();
 		
 		System.out.println("Computing hashes...");
@@ -96,7 +97,24 @@ public class Chunking {
 		
 		int i = 0;
 		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
-			hashes.add(RollingChecksum.sum(FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i)));
+			hashes.add(RollingChecksumOlder.sum(FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i)));
+			i++;
+		}
+		System.out.println("Computed hashes of " + i + " chunks in " + (System.currentTimeMillis() - time) + " miliseconds");
+		return hashes;
+	}*/
+	public static ArrayList<Integer> computeHashes(String path, String initalNameOfCHunk) {
+		ArrayList<Integer> hashes = new ArrayList<Integer>();
+		
+		System.out.println("Computing hashes...");
+		long time = System.currentTimeMillis();
+		
+		Checksum32 c32 = new Checksum32();
+		int i = 0;
+		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
+			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i);
+			c32.check(chunk, 0, chunk.length);
+			hashes.add(c32.getValue());
 			i++;
 		}
 		System.out.println("Computed hashes of " + i + " chunks in " + (System.currentTimeMillis() - time) + " miliseconds");

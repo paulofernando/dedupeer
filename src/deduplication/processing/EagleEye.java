@@ -3,7 +3,7 @@ package deduplication.processing;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import deduplication.checksum.RollingChecksum;
+import deduplication.checksum.RollingChecksumOlder;
 
 public class EagleEye {
 	
@@ -16,8 +16,8 @@ public class EagleEye {
 	public static ArrayList<Integer> searchDuplication(byte[] file, byte[] chunk) {
 		ArrayList<Integer> indexes = new ArrayList<Integer>();
 		
-		Long hash = RollingChecksum.sum(chunk);
-		RollingChecksum checksum = new RollingChecksum(file, chunk.length);
+		Long hash = RollingChecksumOlder.sum(chunk);
+		RollingChecksumOlder checksum = new RollingChecksumOlder(file, chunk.length);
 		
 		int i = 0;
 		while (checksum.next()) {
@@ -43,7 +43,7 @@ public class EagleEye {
 	 * @return index on the {@code file} where the pattern matches. -1 if not found it.
 	 */
 	public static int searchDuplication(byte[] file, long hash, int sizeOfChunk) {					
-		RollingChecksum checksum = new RollingChecksum(file, sizeOfChunk);
+		RollingChecksumOlder checksum = new RollingChecksumOlder(file, sizeOfChunk);
 		
 		int i = 0;
 		while (checksum.next()) {
@@ -68,12 +68,12 @@ public class EagleEye {
 	@Deprecated
 	public static int searchDuplicationWithoutRollingChecksum(byte[] file, int start, long hash, int sizeOfChunk) {
 		file = Arrays.copyOfRange(file, start, file.length);
-		RollingChecksum checksum = new RollingChecksum(file, sizeOfChunk);
+		RollingChecksumOlder checksum = new RollingChecksumOlder(file, sizeOfChunk);
 		
 		int i = 0;
 		while (checksum.next()) {
 			if(i + sizeOfChunk < file.length) {
-				long cs = RollingChecksum.sum(Arrays.copyOfRange(file, i, i + sizeOfChunk));
+				long cs = RollingChecksumOlder.sum(Arrays.copyOfRange(file, i, i + sizeOfChunk));
 				if(cs == hash) {
 					return i;
 				}
