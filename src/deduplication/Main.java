@@ -3,11 +3,9 @@ package deduplication;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
-import deduplication.checksum.RollingChecksumOlder;
 import deduplication.checksum.rsync.Checksum32;
-import deduplication.processing.EagleEye;
+import deduplication.processing.RollingInBruteForce;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
@@ -16,7 +14,7 @@ public class Main {
 	public static void main (String[] args) {
 		//System.out.println(Hashing.getSHA1("Testando!".getBytes()));
 		//RollingAlder32.rollingIn("Testando a parada aqui pra ver se está na paz de Jah".getBytes(), 0, 10);
-		//RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/dedup.txt"), "tando a".getBytes());
+		//
 		//RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/teste/teddy_picker_5s.mp3"), FileUtils.getBytesFromFile("D:/teste/teddy_picker_chunk.mp3"));
 		/*Rolling.rollingTeste("Testando".getBytes());
 		Rolling.rollingTeste("estando!".getBytes());
@@ -54,20 +52,11 @@ public class Main {
 			i++;
 		}
 		*/
-		//-------------------------------------------------------------------------------------------------------------
-		
-		/*try {
-			Chunking.slicingAndDicing(new File("D:/teste/matchless.flac"), new String("D:\\teste\\chunks\\"), 16000);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		
 		
 		//-------------------------------------------------------------------------------------------------------------
 				
 		/*File file = new File("E:/teste/matchless.flac");
-		try {
-			
+		try {			
 			Chunking.slicingAndDicing(file, new String("E:\\teste\\chunks\\"), 16000);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -104,21 +93,32 @@ public class Main {
 				((System.currentTimeMillis() - time)/1000) + " seconds");*/
 		
 		//----------------------------------------------------------------------------------------------------------------
-		File file = new File("E:/teste/matchless.flac");	
-		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
 		
-		File file2 = new File("E:\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0");
-		byte[] chunk = FileUtils.getBytesFromFile(file2.getAbsolutePath());
+		analysis_1();
+	}
+	
+	private static void analysisBruteForce() {
+		RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/dedup.txt"), "tando a".getBytes());
+	}
+	
+	/**
+	 * Quebra um arquivo e chunks e verifica se todos esses chunks estão no mesmo arquivo. O número de chunks encontrados
+	 * deve ser igual ao de chunks divididos inicialmente no método.
+	 */
+	private static void analysis_1() {
+		File file = new File("D:/teste/matchless.flac");		
 		
-		ArrayList<Integer> hashes = Chunking.computeHashes("E:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
+		try { Chunking.slicingAndDicing(file, new String("D:\\teste\\chunks\\"), 64000); 
+		} catch (IOException e) { e.printStackTrace(); }		
+		
+		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
+		byte[] chunk = FileUtils.getBytesFromFile((new File("D:\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());
+		
+		ArrayList<Integer> hashes = Chunking.computeHashes("D:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
 				
-		Checksum32 c32 = new Checksum32();
-		c32.check(flac, 0, chunk.length);
-		Integer hash = c32.getValue();
-		if(hashes.contains(hash)) {
-			System.out.println("Achou " + hash);
-		}
-		
+		long time = System.currentTimeMillis();		
+		Checksum32 c32 = new Checksum32();		
+		Integer hash;;
 		int index = 0;
 		int count = 0;
 		while(index < flac.length - chunk.length) {
@@ -140,6 +140,60 @@ public class Main {
 			index++;
 		}
 		
+		System.out.println("Processado em " + (System.currentTimeMillis() - time) + " milisegundos");
+	}
+	
+	private static void analysis_2(){
+		File newFile = new File("D:\\teste\\matchless_modified.flac");
+		
+		try { Chunking.slicingAndDicing(newFile, new String("D:\\teste\\chunks\\"), 64000); 
+		} catch (IOException e) { e.printStackTrace(); }
+
+		File file = new File("D:/teste/matchless.flac");	
+		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
+		byte[] chunk = FileUtils.getBytesFromFile((new File("D:\\teste\\chunks\\" + FileUtils.getOnlyName(newFile) + "_chunk.0")).getAbsolutePath());
+		
+		ArrayList<Integer> hashes = Chunking.computeHashes("D:\\teste\\chunks\\", FileUtils.getOnlyName(newFile) + "_chunk");
+				
+		long time = System.currentTimeMillis();
+		
+		Checksum32 c32 = new Checksum32();
+		c32.check(flac, 0, chunk.length);
+		Integer hash = c32.getValue();
+		
+		boolean achou = true;
+		int count = 0;
+		int index = 0;
+		if(hashes.contains(hash)) {
+			System.out.println("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
+			count++;
+			index += chunk.length;
+		}		
+		
+		
+		while(index < flac.length - chunk.length) {			
+			if(achou) {
+				c32.check(flac, index, chunk.length);
+			} else {			
+				c32.roll((byte)1);
+			}
+			
+			hash = c32.getValue();
+			if(hashes.contains(hash)) {
+				System.out.println("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
+				index += chunk.length;
+				count++;
+				achou = true;
+				continue;
+			} else {
+				achou = false;
+			}
+			
+			index++;
+		}
+		
+		System.out.println("Processado em " + (System.currentTimeMillis() - time) + " milisegundos");
+
 	}
 	
 }
