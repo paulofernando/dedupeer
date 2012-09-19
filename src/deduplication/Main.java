@@ -3,13 +3,18 @@ package deduplication;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 
 import deduplication.checksum.rsync.Checksum32;
+import deduplication.processing.EagleEye;
 import deduplication.processing.RollingInBruteForce;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
 public class Main {
+	
+	private static String defaultPartition = "E"; 
 	
 	public static void main (String[] args) {
 		//System.out.println(Hashing.getSHA1("Testando!".getBytes()));
@@ -94,7 +99,7 @@ public class Main {
 		
 		//----------------------------------------------------------------------------------------------------------------
 		
-		analysis_1();
+		analysis_2();
 	}
 	
 	private static void analysisBruteForce() {
@@ -106,15 +111,15 @@ public class Main {
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
-		File file = new File("D:/teste/matchless.flac");		
+		File file = new File(defaultPartition + ":/teste/matchless.flac");		
 		
-		try { Chunking.slicingAndDicing(file, new String("D:\\teste\\chunks\\"), 64000); 
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), 64000); 
 		} catch (IOException e) { e.printStackTrace(); }		
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
-		byte[] chunk = FileUtils.getBytesFromFile((new File("D:\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());
+		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());
 		
-		ArrayList<Integer> hashes = Chunking.computeHashes("D:\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
+		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
 				
 		long time = System.currentTimeMillis();		
 		Checksum32 c32 = new Checksum32();		
@@ -140,20 +145,39 @@ public class Main {
 			index++;
 		}
 		
-		System.out.println("Processado em " + (System.currentTimeMillis() - time) + " milisegundos");
+		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
 	}
 	
+	/**
+	 * Encontrar um chunk dentro de um arquivo original através do rolling checksum
+	 */	
 	private static void analysis_2(){
-		File newFile = new File("D:\\teste\\matchless_modified.flac");
+		File file = new File(defaultPartition + ":/teste/matchless.flac");		
 		
-		try { Chunking.slicingAndDicing(newFile, new String("D:\\teste\\chunks\\"), 64000); 
+		int chunks = 0;
+		try { 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), 64000); 
+		} catch (IOException e) { e.printStackTrace(); }	
+		
+		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
+		int random = (new Random()).nextInt(chunks - 1);
+		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk." + random)).getAbsolutePath());
+
+		System.out.println("Searching for chunk " + random);
+		EagleEye.searchDuplication(flac, chunk);
+	}
+	
+	private static void analysis_3(){
+		File newFile = new File(defaultPartition + ":\\teste\\matchless_modified.flac");
+		
+		try { Chunking.slicingAndDicing(newFile, new String(defaultPartition + ":\\teste\\chunks\\"), 64000); 
 		} catch (IOException e) { e.printStackTrace(); }
 
-		File file = new File("D:/teste/matchless.flac");	
+		File file = new File(defaultPartition + ":/teste/matchless.flac");	
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
-		byte[] chunk = FileUtils.getBytesFromFile((new File("D:\\teste\\chunks\\" + FileUtils.getOnlyName(newFile) + "_chunk.0")).getAbsolutePath());
+		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(newFile) + "_chunk.0")).getAbsolutePath());
 		
-		ArrayList<Integer> hashes = Chunking.computeHashes("D:\\teste\\chunks\\", FileUtils.getOnlyName(newFile) + "_chunk");
+		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(newFile) + "_chunk");
 				
 		long time = System.currentTimeMillis();
 		

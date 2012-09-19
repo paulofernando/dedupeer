@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import deduplication.checksum.RollingChecksumOlder;
+import deduplication.checksum.rsync.Checksum32;
 
 public class EagleEye {
 	
@@ -11,9 +12,51 @@ public class EagleEye {
 	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
 	 * @param file File where the block will be searched
 	 * @param chunk Data block to find in {@code file}
+	 * @return index on the {@code file} where the pattern matches. -1 means the pattern not found
+	 */
+	public static int searchDuplication(byte[] file, byte[] chunk) {
+		Checksum32 chunkC32 = new Checksum32();
+		chunkC32.check(chunk, 0, chunk.length);
+		int chunkHash = chunkC32.getValue();
+		
+		long time = System.currentTimeMillis();	
+		
+		int index = 0;
+		
+		Checksum32 c32 = new Checksum32();
+		c32.check(file, 0, chunk.length);
+		int hash;
+		
+		hash = c32.getValue();
+		if(chunkHash == hash) {
+			System.out.println("Achou o chunk [hash = " + hash + "] and [index = " + index + "]");
+			return index;
+		}			
+		index++;
+		
+		while(index < file.length - chunk.length) {
+			c32.roll(file[index]);
+			hash = c32.getValue();
+			if(chunkHash == hash) {
+				System.out.println("Achou o chunk [hash = " + hash + "] and [index = " + index + "]");				
+				return index;
+			}			
+			index++;
+		}
+		
+		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+		return -1;
+	}
+	
+	
+	/**
+	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
+	 * @param file File where the block will be searched
+	 * @param chunk Data block to find in {@code file}
 	 * @return Indexes on the {@code file} where the pattern matches
 	 */
-	public static ArrayList<Integer> searchDuplication(byte[] file, byte[] chunk) {
+	@Deprecated
+	public static ArrayList<Integer> searchDuplicationWithChecksumOlder(byte[] file, byte[] chunk) {
 		ArrayList<Integer> indexes = new ArrayList<Integer>();
 		
 		Long hash = RollingChecksumOlder.sum(chunk);
@@ -21,7 +64,7 @@ public class EagleEye {
 		
 		int i = 0;
 		while (checksum.next()) {
-			long cs = checksum.weak();			
+			long cs = checksum.weak();
 			if(cs == hash) {				
 				System.out.println("\nAchou! [index = " + i +"]");
 				indexes.add(i);
@@ -42,7 +85,8 @@ public class EagleEye {
 	 * @param sizeOfChunk Size of the chunk from which the {@code hash} was computed
 	 * @return index on the {@code file} where the pattern matches. -1 if not found it.
 	 */
-	public static int searchDuplication(byte[] file, long hash, int sizeOfChunk) {					
+	@Deprecated
+	public static int searchDuplicationWithChecksumOlder(byte[] file, long hash, int sizeOfChunk) {					
 		RollingChecksumOlder checksum = new RollingChecksumOlder(file, sizeOfChunk);
 		
 		int i = 0;

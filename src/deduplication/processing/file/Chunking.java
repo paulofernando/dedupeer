@@ -29,7 +29,7 @@ public class Chunking {
 	 * @param destination Destination folder of the chunks
 	 * @param sizeInBytes Amount of bytes for chunk
 	 */
-	public static void slicingAndDicing(File file, String destination, int sizeInBytes) throws IOException {
+	public static int slicingAndDicing(File file, String destination, int sizeInBytes) throws IOException {
 		FileInputStream is = new FileInputStream(file);
 
 		FileChannel fc = is.getChannel();
@@ -50,7 +50,8 @@ public class Chunking {
 			chunkCount++;
 			bb.clear();
 		}
-		System.out.println(chunkCount + " created of " + (sizeInBytes/1000) + " in " + (System.currentTimeMillis() - time) + " miliseconds");
+		System.out.println(chunkCount + " created of " + (sizeInBytes/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
+		return chunkCount;
 	}
 
 	private static void storeByteArrayToFile(byte[] bytesToSave, String path) throws IOException {
