@@ -38,7 +38,7 @@ public class EagleEye {
 			c32.roll(file[index]);
 			hash = c32.getValue();
 			if(chunkHash == hash) {
-				System.out.println("Achou o chunk [hash = " + hash + "] and [index = " + index + "]");				
+				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
 				return index;
 			}			
 			index++;
