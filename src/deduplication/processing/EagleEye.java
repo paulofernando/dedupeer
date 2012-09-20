@@ -29,7 +29,7 @@ public class EagleEye {
 		
 		hash = c32.getValue();
 		if(chunkHash == hash) {
-			System.out.println("Achou o chunk [hash = " + hash + "] and [index = " + index + "]");
+			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");
 			return index;
 		}			
 		index++;
@@ -48,6 +48,40 @@ public class EagleEye {
 		return -1;
 	}
 	
+	/**
+	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
+	 * @param file File where the block will be searched
+	 * @param chunkHash Hash computed of a chunk
+	 * @param offset Initial position to search
+	 * @param sizeOfChunk Size of the chunk from which the {@code hash} was computed
+	 * @return index on the {@code file} where the pattern matches. -1 if not found it.
+	 */
+	public static int searchDuplication(byte[] file, int chunkHash, int offset, int sizeOfChunk) {	
+		int index = offset;
+		
+		Checksum32 c32 = new Checksum32();
+		c32.check(file, 0, sizeOfChunk);
+		int hash;
+		
+		hash = c32.getValue();
+		if(chunkHash == hash) {
+			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");
+			return index;
+		}			
+		index++;
+		
+		while(index < file.length - sizeOfChunk) {
+			c32.roll(file[index]);
+			hash = c32.getValue();
+			if(chunkHash == hash) {
+				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
+				return index;
+			}			
+			index++;
+		}
+		System.out.println("-> Pattern not found!");	
+		return -1;
+	}
 	
 	/**
 	 * Try find a data block in {@code file} with same bytes as the {@code chunk}

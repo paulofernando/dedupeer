@@ -14,7 +14,7 @@ import deduplication.utils.FileUtils;
 
 public class Main {
 	
-	private static String defaultPartition = "E"; 
+	private static String defaultPartition = "D"; 
 	
 	public static void main (String[] args) {
 		//System.out.println(Hashing.getSHA1("Testando!".getBytes()));
@@ -99,7 +99,8 @@ public class Main {
 		
 		//----------------------------------------------------------------------------------------------------------------
 		
-		analysis_2();
+		//analysis_2();
+		analysis_3();
 	}
 	
 	private static void analysisBruteForce() {
@@ -167,57 +168,41 @@ public class Main {
 		EagleEye.searchDuplication(flac, chunk);
 	}
 	
-	private static void analysis_3(){
+	/**
+	 * Quebra umarquivo modificado em pedaços e em seguida compara para identificar quando chunks são iguais aos do arquivo original
+	 */
+	private static void analysis_3() {
 		File newFile = new File(defaultPartition + ":\\teste\\matchless_modified.flac");
 		
 		try { Chunking.slicingAndDicing(newFile, new String(defaultPartition + ":\\teste\\chunks\\"), 64000); 
 		} catch (IOException e) { e.printStackTrace(); }
 
-		File file = new File(defaultPartition + ":/teste/matchless.flac");	
-		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
-		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(newFile) + "_chunk.0")).getAbsolutePath());
-		
-		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(newFile) + "_chunk");
-				
 		long time = System.currentTimeMillis();
 		
-		Checksum32 c32 = new Checksum32();
-		c32.check(flac, 0, chunk.length);
-		Integer hash = c32.getValue();
+		File file = new File(defaultPartition + ":/teste/matchless.flac");
+		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
+		int chunkLength = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(newFile) + "_chunk.0")).getAbsolutePath()).length;
 		
-		boolean achou = true;
+		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(newFile) + "_chunk");
+		
 		int count = 0;
-		int index = 0;
-		if(hashes.contains(hash)) {
-			System.out.println("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
-			count++;
-			index += chunk.length;
-		}		
-		
-		
-		while(index < flac.length - chunk.length) {			
-			if(achou) {
-				c32.check(flac, index, chunk.length);
-			} else {			
-				c32.roll((byte)1);
-			}
-			
-			hash = c32.getValue();
-			if(hashes.contains(hash)) {
-				System.out.println("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
-				index += chunk.length;
+		for(int hash: hashes) {
+			if(EagleEye.searchDuplication(flac, hash, 0, chunkLength) != -1) {
 				count++;
-				achou = true;
-				continue;
-			} else {
-				achou = false;
 			}
-			
-			index++;
 		}
 		
-		System.out.println("Processado em " + (System.currentTimeMillis() - time) + " milisegundos");
+		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+		System.out.println(count + " chunks found!");
 
+	}
+	
+	/**
+	 * Criação de uma lista de reconstrução e utilização da meemsa para a obtenção de um arquivo com uma 
+	 * parte adicionado a partir dos chunks do antigo.
+	 */
+	public static void analysis_4() {
+		
 	}
 	
 }
