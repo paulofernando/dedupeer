@@ -15,7 +15,7 @@ import deduplication.utils.FileUtils;
 
 public class Main {
 	
-	private static String defaultPartition = "D"; 
+	private static String defaultPartition = "E"; 
 	private static int chunkSize = 64000;
 	
 	private static File file;
@@ -25,9 +25,12 @@ public class Main {
 		file = new File(defaultPartition + ":/teste/matchless.flac");
 		modifiedFile = new File(defaultPartition + ":\\teste\\matchless_modified.flac");
 		
+		//test1();
+		test2();
+		
 		//analysis_1();
 		//analysis_2();
-		analysis_3();
+		//analysis_3();
 		//analysis_4();
 	}
 	
@@ -35,12 +38,72 @@ public class Main {
 		RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/dedup.txt"), "tando a".getBytes());
 	}
 	
+	
+	/**
+	 * Teste para idetificar se o algoritmo de quebra de chunks está quebrando o arquivo de forma correta.
+	 */
+	private static void test1() {
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());		
+		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.1")).getAbsolutePath());
+		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.2")).getAbsolutePath());
+		
+		if((chunk0[chunk0.length - 1] == chunk1[0]) && (chunk1[chunk1.length - 1] == chunk2[0])) {
+			System.out.println("Probably buggy");
+		} else {
+			System.out.println("Jah reigns!\nchunk0[" + (chunk0.length - 1) + "] == " + chunk0[chunk0.length - 1] + " != " + " chunk1[0] == " + chunk1[0]);
+			System.out.println("chunk1[" + (chunk1.length - 1) + "] == " + chunk1[chunk1.length - 1] + " != " + " chunk2[0] == " + chunk2[0]);
+		}
+	}
+	
+	/**
+	 * Testa se o arquivo está sendo divido corretamente
+	 */	
+	private static void test2() {
+		chunkSize = 4;
+		File txtFile = new File(defaultPartition + ":/teste/lorem.txt");
+		
+		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		String path = defaultPartition + ":\\teste\\chunks\\";
+		String initalNameOfCHunk = FileUtils.getOnlyName(txtFile) + "_chunk";
+				
+		byte[] txtFileBytes = FileUtils.getBytesFromFile(txtFile.getAbsolutePath());
+		
+		int i = 0;
+		boolean equals = true;
+		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
+			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i);
+			
+			String dividedChunk = new String(chunk);
+			String originalChunk = new String(Arrays.copyOfRange(txtFileBytes, i * chunkSize, (i * chunkSize) + chunkSize));
+			if(!dividedChunk.equals(originalChunk))  {
+				equals = false;
+				System.out.println(dividedChunk + " != " + originalChunk);
+			} else {
+				System.out.println(dividedChunk + " == " + originalChunk);
+			}
+			i++;
+		}
+		
+		if(!equals) {
+			System.out.println("Falha na divisão");
+		} else {
+			System.out.println("Divisão correta");
+		}
+		
+		chunkSize = 64000;
+	}
+	
 	/**
 	 * Quebra um arquivo e chunks e verifica se todos esses chunks estão no mesmo arquivo. O número de chunks encontrados
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), 64000); 
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }		
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
@@ -81,7 +144,7 @@ public class Main {
 	private static void analysis_2(){
 		int chunks = 0;
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), 64000); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }	
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -126,9 +189,34 @@ public class Main {
 		ArrayList<Chunk> rebuild = new ArrayList<Chunk>();
 		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }
-				
+		
+		String path = defaultPartition + ":\\teste\\chunks\\";
+		String initalNameOfCHunk = FileUtils.getOnlyName(file) + "_chunk";
+		
 		long time = System.currentTimeMillis();
 		
+		byte[] modFile = FileUtils.getBytesFromFile(modifiedFile.getAbsolutePath());
+		
+		Checksum32 c32 = new Checksum32();
+		int i = 0;
+		int lastIndex = 0;
+		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
+			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i);
+			c32.check(chunk, 0, chunk.length);
+			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunkSize);
+			if(index != -1) {
+				rebuild.add(new Chunk(chunk, index));
+				lastIndex = index;
+			}
+			i++;
+		}
+		
+		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");		
+		
+		i = 0;
+		for(Chunk c: rebuild) {
+			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + chunkSize) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
+		}
 	}
 	
 }
