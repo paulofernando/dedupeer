@@ -27,30 +27,44 @@ public class Chunking {
 	 * Slice a file into pieces
 	 * @param file File to be sliced
 	 * @param destination Destination folder of the chunks
-	 * @param sizeInBytes Amount of bytes for chunk
+	 * @param size Amount of bytes for chunk
 	 */
-	public static int slicingAndDicing(File file, String destination, int sizeInBytes) throws IOException {
+	public static int slicingAndDicing(File file, String destination, int size) throws IOException {
 		FileInputStream is = new FileInputStream(file);
 
-		FileChannel fc = is.getChannel();
+		/*FileChannel fc = is.getChannel();
 		ByteBuffer bb = ByteBuffer.allocate(sizeInBytes);
 
 		int chunkCount = 0;
-		byte[] bytes;
+		byte[] bytes;*/
 		
 		new File(destination).mkdir();
+		int filesize = (int) file.length();
+		
+		FileInputStream fis = new FileInputStream(file.getAbsolutePath()); 
 		
 		System.out.println("Starting the slicing and dicing...");
 		long time = System.currentTimeMillis();
 		String prefix = FileUtils.getOnlyName(file);
-		while (fc.read(bb) >= 0) {
-			bb.flip();
-			bytes = bb.array();
-			storeByteArrayToFile(bytes, destination + prefix + "_chunk" + "." + chunkCount);
-			chunkCount++;
-			bb.clear();
-		}
-		System.out.println(chunkCount + " created of " + (sizeInBytes/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
+		
+		byte[] b = new byte[size];
+	    int ch , chunkCount = 0;
+
+	    while(filesize > 0) {
+		    ch = fis.read(b,0,size);	
+		
+		     filesize = filesize-ch;
+		
+		     String fname = destination + prefix + "_chunk" + "." + chunkCount;
+		     chunkCount++;
+		        
+		     FileOutputStream fos= new FileOutputStream(new File(fname));
+		     fos.write(b,0,ch);
+		     fos.flush();
+		     fos.close();	
+	    }	    	    fis.close();	
+		
+		System.out.println(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return chunkCount;
 	}
 

@@ -43,8 +43,11 @@ public class Main {
 	 * Teste para idetificar se o algoritmo de quebra de chunks está quebrando o arquivo de forma correta.
 	 */
 	private static void test1() {
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
-		} catch (IOException e) { e.printStackTrace(); }
+		try { 
+			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		} catch (IOException e) { 
+			e.printStackTrace(); 
+		}
 		
 		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());		
 		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.1")).getAbsolutePath());
@@ -59,7 +62,7 @@ public class Main {
 	}
 	
 	/**
-	 * Testa se o arquivo está sendo divido corretamente
+	 * Teste para verificar se o arquivo está sendo divido corretamente.
 	 */	
 	private static void test2() {
 		chunkSize = 4;
@@ -73,20 +76,26 @@ public class Main {
 				
 		byte[] txtFileBytes = FileUtils.getBytesFromFile(txtFile.getAbsolutePath());
 		
-		int i = 0;
+		int currentChunk = 0;
 		boolean equals = true;
-		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
-			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i);
-			
+		
+		int lastChunkSize = (int)txtFile.length() % chunkSize;
+		long totalChunks = (long)Math.ceil((double)txtFile.length()/(double)chunkSize);
+		
+		while(currentChunk < totalChunks) {
+			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + currentChunk);
+						
 			String dividedChunk = new String(chunk);
-			String originalChunk = new String(Arrays.copyOfRange(txtFileBytes, i * chunkSize, (i * chunkSize) + chunkSize));
+			String originalChunk = new String(Arrays.copyOfRange(txtFileBytes, currentChunk * chunkSize, 
+					(currentChunk * chunkSize) + (currentChunk == (totalChunks - 1) ? lastChunkSize : chunkSize)));
+			
 			if(!dividedChunk.equals(originalChunk))  {
 				equals = false;
 				System.out.println(dividedChunk + " != " + originalChunk);
 			} else {
 				System.out.println(dividedChunk + " == " + originalChunk);
 			}
-			i++;
+			currentChunk++;
 		}
 		
 		if(!equals) {
