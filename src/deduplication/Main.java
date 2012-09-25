@@ -16,22 +16,25 @@ import deduplication.utils.FileUtils;
 public class Main {
 	
 	private static String defaultPartition = "E"; 
-	private static int chunkSize = 64000;
+	private static int chunkSize = 4;
 	
 	private static File file;
 	private static File modifiedFile;
 	
+	private static String fileName = "lorem.txt";
+	private static String modifiedFileName = "lorem_modified.txt";
+	
 	public static void main (String[] args) {		
-		file = new File(defaultPartition + ":/teste/matchless.flac");
-		modifiedFile = new File(defaultPartition + ":\\teste\\matchless_modified.flac");
+		file = new File(defaultPartition + ":\\teste\\" + fileName);
+		modifiedFile = new File(defaultPartition + ":\\teste\\" + modifiedFileName);
 		
 		//test1();
-		test2();
+		//test2();
 		
 		//analysis_1();
 		//analysis_2();
 		//analysis_3();
-		//analysis_4();
+		analysis_4();
 	}
 	
 	private static void analysisBruteForce() {
@@ -40,7 +43,7 @@ public class Main {
 	
 	
 	/**
-	 * Teste para idetificar se o algoritmo de quebra de chunks está quebrando o arquivo de forma correta.
+	 * Teste para idetificar se o algoritmo de quebra de chunks estão quebrando o arquivo de forma correta.
 	 */
 	private static void test1() {
 		try { 
@@ -62,7 +65,7 @@ public class Main {
 	}
 	
 	/**
-	 * Teste para verificar se o arquivo está sendo divido corretamente.
+	 * Teste para verificar se o arquivo estão sendo divido corretamente.
 	 */	
 	private static void test2() {
 		chunkSize = 4;
@@ -108,7 +111,7 @@ public class Main {
 	}
 	
 	/**
-	 * Quebra um arquivo e chunks e verifica se todos esses chunks estão no mesmo arquivo. O número de chunks encontrados
+	 * Quebra um arquivo e chunks e verifica se todos esses chunks estï¿½o no mesmo arquivo. O número de chunks encontrados
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
@@ -165,7 +168,7 @@ public class Main {
 	}
 	
 	/**
-	 * Quebra umarquivo modificado em pedaços e em seguida compara para identificar quando chunks são iguais aos do arquivo original
+	 * Quebra um arquivo modificado em pedaços e em seguida compara para identificar quando chunks são iguais aos do arquivo original
 	 */
 	private static void analysis_3() {
 		try { Chunking.slicingAndDicing(modifiedFile, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
@@ -179,9 +182,12 @@ public class Main {
 		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(modifiedFile) + "_chunk");
 		
 		int count = 0;
+		int lastIndex = 0;
 		for(int hash: hashes) {
-			if(EagleEye.searchDuplication(flac, hash, 0, chunkSize) != -1) {
+			int index = EagleEye.searchDuplication(flac, hash, lastIndex, chunkSize);
+			if(index != -1) {
 				count++;
+				lastIndex = index;
 			}
 		}
 		
@@ -200,7 +206,7 @@ public class Main {
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
-		String initalNameOfCHunk = FileUtils.getOnlyName(file) + "_chunk";
+		String initalNameOfChunk = FileUtils.getOnlyName(file) + "_chunk";
 		
 		long time = System.currentTimeMillis();
 		
@@ -209,8 +215,8 @@ public class Main {
 		Checksum32 c32 = new Checksum32();
 		int i = 0;
 		int lastIndex = 0;
-		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
-			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i);
+		while((new File(path + initalNameOfChunk + "." + i)).exists()) {
+			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfChunk + "." + i);
 			c32.check(chunk, 0, chunk.length);
 			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunkSize);
 			if(index != -1) {
@@ -224,7 +230,7 @@ public class Main {
 		
 		i = 0;
 		for(Chunk c: rebuild) {
-			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + chunkSize) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
+			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + chunkSize - 1) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
 		}
 	}
 	

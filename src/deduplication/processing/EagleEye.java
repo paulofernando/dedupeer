@@ -60,12 +60,12 @@ public class EagleEye {
 		int index = offset;
 		
 		Checksum32 c32 = new Checksum32();
-		c32.check(file, 0, sizeOfChunk);
+		c32.check(file, offset, sizeOfChunk);
 		int hash;
 		
 		hash = c32.getValue();
-		if(chunkHash == hash) {
-			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "] * ... {firt byte = " + file[index] + "} and {last byte = " + file[index + sizeOfChunk] + "}");
+		if(chunkHash == hash) {			
+			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "] *");
 			return index;
 		}			
 		index++;
@@ -74,7 +74,8 @@ public class EagleEye {
 			c32.roll(file[index]);
 			hash = c32.getValue();
 			if(chunkHash == hash) {
-				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "] ... {firt byte = " + file[index] + "} and {last byte = " + file[index + sizeOfChunk] + "}");				
+				index -= (sizeOfChunk - 1); //the index informed to roll() is the index of the last byte
+				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
 				return index;
 			}			
 			index++;
