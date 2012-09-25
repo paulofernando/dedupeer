@@ -16,7 +16,7 @@ import deduplication.utils.FileUtils;
 public class Main {
 	
 	private static String defaultPartition = "E"; 
-	private static int chunkSize = 4;
+	private static int defaultChunkSize = 4;
 	
 	private static File file;
 	private static File modifiedFile;
@@ -47,7 +47,7 @@ public class Main {
 	 */
 	private static void test1() {
 		try { 
-			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
@@ -68,10 +68,10 @@ public class Main {
 	 * Teste para verificar se o arquivo estão sendo divido corretamente.
 	 */	
 	private static void test2() {
-		chunkSize = 4;
+		defaultChunkSize = 4;
 		File txtFile = new File(defaultPartition + ":/teste/lorem.txt");
 		
-		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
@@ -82,15 +82,15 @@ public class Main {
 		int currentChunk = 0;
 		boolean equals = true;
 		
-		int lastChunkSize = (int)txtFile.length() % chunkSize;
-		long totalChunks = (long)Math.ceil((double)txtFile.length()/(double)chunkSize);
+		int lastChunkSize = (int)txtFile.length() % defaultChunkSize;
+		long totalChunks = (long)Math.ceil((double)txtFile.length()/(double)defaultChunkSize);
 		
 		while(currentChunk < totalChunks) {
 			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + currentChunk);
 						
 			String dividedChunk = new String(chunk);
-			String originalChunk = new String(Arrays.copyOfRange(txtFileBytes, currentChunk * chunkSize, 
-					(currentChunk * chunkSize) + (currentChunk == (totalChunks - 1) ? lastChunkSize : chunkSize)));
+			String originalChunk = new String(Arrays.copyOfRange(txtFileBytes, currentChunk * defaultChunkSize, 
+					(currentChunk * defaultChunkSize) + (currentChunk == (totalChunks - 1) ? lastChunkSize : defaultChunkSize)));
 			
 			if(!dividedChunk.equals(originalChunk))  {
 				equals = false;
@@ -107,7 +107,7 @@ public class Main {
 			System.out.println("Divisão correta");
 		}
 		
-		chunkSize = 64000;
+		defaultChunkSize = 64000;
 	}
 	
 	/**
@@ -115,7 +115,7 @@ public class Main {
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }		
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
@@ -156,7 +156,7 @@ public class Main {
 	private static void analysis_2(){
 		int chunks = 0;
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }	
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -171,7 +171,7 @@ public class Main {
 	 * Quebra um arquivo modificado em pedaços e em seguida compara para identificar quando chunks são iguais aos do arquivo original
 	 */
 	private static void analysis_3() {
-		try { Chunking.slicingAndDicing(modifiedFile, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		try { Chunking.slicingAndDicing(modifiedFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }
 
 		long time = System.currentTimeMillis();
@@ -184,7 +184,7 @@ public class Main {
 		int count = 0;
 		int lastIndex = 0;
 		for(int hash: hashes) {
-			int index = EagleEye.searchDuplication(flac, hash, lastIndex, chunkSize);
+			int index = EagleEye.searchDuplication(flac, hash, lastIndex, defaultChunkSize);
 			if(index != -1) {
 				count++;
 				lastIndex = index;
@@ -202,7 +202,7 @@ public class Main {
 	 */
 	public static void analysis_4() {
 		ArrayList<Chunk> rebuild = new ArrayList<Chunk>();
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), chunkSize); 
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
@@ -217,8 +217,17 @@ public class Main {
 		int lastIndex = 0;
 		while((new File(path + initalNameOfChunk + "." + i)).exists()) {
 			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfChunk + "." + i);
+			
+			String c = "[ ";
+			for(byte b: chunk) {
+				c += b + ", ";
+			}
+			c = c.substring(0, c.length() - 2) + "]";
+			
+			System.out.println("\nSearching for " + c);
+			
 			c32.check(chunk, 0, chunk.length);
-			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunkSize);
+			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
 			if(index != -1) {
 				rebuild.add(new Chunk(chunk, index));
 				lastIndex = index;
@@ -226,11 +235,11 @@ public class Main {
 			i++;
 		}
 		
-		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");		
+		System.out.println("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
 		
 		i = 0;
 		for(Chunk c: rebuild) {
-			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + chunkSize - 1) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
+			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + defaultChunkSize - 1) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
 		}
 	}
 	
