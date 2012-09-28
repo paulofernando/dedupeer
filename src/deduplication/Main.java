@@ -243,6 +243,7 @@ public class Main {
 			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + defaultChunkSize - 1) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
 		}
 		
+		System.out.println("\nRebuild the new file with chunks of the old file...");
 		byte[] rebuildFile = new byte[modFile.length];		
 		for(int j = 0; j < rebuildFile.length;) {
 			if(rebuild.containsKey(j)) {
