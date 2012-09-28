@@ -141,7 +141,7 @@ public class Chunking {
 	 * @param aInput Chunks to write in a file
 	 * @param newFile Name of the file to create
 	 */
-	private static void write(Vector<byte[]> aInput, String newFile) {	    
+	public static void write(Vector<byte[]> aInput, String newFile) {	    
 	    try {
 	      OutputStream output = null;
 	      try {

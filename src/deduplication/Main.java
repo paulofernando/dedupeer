@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Random;
 
 import deduplication.checksum.rsync.Checksum32;
@@ -201,7 +202,7 @@ public class Main {
 	 * parte adicionado a partir dos chunks do antigo.
 	 */
 	public static void analysis_4() {
-		ArrayList<Chunk> rebuild = new ArrayList<Chunk>();
+		HashMap<Integer, Chunk> rebuild = new HashMap<Integer, Chunk>();
 		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
@@ -229,7 +230,7 @@ public class Main {
 			c32.check(chunk, 0, chunk.length);
 			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
 			if(index != -1) {
-				rebuild.add(new Chunk(chunk, index));
+				rebuild.put(index, new Chunk(chunk, index));
 				lastIndex = index;
 			}
 			i++;
@@ -238,9 +239,28 @@ public class Main {
 		System.out.println("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
 		
 		i = 0;
-		for(Chunk c: rebuild) {
+		for(Chunk c: rebuild.values()) {
 			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + defaultChunkSize - 1) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
 		}
+		
+		byte[] rebuildFile = new byte[modFile.length];		
+		for(int j = 0; j < rebuildFile.length;) {
+			if(rebuild.containsKey(j)) {
+				for(int b = j; b - j < rebuild.get(j).getData().length; b++) {
+					rebuildFile[b] = rebuild.get(j).getData()[b - j];
+				}
+				j += rebuild.get(j).getLenght();
+			} else {
+				rebuildFile[j] = modFile[j];
+				j++;
+			}
+		}
+		
+		System.out.print("[");
+		for(byte b: rebuildFile) {
+			System.out.print(b + ", ");
+		}
+		System.out.print("]");
 	}
 	
 }
