@@ -16,7 +16,7 @@ import deduplication.utils.FileUtils;
 
 public class Main {
 	
-	private static String defaultPartition = "E"; 
+	private static String defaultPartition = "D"; 
 	private static int defaultChunkSize = 4;
 	
 	private static File file;
@@ -203,8 +203,11 @@ public class Main {
 	 */
 	public static void analysis_4() {
 		HashMap<Integer, Chunk> rebuild = new HashMap<Integer, Chunk>();
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
-		} catch (IOException e) { e.printStackTrace(); }
+		try { 
+			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
+		} catch (IOException e) { 
+			e.printStackTrace(); 
+		}
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
 		String initalNameOfChunk = FileUtils.getOnlyName(file) + "_chunk";
@@ -230,7 +233,9 @@ public class Main {
 			c32.check(chunk, 0, chunk.length);
 			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
 			if(index != -1) {
-				rebuild.put(index, new Chunk(chunk, index));
+				rebuild.put(index, new Chunk(index, chunk.length, 
+						(i * chunk.length)//position in the remote file TODO put this data in a database
+						));
 				lastIndex = index;
 			}
 			i++;
@@ -238,19 +243,20 @@ public class Main {
 		
 		System.out.println("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
 		
-		i = 0;
+		System.out.println("Rebuild:");
 		for(Chunk c: rebuild.values()) {
-			System.out.println("Chunk " + (i++) + " = [" + c.getOffset() + " -> " + (c.getOffset() + defaultChunkSize - 1) + "] " + "| [" + (c.getData()[0]) + " -> " + (c.getData()[c.getLenght() - 1]) + "]");		
+			System.out.println(c.getOffset() + " -> " + (c.getOffset() + c.getLength()) + " with index in remote file = " + c.getIndexInRemoteFile());
 		}
 		
-		System.out.println("\nRebuild the new file with chunks of the old file...");
+		System.out.println("\nRebuilding the new file with chunks of the old file...");
 		byte[] rebuildFile = new byte[modFile.length];		
 		for(int j = 0; j < rebuildFile.length;) {
 			if(rebuild.containsKey(j)) {
-				for(int b = j; b - j < rebuild.get(j).getData().length; b++) {
-					rebuildFile[b] = rebuild.get(j).getData()[b - j];
+				byte[] oldChunk = FileUtils.getBytesFromFile(path + initalNameOfChunk + "." + (rebuild.get(j).getIndexInRemoteFile()/defaultChunkSize));
+				for(int b = j; b - j < oldChunk.length; b++) {
+					rebuildFile[b] = oldChunk[b - j];
 				}
-				j += rebuild.get(j).getLenght();
+				j += rebuild.get(j).getLength();
 			} else {
 				rebuildFile[j] = modFile[j];
 				j++;
@@ -259,7 +265,7 @@ public class Main {
 		
 		System.out.print("[");
 		for(byte b: rebuildFile) {
-			System.out.print(b + ", ");
+			System.out.print(b + " ");
 		}
 		System.out.print("]");
 	}

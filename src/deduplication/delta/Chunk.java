@@ -1,11 +1,8 @@
 package deduplication.delta;
 
-public class Chunk implements Delta {
+import java.io.File;
 
-	/**
-	 * The bytes of the chunk
-	 */
-	private byte[] dataBlock;
+public class Chunk implements Delta {
 	
 	/**
 	 * The initial position of the data block in the file
@@ -13,17 +10,26 @@ public class Chunk implements Delta {
 	private int offset;
 	
 	/**
-	 * Creates a new instance of a chunk
-	 * @param data The bytes of the chunk
-	 * @param offset The initial position of the data block in the file
+	 * Index in the remote file that the data matches with the data in current file
 	 */
-	public Chunk(byte[] data, int offset) {
-		this.offset = offset;
-		this.dataBlock = data.clone();
-	}
+	private int indexInRemoteFile;
 	
-	public byte[] getData() {
-		return dataBlock;
+	
+	/**
+	 * Size of data block
+	 */
+	private int length;
+	
+	/**
+	 * Creates a new instance of a chunk
+	 * @param offset The initial position of the data block in the file
+	 * @param length Size of data block
+	 * @param indexInRemoteFile Index in the remote file that the data matches with the data in current file
+	 */
+	public Chunk(int offset, int length, int indexInRemoteFile) {
+		this.offset = offset;
+		this.indexInRemoteFile = indexInRemoteFile;
+		this.length = length;
 	}
 	
 	@Override
@@ -32,8 +38,14 @@ public class Chunk implements Delta {
 	}
 
 	@Override
-	public int getLenght() {		
-		return (dataBlock != null) ? dataBlock.length : 0;
+	public int getLength() {		
+		return length;
 	}
 
+	@Override
+	public int getIndexInRemoteFile() {
+		return indexInRemoteFile;
+	}
+
+	
 }

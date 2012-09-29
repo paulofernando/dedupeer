@@ -12,6 +12,11 @@ public interface Delta {
 	 * The size of block
 	 * @return The size of block
 	 */
-	public int getLenght();
+	public int getLength();
 
+	/**
+	 * Retrieves the initial index in the byte array of the remote file where the data match
+	 */
+	public int getIndexInRemoteFile();
+	
 }
