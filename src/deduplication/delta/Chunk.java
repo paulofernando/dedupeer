@@ -31,21 +31,17 @@ public class Chunk implements Delta {
 		this.indexInRemoteFile = indexInRemoteFile;
 		this.length = length;
 	}
-	
-	@Override
+
 	public int getOffset() {
 		return offset;
 	}
 
-	@Override
 	public int getLength() {		
 		return length;
 	}
 
-	@Override
 	public int getIndexInRemoteFile() {
 		return indexInRemoteFile;
 	}
-
 	
 }
