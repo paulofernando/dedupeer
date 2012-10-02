@@ -1,6 +1,5 @@
 package deduplication.delta;
 
-import java.io.File;
 
 public class Chunk implements Delta {
 	

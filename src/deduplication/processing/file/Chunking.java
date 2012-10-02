@@ -7,18 +7,19 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Vector;
 
 import org.apache.log4j.Logger;
 
-import deduplication.checksum.RollingChecksumOlder;
 import deduplication.checksum.rsync.Checksum32;
 import deduplication.utils.FileUtils;
 
+/**
+ * Utility class for operations with chunks
+ * @author Paulo Fernando
+ *
+ */
 public class Chunking {
 	
 	private static final Logger log = Logger.getLogger(Chunking.class);
@@ -30,20 +31,12 @@ public class Chunking {
 	 * @param size Amount of bytes for chunk
 	 */
 	public static int slicingAndDicing(File file, String destination, int size) throws IOException {
-		FileInputStream is = new FileInputStream(file);
-
-		/*FileChannel fc = is.getChannel();
-		ByteBuffer bb = ByteBuffer.allocate(sizeInBytes);
-
-		int chunkCount = 0;
-		byte[] bytes;*/
-		
 		new File(destination).mkdir();
 		int filesize = (int) file.length();
 		
 		FileInputStream fis = new FileInputStream(file.getAbsolutePath()); 
 		
-		System.out.println("Starting the slicing and dicing...");
+		log.debug("Starting the slicing and dicing...");
 		long time = System.currentTimeMillis();
 		String prefix = FileUtils.getOnlyName(file);
 		
@@ -64,21 +57,10 @@ public class Chunking {
 		     fos.close();	
 	    }	    	    fis.close();	
 		
-		System.out.println(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return chunkCount;
 	}
 
-	private static void storeByteArrayToFile(byte[] bytesToSave, String path) throws IOException {
-		FileOutputStream fOut = new FileOutputStream(path);
-		try {
-			fOut.write(bytesToSave);
-		} catch (Exception ex) {
-			log.error("ERROR " + ex.getMessage());
-		} finally {
-			fOut.close();
-		}
-	}
-	
 	/**
 	 * Retrieves the chunks of the file system and stores them in a vector of bytes
 	 * @param path Path of the folder with the chunks
@@ -93,7 +75,7 @@ public class Chunking {
 			i++;
 		}
 		
-		System.out.println(chunks.size() + " chunks restored");
+		log.debug(chunks.size() + " chunks restored");
 		new File(to.substring(0, to.lastIndexOf("\\"))).mkdir();
 		write(chunks, to);
 	}
@@ -103,25 +85,11 @@ public class Chunking {
 	 * @param path Directory where the chunks are
 	 * @param initalNameOfCHunk Initial name of the chunks
 	 * @return Collection of hashes
-	 */
-	/*public static ArrayList<Long> computeHashes(String path, String initalNameOfCHunk) {
-		ArrayList<Long> hashes = new ArrayList<Long>();
-		
-		System.out.println("Computing hashes...");
-		long time = System.currentTimeMillis();
-		
-		int i = 0;
-		while((new File(path + initalNameOfCHunk + "." + i)).exists()) {
-			hashes.add(RollingChecksumOlder.sum(FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + i)));
-			i++;
-		}
-		System.out.println("Computed hashes of " + i + " chunks in " + (System.currentTimeMillis() - time) + " miliseconds");
-		return hashes;
-	}*/
+	 */	
 	public static ArrayList<Integer> computeHashes(String path, String initalNameOfCHunk) {
 		ArrayList<Integer> hashes = new ArrayList<Integer>();
 		
-		System.out.println("Computing hashes...");
+		log.debug("Computing hashes...");
 		long time = System.currentTimeMillis();
 		
 		Checksum32 c32 = new Checksum32();
@@ -132,7 +100,7 @@ public class Chunking {
 			hashes.add(c32.getValue());
 			i++;
 		}
-		System.out.println("Computed hashes of " + i + " chunks in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.debug("Computed hashes of " + i + " chunks in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return hashes;
 	}
 	
@@ -155,10 +123,10 @@ public class Chunking {
 	      }
 	    }
 	    catch(FileNotFoundException ex){
-	      System.out.println("File not found.");
+	    	log.error("File not found.");
 	    }
 	    catch(IOException ex){
-	    	System.out.println(ex);
+	    	log.error(ex);
 	    }
 	  }
 }
