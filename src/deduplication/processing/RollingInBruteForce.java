@@ -3,7 +3,7 @@ package deduplication.processing;
 import java.util.HashSet;
 
 import deduplication.checksum.Hashing;
-import deduplication.checksum.RollingAlder32;
+import deduplication.checksum.RollingAdler32;
 
 /**
  * Responsible to identify a specific chunk into the block of data using brute force
@@ -24,7 +24,7 @@ public class RollingInBruteForce {
 			return;
 		}
 		
-		HashSet<Long> rollingHashes = RollingAlder32.rollingIn(block, 0, chunk.length);
+		HashSet<Long> rollingHashes = RollingAdler32.rollingIn(block, 0, chunk.length);
 		long chunkHash = Hashing.getAlder32(chunk);
 					
 		System.out.println("--------- \nChunk: " + (new String(chunk)) + "\nHash: " + chunkHash);

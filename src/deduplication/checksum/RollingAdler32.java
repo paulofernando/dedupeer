@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
-public class RollingAlder32 {
+public class RollingAdler32 {
 	
 	/**
 	 * Rolling checksum with Alder32 algorithm
