@@ -1,0 +1,18 @@
+drop keyspace Dedupeer;
+create keyspace Dedupeer
+    with strategy_options = {replication_factor:1}
+    and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy';
+
+use Dedupeer;
+drop column family Chunk;
+create column family Chunk
+    with comparator = UTF8Type
+    and default_validation_class = 'UTF8Type'
+    and key_validation_class = 'UTF8Type';
+
+drop column family UserFiles;
+create column family UserFiles 
+    with column_type='Super'
+    and comparator = UTF8Type
+    and default_validation_class = 'UTF8Type'
+    and key_validation_class = 'UTF8Type';
