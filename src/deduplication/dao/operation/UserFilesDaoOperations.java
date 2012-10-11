@@ -15,11 +15,19 @@ import me.prettyprint.hector.api.query.SuperColumnQuery;
 import org.apache.log4j.Logger;
 
 public class UserFilesDaoOperations {
-	private static final Logger log = Logger.getLogger(UserFilesDaoOperations.class);	
+	
+	private static final Logger log = Logger.getLogger(UserFilesDaoOperations.class);
+	
 	private Cluster cluster;
-	private static StringSerializer stringSerializer = StringSerializer.get();
 	private Keyspace keyspaceOperator;
 	
+	private static StringSerializer stringSerializer = StringSerializer.get();	
+	
+	/**
+	 * Creates an object to manipulate the operations on the UserFiles SuperColumn Family
+	 * @param clusterName The cluster name from instance of Cassandra
+	 * @param keyspaceName The Keyspace name where the UserFiles SuperColumn Family was created 
+	 */
 	public UserFilesDaoOperations (String clusterName, String keyspaceName) {
 		cluster = HFactory.getOrCreateCluster("TestCluster", "localhost:9160");
 		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
@@ -39,10 +47,10 @@ public class UserFilesDaoOperations {
                     stringSerializer, stringSerializer, stringSerializer));
             mutator.insert(key, "UserFiles", HFactory.createSuperColumn(fileName, 
                     Arrays.asList(HFactory.createStringColumn("version", version)), 
-                    stringSerializer, stringSerializer, stringSerializer));
-            
+                    stringSerializer, stringSerializer, stringSerializer));            
         } catch (HectorException e) {
-            e.printStackTrace();
+            log.error("Data was not inserted");
+        	e.printStackTrace();
         }        
 	}
 	
@@ -54,7 +62,7 @@ public class UserFilesDaoOperations {
         superColumnQuery.setColumnFamily("UserFiles").setKey(key).setSuperName(fileName);
         QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();
 
-        System.out.println("Read HSuperColumn from cassandra: " + result.get());        
+        log.info("Read HSuperColumn from cassandra: " + result.get());        
         return result;
 	}
 	
@@ -63,10 +71,5 @@ public class UserFilesDaoOperations {
 	 */
 	public void close() {
 		cluster.getConnectionManager().shutdown();
-	}
-	
-	public static void main(String[] args) {				
-		UserFilesDaoOperations cdh = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		cdh.insertRow("paulofernando", "lorem.txt", "123", "128000", "2");
 	}
 }
