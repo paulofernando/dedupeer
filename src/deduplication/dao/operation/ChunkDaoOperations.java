@@ -45,13 +45,16 @@ public class ChunkDaoOperations {
         }        
 	}
 	
+	/**
+	 * Retrieves the Column with the key and the column name specified
+	 * @param key The line key
+	 * @param columnName The column name to get the value
+	 * @return The Column with the parameters specified
+	 */
 	public QueryResult<HColumn<String, String>> getValues(String key, String columnName) {
 		 ColumnQuery<String, String, String> columnQuery = HFactory.createStringColumnQuery(keyspaceOperator);
          columnQuery.setColumnFamily("Chunk").setKey(key).setName(columnName);
          QueryResult<HColumn<String, String>> result = columnQuery.execute();
-         
-         log.info("Read HColumn from cassandra: " + result.get());
-         
          return result;
 	}
 	

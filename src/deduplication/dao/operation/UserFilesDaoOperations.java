@@ -54,15 +54,19 @@ public class UserFilesDaoOperations {
         }        
 	}
 	
+	/**
+	 * Retrieves the Super Column with the key and the column specified
+	 * @param key The line key
+	 * @param fileName The filename that is a column name of the SuperColumn
+	 * @return The SuperColumns with the parametres specified
+	 */
 	public QueryResult<HSuperColumn<String, String, String>> getValues(String key, String fileName) {
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
             HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
                     stringSerializer, stringSerializer);
 		
         superColumnQuery.setColumnFamily("UserFiles").setKey(key).setSuperName(fileName);
-        QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();
-
-        log.info("Read HSuperColumn from cassandra: " + result.get());        
+        QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();    
         return result;
 	}
 	
