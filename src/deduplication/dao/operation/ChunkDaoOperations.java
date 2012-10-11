@@ -2,25 +2,26 @@ package deduplication.dao.operation;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
+import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.ColumnQuery;
+import me.prettyprint.hector.api.query.QueryResult;
 
 import org.apache.log4j.Logger;
 
-import deduplication.dao.DaoUtils;
-
-public class ChunkDaoHector {
+public class ChunkDaoOperations {
 	
-	private static final Logger log = Logger.getLogger(ChunkDaoHector.class);	
+	private static final Logger log = Logger.getLogger(ChunkDaoOperations.class);	
 	private Cluster cluster;
 	
-	private String clusterName, keyspaceName;
+	private Keyspace keyspaceOperator;
 	
-	public ChunkDaoHector (String clusterName, String keyspaceName) {
-		this.clusterName = clusterName;
-		this.keyspaceName = keyspaceName;
+	public ChunkDaoOperations (String clusterName, String keyspaceName) {
 		cluster = HFactory.getOrCreateCluster(clusterName, "localhost:9160");
+		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
 	}
 	
 	/**
@@ -28,7 +29,7 @@ public class ChunkDaoHector {
 	 */
 	public void insertRow(String key, String adler32, String fileID, String index, String length) {		
 		try {
-            Mutator<String> mutator = HFactory.createMutator(HFactory.createKeyspace(keyspaceName, cluster), StringSerializer.get());
+            Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, StringSerializer.get());
             mutator.insert(key, "Chunk", HFactory.createStringColumn("adler32", adler32));
             mutator.insert(key, "Chunk", HFactory.createStringColumn("file_id", fileID));
             mutator.insert(key, "Chunk", HFactory.createStringColumn("index", index));
@@ -36,6 +37,16 @@ public class ChunkDaoHector {
         } catch (HectorException e) {
             e.printStackTrace();
         }        
+	}
+	
+	public QueryResult<HColumn<String, String>> getValues(String key, String columnName) {
+		 ColumnQuery<String, String, String> columnQuery = HFactory.createStringColumnQuery(keyspaceOperator);
+         columnQuery.setColumnFamily("Chunk").setKey(key).setName(columnName);
+         QueryResult<HColumn<String, String>> result = columnQuery.execute();
+         
+         System.out.println("Read HColumn from cassandra: " + result.get());
+         
+         return result;
 	}
 	
 	/**
@@ -46,7 +57,7 @@ public class ChunkDaoHector {
 	}
 	
 	public static void main(String[] args) {				
-		ChunkDaoHector cdh = new ChunkDaoHector("TestCluster", "Dedupeer");
+		ChunkDaoOperations cdh = new ChunkDaoOperations("TestCluster", "Dedupeer");
 		cdh.insertRow("ae25d454ff1d414", "45131541631315", "152", "0", "64000");
 	}
 }
