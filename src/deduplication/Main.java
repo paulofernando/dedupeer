@@ -7,7 +7,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
+
 import deduplication.checksum.rsync.Checksum32;
+import deduplication.dao.ChunkDao;
+import deduplication.dao.operation.ChunkDaoOperations;
 import deduplication.delta.Chunk;
 import deduplication.processing.EagleEye;
 import deduplication.processing.RollingInBruteForce;
@@ -16,7 +20,9 @@ import deduplication.utils.FileUtils;
 
 public class Main {
 	
-	private static String defaultPartition = "D"; 
+	private static final Logger log = Logger.getLogger(Main.class);
+	
+	private static String defaultPartition = "E"; 
 	private static int defaultChunkSize = 4;
 	
 	private static File file;
@@ -35,7 +41,8 @@ public class Main {
 		//analysis_1();
 		//analysis_2();
 		//analysis_3();
-		analysis_4();
+		//analysis_4();
+		analysis_5();
 	}
 	
 	private static void analysisBruteForce() {
@@ -58,10 +65,10 @@ public class Main {
 		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.2")).getAbsolutePath());
 		
 		if((chunk0[chunk0.length - 1] == chunk1[0]) && (chunk1[chunk1.length - 1] == chunk2[0])) {
-			System.out.println("Probably buggy");
+			log.info("Probably buggy");
 		} else {
-			System.out.println("Jah reigns!\nchunk0[" + (chunk0.length - 1) + "] == " + chunk0[chunk0.length - 1] + " != " + " chunk1[0] == " + chunk1[0]);
-			System.out.println("chunk1[" + (chunk1.length - 1) + "] == " + chunk1[chunk1.length - 1] + " != " + " chunk2[0] == " + chunk2[0]);
+			log.info("Jah reigns!\nchunk0[" + (chunk0.length - 1) + "] == " + chunk0[chunk0.length - 1] + " != " + " chunk1[0] == " + chunk1[0]);
+			log.info("chunk1[" + (chunk1.length - 1) + "] == " + chunk1[chunk1.length - 1] + " != " + " chunk2[0] == " + chunk2[0]);
 		}
 	}
 	
@@ -95,24 +102,24 @@ public class Main {
 			
 			if(!dividedChunk.equals(originalChunk))  {
 				equals = false;
-				System.out.println(dividedChunk + " != " + originalChunk);
+				log.info(dividedChunk + " != " + originalChunk);
 			} else {
-				System.out.println(dividedChunk + " == " + originalChunk);
+				log.info(dividedChunk + " == " + originalChunk);
 			}
 			currentChunk++;
 		}
 		
 		if(!equals) {
-			System.out.println("Falha na divisão");
+			log.info("Falha na divisão");
 		} else {
-			System.out.println("Divisão correta");
+			log.info("Divisão correta");
 		}
 		
 		defaultChunkSize = 64000;
 	}
 	
 	/**
-	 * Quebra um arquivo e chunks e verifica se todos esses chunks estï¿½o no mesmo arquivo. O número de chunks encontrados
+	 * Quebra um arquivo e chunks e verifica se todos esses chunks estão no mesmo arquivo. O número de chunks encontrados
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
@@ -139,7 +146,7 @@ public class Main {
 			
 			hash = c32.getValue();
 			if(hashes.contains(hash)) {
-				System.out.println("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
+				log.info("Achou " + hash + " [count = " + count + "] e [index = " + index + "]");
 				index += chunk.length;
 				count++;
 				continue;
@@ -148,7 +155,7 @@ public class Main {
 			index++;
 		}
 		
-		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
 	}
 	
 	/**
@@ -157,14 +164,14 @@ public class Main {
 	private static void analysis_2(){
 		int chunks = 0;
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize).size(); 
 		} catch (IOException e) { e.printStackTrace(); }	
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
 		int random = (new Random()).nextInt(chunks - 1);
 		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk." + random)).getAbsolutePath());
 
-		System.out.println("Searching for chunk " + random);
+		log.info("Searching for chunk " + random);
 		EagleEye.searchDuplication(flac, chunk);
 	}
 	
@@ -192,8 +199,8 @@ public class Main {
 			}
 		}
 		
-		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
-		System.out.println(count + " chunks found!");
+		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.info(count + " chunks found!");
 
 	}
 	
@@ -228,7 +235,7 @@ public class Main {
 			}
 			c = c.substring(0, c.length() - 2) + "]";
 			
-			System.out.println("\nSearching for " + c);
+			log.info("\nSearching for " + c);
 			
 			c32.check(chunk, 0, chunk.length);
 			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
@@ -241,14 +248,14 @@ public class Main {
 			i++;
 		}
 		
-		System.out.println("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
+		log.info("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
 		
-		System.out.println("Rebuild:");
+		log.info("Rebuild:");
 		for(Chunk c: rebuild.values()) {
-			System.out.println(c.getOffset() + " -> " + (c.getOffset() + c.getLength()) + " with index in remote file = " + c.getIndexInRemoteFile());
+			log.info(c.getOffset() + " -> " + (c.getOffset() + c.getLength()) + " with index in remote file = " + c.getIndexInRemoteFile());
 		}
 		
-		System.out.println("\nRebuilding the new file with chunks of the old file...");
+		log.info("\nRebuilding the new file with chunks of the old file...");
 		byte[] rebuildFile = new byte[modFile.length];		
 		for(int j = 0; j < rebuildFile.length;) {
 			if(rebuild.containsKey(j)) {
@@ -268,6 +275,25 @@ public class Main {
 			System.out.print(b + " ");
 		}
 		System.out.print("]");
+	}
+	
+	/**
+	 * Quebra um arquivo e salva as informações de chunk no Cassandra
+	 */
+	public static void analysis_5() {
+		
+		long time = System.currentTimeMillis();
+		ArrayList<ChunkDao> chunks = new ArrayList<ChunkDao>();
+		try { 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
+		} catch (IOException e) { 
+			e.printStackTrace(); 
+		}
+		
+		ChunkDaoOperations cdo = new ChunkDaoOperations("TestCluster", "Dedupeer");
+		cdo.insertRows(chunks);
+		
+		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
 	}
 	
 }

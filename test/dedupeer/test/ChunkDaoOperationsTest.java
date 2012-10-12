@@ -12,7 +12,6 @@ public class ChunkDaoOperationsTest extends TestCase {
 	
 	public void testGetValues() {
 		ChunkDaoOperations cdh = new ChunkDaoOperations("TestCluster", "Dedupeer");
-		cdh.insertRow(key, adler32, file_id, index, length);
 		assertTrue(adler32.equals(cdh.getValues("ae25d454ff1d414", "adler32").get().getValue()));
 		assertTrue(file_id.equals(cdh.getValues("ae25d454ff1d414", "file_id").get().getValue()));
 		assertTrue(index.equals(cdh.getValues("ae25d454ff1d414", "index").get().getValue()));

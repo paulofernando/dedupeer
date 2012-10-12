@@ -1,5 +1,7 @@
 package deduplication.dao.operation;
 
+import java.util.ArrayList;
+
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
@@ -11,6 +13,8 @@ import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 
 import org.apache.log4j.Logger;
+
+import deduplication.dao.ChunkDao;
 
 public class ChunkDaoOperations {
 	
@@ -43,6 +47,24 @@ public class ChunkDaoOperations {
         	log.error("Data was not inserted");
             e.printStackTrace();
         }        
+	}
+	
+	/**
+	 * Inserts a collection of chunks on the Chunk Column Family
+	 */
+	public void insertRows(ArrayList<ChunkDao> chunks) {
+		for(ChunkDao c: chunks) {
+			try {
+	            Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, StringSerializer.get());
+	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("adler32", c.adler32));
+	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("file_id", c.fileID));
+	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("index", c.index));
+	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("length", c.length));
+	        } catch (HectorException e) {
+	        	log.error("Data was not inserted");
+	            e.printStackTrace();
+	        }
+		}
 	}
 	
 	/**

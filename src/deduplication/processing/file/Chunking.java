@@ -7,12 +7,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import deduplication.checksum.rsync.Checksum32;
+import deduplication.dao.ChunkDao;
 import deduplication.utils.FileUtils;
 
 /**
@@ -30,7 +33,9 @@ public class Chunking {
 	 * @param destination Destination folder of the chunks
 	 * @param size Amount of bytes for chunk
 	 */
-	public static int slicingAndDicing(File file, String destination, int size) throws IOException {
+	public static ArrayList<ChunkDao> slicingAndDicing(File file, String destination, int size) throws IOException {
+		ArrayList<ChunkDao> chunks = new ArrayList<ChunkDao>();
+		
 		new File(destination).mkdir();
 		int filesize = (int) file.length();
 		
@@ -43,6 +48,8 @@ public class Chunking {
 		byte[] b = new byte[size];
 	    int ch , chunkCount = 0;
 
+	    Checksum32 c32 = new Checksum32();
+	    
 	    while(filesize > 0) {
 		    ch = fis.read(b,0,size);	
 		
@@ -54,11 +61,14 @@ public class Chunking {
 		     FileOutputStream fos= new FileOutputStream(new File(fname));
 		     fos.write(b,0,ch);
 		     fos.flush();
-		     fos.close();	
+		     fos.close();
+		     
+		     c32.check(b, 0, b.length);
+		     chunks.add(new ChunkDao(DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), "1", String.valueOf(chunkCount * b.length), String.valueOf(b.length)));
 	    }	    	    fis.close();	
 		
 		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
-		return chunkCount;
+		return chunks;
 	}
 
 	/**
