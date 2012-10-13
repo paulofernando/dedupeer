@@ -15,6 +15,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.apache.log4j.Logger;
 
 import deduplication.dao.ChunkDao;
+import deduplication.utils.FileUtils;
 
 public class ChunkDaoOperations {
 	
@@ -60,6 +61,9 @@ public class ChunkDaoOperations {
 	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("file_id", c.fileID));
 	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("index", c.index));
 	            mutator.insert(c.md5, "Chunk", HFactory.createStringColumn("length", c.length));
+	            if(!c.destination.equals("")) {
+	            	mutator.insert(c.md5, "Chunk", HFactory.createColumn("content", FileUtils.getBytesFromFile(c.destination)));
+	            }
 	        } catch (HectorException e) {
 	        	log.error("Data was not inserted");
 	            e.printStackTrace();

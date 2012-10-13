@@ -278,10 +278,9 @@ public class Main {
 	}
 	
 	/**
-	 * Quebra um arquivo e salva as informações de chunk no Cassandra
+	 * Quebra um arquivo e salva as informações e o conteúdo (em bytes) de chunk no Cassandra
 	 */
-	public static void analysis_5() {
-		
+	public static void analysis_5() {		
 		long time = System.currentTimeMillis();
 		ArrayList<ChunkDao> chunks = new ArrayList<ChunkDao>();
 		try { 
@@ -294,6 +293,5 @@ public class Main {
 		cdo.insertRows(chunks);
 		
 		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
-	}
-	
+	}	
 }

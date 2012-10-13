@@ -64,7 +64,7 @@ public class Chunking {
 		     fos.close();
 		     
 		     c32.check(b, 0, b.length);
-		     chunks.add(new ChunkDao(DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), "1", String.valueOf(chunkCount * b.length), String.valueOf(b.length)));
+		     chunks.add(new ChunkDao(DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), "1", String.valueOf(chunkCount * b.length), String.valueOf(b.length), fname));
 	    }	    	    fis.close();	
 		
 		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
