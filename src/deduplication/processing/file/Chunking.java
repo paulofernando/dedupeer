@@ -15,7 +15,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import deduplication.checksum.rsync.Checksum32;
-import deduplication.dao.ChunkDao;
+import deduplication.dao.ChunksDao;
 import deduplication.utils.FileUtils;
 
 /**
@@ -33,8 +33,8 @@ public class Chunking {
 	 * @param destination Destination folder of the chunks
 	 * @param size Amount of bytes for chunk
 	 */
-	public static ArrayList<ChunkDao> slicingAndDicing(File file, String destination, int size) throws IOException {
-		ArrayList<ChunkDao> chunks = new ArrayList<ChunkDao>();
+	public static ArrayList<ChunksDao> slicingAndDicing(File file, String destination, int size) throws IOException {
+		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		
 		new File(destination).mkdir();
 		int filesize = (int) file.length();
@@ -64,7 +64,7 @@ public class Chunking {
 		     fos.close();
 		     
 		     c32.check(b, 0, b.length);
-		     chunks.add(new ChunkDao(DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), "1", String.valueOf(chunkCount * b.length), String.valueOf(b.length), fname));
+		     chunks.add(new ChunksDao("1", DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * b.length), String.valueOf(b.length), fname));
 	    }	    	    fis.close();	
 		
 		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");

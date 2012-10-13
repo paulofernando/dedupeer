@@ -3,11 +3,13 @@ create keyspace Dedupeer
     and placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy';
 
 use Dedupeer;
-create column family Chunk
-    with comparator = UTF8Type
+create column family Chunks
+    with column_type='Super'
+    and comparator = UTF8Type
     and default_validation_class = 'UTF8Type'
     and key_validation_class = 'UTF8Type';
-assume Chunk keys as utf8;
+assume Chunks keys as utf8;
+assume Chunks sub_comparator as utf8;
 
 create column family UserFiles 
     with column_type='Super'
@@ -15,4 +17,4 @@ create column family UserFiles
     and default_validation_class = 'UTF8Type'
     and key_validation_class = 'UTF8Type';
 assume UserFiles keys as utf8;
-assume UserFiles sub_validator as utf8;
+assume UserFiles sub_comparator as utf8;

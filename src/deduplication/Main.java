@@ -10,8 +10,8 @@ import java.util.Random;
 import org.apache.log4j.Logger;
 
 import deduplication.checksum.rsync.Checksum32;
-import deduplication.dao.ChunkDao;
-import deduplication.dao.operation.ChunkDaoOperations;
+import deduplication.dao.ChunksDao;
+import deduplication.dao.operation.ChunksDaoOperations;
 import deduplication.delta.Chunk;
 import deduplication.processing.EagleEye;
 import deduplication.processing.RollingInBruteForce;
@@ -42,7 +42,8 @@ public class Main {
 		//analysis_2();
 		//analysis_3();
 		//analysis_4();
-		analysis_5();
+		//analysis_5();
+		analysis_6();
 	}
 	
 	private static void analysisBruteForce() {
@@ -282,16 +283,41 @@ public class Main {
 	 */
 	public static void analysis_5() {		
 		long time = System.currentTimeMillis();
-		ArrayList<ChunkDao> chunks = new ArrayList<ChunkDao>();
+		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		try { 
 			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
 		
-		ChunkDaoOperations cdo = new ChunkDaoOperations("TestCluster", "Dedupeer");
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
 		cdo.insertRows(chunks);
 		
 		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
-	}	
+	}
+	
+	/**
+	 * Criação de uma lista de reconstrução e utilização da mesma para a obtenção de um arquivo com uma 
+	 * parte adicionado a partir dos chunks do antigo, usando os dados no Cassandra.
+	 */
+	public static void analysis_6() {		
+		long time = System.currentTimeMillis();
+		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
+		try { 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
+		} catch (IOException e) { 
+			e.printStackTrace(); 
+		}
+		
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");		
+		cdo.insertRows(chunks);
+		
+		byte[] modFile = FileUtils.getBytesFromFile(modifiedFile.getAbsolutePath());
+		
+		//...
+		
+		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+	}
+	
+	
 }

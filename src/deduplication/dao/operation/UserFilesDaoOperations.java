@@ -21,7 +21,7 @@ public class UserFilesDaoOperations {
 	private Cluster cluster;
 	private Keyspace keyspaceOperator;
 	
-	private static StringSerializer stringSerializer = StringSerializer.get();	
+	private static StringSerializer stringSerializer = StringSerializer.get();
 	
 	/**
 	 * Creates an object to manipulate the operations on the UserFiles SuperColumn Family
@@ -36,16 +36,19 @@ public class UserFilesDaoOperations {
 	/**
 	 * Inserts a new row on the UserFiles SuperColumn Family
 	 */
-	public void insertRow(String key, String fileName, String fileID, String size, String version) {		
+	public void insertRow(String owner_name, String fileName, String fileID, String size, String chunks, String version) {		
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
-            mutator.insert(key, "UserFiles", HFactory.createSuperColumn(fileName, 
+            mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(fileName, 
                     Arrays.asList(HFactory.createStringColumn("file_id", fileID)), 
                     stringSerializer, stringSerializer, stringSerializer));
-            mutator.insert(key, "UserFiles", HFactory.createSuperColumn(fileName, 
+            mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(fileName, 
                     Arrays.asList(HFactory.createStringColumn("size", size)), 
+                    stringSerializer, stringSerializer, stringSerializer));            
+            mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(fileName, 
+                    Arrays.asList(HFactory.createStringColumn("chunks", chunks)), 
                     stringSerializer, stringSerializer, stringSerializer));
-            mutator.insert(key, "UserFiles", HFactory.createSuperColumn(fileName, 
+            mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(fileName, 
                     Arrays.asList(HFactory.createStringColumn("version", version)), 
                     stringSerializer, stringSerializer, stringSerializer));            
         } catch (HectorException e) {
@@ -56,16 +59,16 @@ public class UserFilesDaoOperations {
 	
 	/**
 	 * Retrieves the Super Column with the key and the column specified
-	 * @param key The line key
+	 * @param owner_name The line key (the owner name of file)
 	 * @param fileName The filename that is a column name of the SuperColumn
 	 * @return The SuperColumns with the parametres specified
 	 */
-	public QueryResult<HSuperColumn<String, String, String>> getValues(String key, String fileName) {
+	public QueryResult<HSuperColumn<String, String, String>> getValues(String owner_name, String fileName) {
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
             HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
                     stringSerializer, stringSerializer);
 		
-        superColumnQuery.setColumnFamily("UserFiles").setKey(key).setSuperName(fileName);
+        superColumnQuery.setColumnFamily("UserFiles").setKey(owner_name).setSuperName(fileName);
         QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();    
         return result;
 	}
