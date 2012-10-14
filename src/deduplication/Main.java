@@ -317,9 +317,8 @@ public class Main {
 		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");		
 		cdo.insertRows(chunks);
-		
-		UserFilesDaoOperations ufd = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		int amountChunk = Integer.parseInt(ufd.getValues("paulofernando", FileUtils.getOnlyName(file)).get().getColumns().get(0).getValue());
+				
+		int amountChunk = chunks.size();
 		
 		byte[] modFile = FileUtils.getBytesFromFile(modifiedFile.getAbsolutePath());
 		
