@@ -98,12 +98,7 @@ public class ChunksDaoOperations {
 		                    stringSerializer, stringSerializer, stringSerializer));
 		            mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
 		                    Arrays.asList(HFactory.createStringColumn("pchunk", c.pchunk)), 
-		                    stringSerializer, stringSerializer, stringSerializer));
-		            if(!c.destination.equals("")) {
-		            	mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-			                    Arrays.asList(HFactory.createColumn("content", new String(FileUtils.getBytesFromFile(c.destination)))), 
-			                    stringSerializer, stringSerializer, stringSerializer));
-		            }
+		                    stringSerializer, stringSerializer, stringSerializer));		            
 				}
 	            chunk_number++;
 

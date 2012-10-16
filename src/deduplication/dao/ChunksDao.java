@@ -22,13 +22,12 @@ public class ChunksDao {
 		this.destination = destination;
 	}
 	
-	public ChunksDao(String fileID, String chunkNumber, String index, String pfile, String pchunk, String destination) {
+	public ChunksDao(String fileID, String chunkNumber, String index, String pfile, String pchunk) {
 		this.fileID = fileID;
 		this.chunkNumber = chunkNumber;		
 		this.index = index;
 		this.pfile = pfile;
 		this.pchunk = pchunk;
-		this.destination = destination;
 	}
 	
 }

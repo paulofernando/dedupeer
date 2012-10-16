@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 import deduplication.checksum.rsync.Checksum32;
 import deduplication.dao.ChunksDao;
 import deduplication.dao.operation.ChunksDaoOperations;
-import deduplication.dao.operation.UserFilesDaoOperations;
 import deduplication.delta.Chunk;
 import deduplication.processing.EagleEye;
 import deduplication.processing.RollingInBruteForce;
@@ -394,6 +393,7 @@ public class Main {
 		
 		byte[] modFile = FileUtils.getBytesFromFile(modifiedFile.getAbsolutePath());
 		ArrayList<ChunksDao> newFileChunks = new ArrayList<ChunksDao>();
+		long modFileID = System.currentTimeMillis();
 		
 		Checksum32 c32 = new Checksum32();
 		int lastIndex = 0;
@@ -409,8 +409,9 @@ public class Main {
 			
 			c32.check(chunk, 0, chunk.length);
 			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
-			//...
 			if(index != -1) {
+				/*newFileChunks.add(new ChunkDao(modFileID, String.valueOf(i), String.valueOf(i * chunk.length), 
+						chunks.get(0).fileID, ));*/
 				rebuild.put(index, new Chunk(index, chunk.length, 
 						(i * chunk.length)//position in the remote file TODO put this data in a database
 						));
@@ -425,10 +426,12 @@ public class Main {
 		for(int j = 0; j < rebuildFile.length;) {
 			if(rebuild.containsKey(j)) {
 				byte[] oldChunk = cdo.getValues(chunks.get(0).fileID, String.valueOf((rebuild.get(j).getIndexInRemoteFile()/defaultChunkSize))).get().getColumns().get(1).getValue().getBytes();
+				
 				for(int b = j; b - j < oldChunk.length; b++) {
 					rebuildFile[b] = oldChunk[b - j];
 				}
 				j += rebuild.get(j).getLength();
+				
 			} else {
 				rebuildFile[j] = modFile[j];
 				j++;
