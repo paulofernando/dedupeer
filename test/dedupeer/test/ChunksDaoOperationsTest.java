@@ -17,7 +17,7 @@ public class ChunksDaoOperationsTest extends TestCase {
 	private File file;
 	
 	private String file_id = "152552";
-	private String chunk_number = "chunk_0";
+	private String chunk_number = "0";
 	private String md5 = "ae25d454ff1d414edd855d";	
 	private String adler32 = "451315416";	
 	private String index = "0";

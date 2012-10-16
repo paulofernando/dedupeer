@@ -46,7 +46,8 @@ public class Main {
 		//analysis_3();
 		//analysis_4();
 		//analysis_5();
-		analysis_6();
+		//analysis_6();
+		analysis_7();
 	}
 	
 	private static void analysisBruteForce() {
@@ -326,11 +327,11 @@ public class Main {
 		int lastIndex = 0;
 		
 		for(int i = 0; i < amountChunk; i++) {
-			HColumn<String, String> columnAdler32 = cdo.getValues(chunks.get(i).fileID, "chunk_" + i).get().getColumns().get(0);
-			HColumn<String, String> columnContent = cdo.getValues(chunks.get(i).fileID, "chunk_" + i).get().getColumns().get(1);
-			HColumn<String, String> columnIndex = cdo.getValues(chunks.get(i).fileID, "chunk_" + i).get().getColumns().get(2);
-			HColumn<String, String> columnLength = cdo.getValues(chunks.get(i).fileID, "chunk_" + i).get().getColumns().get(3);
-			HColumn<String, String> columnMd5 = cdo.getValues(chunks.get(i).fileID, "chunk_" + i).get().getColumns().get(4);
+			HColumn<String, String> columnAdler32 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(0);
+			HColumn<String, String> columnContent = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(1);
+			HColumn<String, String> columnIndex = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(2);
+			HColumn<String, String> columnLength = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(3);
+			HColumn<String, String> columnMd5 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(4);
 			
 			byte[] chunk = columnContent.getValue().getBytes();
 			
@@ -350,7 +351,80 @@ public class Main {
 		byte[] rebuildFile = new byte[modFile.length];		
 		for(int j = 0; j < rebuildFile.length;) {
 			if(rebuild.containsKey(j)) {
-				byte[] oldChunk = cdo.getValues(chunks.get(0).fileID, "chunk_" + (rebuild.get(j).getIndexInRemoteFile()/defaultChunkSize)).get().getColumns().get(1).getValue().getBytes();
+				byte[] oldChunk = cdo.getValues(chunks.get(0).fileID, String.valueOf((rebuild.get(j).getIndexInRemoteFile()/defaultChunkSize))).get().getColumns().get(1).getValue().getBytes();
+				for(int b = j; b - j < oldChunk.length; b++) {
+					rebuildFile[b] = oldChunk[b - j];
+				}
+				j += rebuild.get(j).getLength();
+			} else {
+				rebuildFile[j] = modFile[j];
+				j++;
+			}
+		}
+		
+		System.out.print("[");
+		for(byte b: rebuildFile) {
+			System.out.print(b + " ");
+		}
+		System.out.print("]");
+		
+		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+	}
+	
+	/**
+	 * Salva um arquivo no cassandra, em seguida pega o mesmo arquivo modificado, compara com o salvo no cassandra, indentifica
+	 * os chunks duplicados e salva o arquivo no cassandra com a referencia para os chunks duplicados com o primeiro arquivo
+	 */
+	public static void analysis_7() {
+		long time = System.currentTimeMillis();
+		
+		HashMap<Integer, Chunk> rebuild = new HashMap<Integer, Chunk>();
+		
+		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
+		try { 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
+		} catch (IOException e) { 
+			e.printStackTrace(); 
+		}
+		
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");		
+		cdo.insertRows(chunks);
+				
+		int amountChunk = chunks.size();
+		
+		byte[] modFile = FileUtils.getBytesFromFile(modifiedFile.getAbsolutePath());
+		ArrayList<ChunksDao> newFileChunks = new ArrayList<ChunksDao>();
+		
+		Checksum32 c32 = new Checksum32();
+		int lastIndex = 0;
+		
+		for(int i = 0; i < amountChunk; i++) {
+			HColumn<String, String> columnAdler32 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(0);
+			HColumn<String, String> columnContent = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(1);
+			HColumn<String, String> columnIndex = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(2);
+			HColumn<String, String> columnLength = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(3);
+			HColumn<String, String> columnMd5 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(4);
+			
+			byte[] chunk = columnContent.getValue().getBytes();
+			
+			c32.check(chunk, 0, chunk.length);
+			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
+			//...
+			if(index != -1) {
+				rebuild.put(index, new Chunk(index, chunk.length, 
+						(i * chunk.length)//position in the remote file TODO put this data in a database
+						));
+				lastIndex = index;
+			}
+		}
+				
+		log.info("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
+				
+		log.info("\nRebuilding the new file with chunks of the old file...");
+		byte[] rebuildFile = new byte[modFile.length];		
+		for(int j = 0; j < rebuildFile.length;) {
+			if(rebuild.containsKey(j)) {
+				byte[] oldChunk = cdo.getValues(chunks.get(0).fileID, String.valueOf((rebuild.get(j).getIndexInRemoteFile()/defaultChunkSize))).get().getColumns().get(1).getValue().getBytes();
 				for(int b = j; b - j < oldChunk.length; b++) {
 					rebuildFile[b] = oldChunk[b - j];
 				}
