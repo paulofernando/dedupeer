@@ -448,6 +448,7 @@ public class Main {
 			}
 		}
 		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+			chunk_number++;
 			newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
 					DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
 					String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
@@ -455,19 +456,17 @@ public class Main {
 			buffer.clear();
 		}
 		
+		System.out.println("chunk 24 " + newFileChunks.get(24).content);
+		
 		for(ChunksDao chunk: newFileChunks.values()) {
-			System.out.println("inserindo fileID " + chunk.fileID);
-			System.out.println("inserindo index " + chunk.index);
-			System.out.println("inserindo md5 " + chunk.md5);
-			System.out.println("inserindo adler " + chunk.adler32);
-			System.out.println("inserindo length " + chunk.length);
-			if(chunk.content != null)
-				System.out.println("inserindo content " + new String(chunk.content));
-			System.out.println("------------------------");
 			cdo.insertRow(chunk);			
 		}
 				
 		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+		
+		for(int i = 0; i < newFileChunks.size(); i++) {
+			System.out.println("chunk: " + cdo.getValues(newFileChunks.get(0).fileID, String.valueOf(i)).get());
+		}
 	}
 	
 	
