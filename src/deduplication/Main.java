@@ -423,18 +423,20 @@ public class Main {
 		while(index < modFile.length) {
 			if(newFileChunks.containsKey(index)) {
 				if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+					byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+					c32.check(newchunk, 0, newchunk.length);
 					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
-							DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index), 
-							String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
+							String.valueOf(buffer.capacity()), newchunk));
 					
 					buffer.clear();
 				}
-				index += Integer.parseInt(newFileChunks.get(index).length);
+				index += Integer.parseInt(newFileChunks.get(index).length); //pula, porque o chunk já foi inserido na comparação com o outro arquivo
 			} else {
 				if(buffer.remaining() == 0) {
 					c32.check(buffer.array(), 0, buffer.capacity());
 					newFileChunks.put(index - buffer.capacity(), new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
-							DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index), 
+							DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index - buffer.capacity()), 
 							String.valueOf(buffer.capacity()), buffer.array()));
 					chunk_number++;
 					
@@ -445,9 +447,24 @@ public class Main {
 				}
 			}
 		}
+		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+			newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
+					DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
+					String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+			
+			buffer.clear();
+		}
 		
 		for(ChunksDao chunk: newFileChunks.values()) {
-			cdo.insertRow(chunk);
+			System.out.println("inserindo fileID " + chunk.fileID);
+			System.out.println("inserindo index " + chunk.index);
+			System.out.println("inserindo md5 " + chunk.md5);
+			System.out.println("inserindo adler " + chunk.adler32);
+			System.out.println("inserindo length " + chunk.length);
+			if(chunk.content != null)
+				System.out.println("inserindo content " + new String(chunk.content));
+			System.out.println("------------------------");
+			cdo.insertRow(chunk);			
 		}
 				
 		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
