@@ -2,6 +2,7 @@ package deduplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -398,6 +399,7 @@ public class Main {
 		Checksum32 c32 = new Checksum32();
 		int lastIndex = 0;
 		
+		//encontra os chunk duplicados no sistema
 		for(int i = 0; i < amountChunk; i++) {
 			HColumn<String, String> columnAdler32 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(0);
 			HColumn<String, String> columnContent = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(1);
@@ -417,18 +419,30 @@ public class Main {
 		}
 		
 		int index = 0;
+		ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
 		while(index < modFile.length) {
 			if(newFileChunks.containsKey(index)) {
+				if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
+							DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index), 
+							String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+					
+					buffer.clear();
+				}
 				index += Integer.parseInt(newFileChunks.get(index).length);
 			} else {
-				byte[] newChunk = Arrays.copyOfRange(modFile, index, index + defaultChunkSize);
-				
-				c32.check(newChunk, 0, newChunk.length);
-				newFileChunks.put(index, new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
-						DigestUtils.md5Hex(newChunk), String.valueOf(c32.getValue()), String.valueOf(index), 
-						String.valueOf(newChunk.length), newChunk));
-				chunk_number++;
-				index += newChunk.length;
+				if(buffer.remaining() == 0) {
+					c32.check(buffer.array(), 0, buffer.capacity());
+					newFileChunks.put(index - buffer.capacity(), new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
+							DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index), 
+							String.valueOf(buffer.capacity()), buffer.array()));
+					chunk_number++;
+					
+					buffer.clear();
+				} else {
+					buffer.put(modFile[index]);
+					index++;
+				}
 			}
 		}
 		

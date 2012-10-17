@@ -59,8 +59,7 @@ public class Chunking {
 		     filesize = filesize-ch;
 		
 		     String fname = destination + prefix + "_chunk" + "." + chunkCount;
-		     chunkCount++;
-		        
+		     		        
 		     FileOutputStream fos= new FileOutputStream(new File(fname));
 		     fos.write(b,0,ch);
 		     fos.flush();
@@ -68,6 +67,8 @@ public class Chunking {
 		     
 		     c32.check(b, 0, b.length);
 		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * b.length), String.valueOf(b.length), fname));
+		     
+		     chunkCount++;
 	    }	    	    fis.close();	
 		
 		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
