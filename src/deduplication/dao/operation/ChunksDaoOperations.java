@@ -61,6 +61,43 @@ public class ChunksDaoOperations {
         }
 	}
 	
+	public void insertRow(ChunksDao chunk) {
+		try {
+			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
+			
+			if(chunk.pfile.equals("")) {
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("md5", chunk.md5)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("adler32", chunk.adler32)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("index", chunk.index)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("length", chunk.length)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createColumn("content", new String(chunk.content))), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+			} else { //deduplicated chunk
+				mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("index", chunk.index)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("pfile", chunk.pfile)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
+	                    Arrays.asList(HFactory.createStringColumn("pchunk", chunk.pchunk)), 
+	                    stringSerializer, stringSerializer, stringSerializer));
+			}
+        } catch (HectorException e) {
+        	log.error("Data was not inserted");
+            e.printStackTrace();
+        }
+	}
+	
 	/**
 	 * Inserts a collection of chunks on the Chunk Column Family
 	 */

@@ -9,6 +9,7 @@ import java.util.Random;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import deduplication.checksum.rsync.Checksum32;
@@ -376,9 +377,7 @@ public class Main {
 	 */
 	public static void analysis_7() {
 		long time = System.currentTimeMillis();
-		
-		HashMap<Integer, Chunk> rebuild = new HashMap<Integer, Chunk>();
-		
+				
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		try { 
 			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
@@ -392,8 +391,9 @@ public class Main {
 		int amountChunk = chunks.size();
 		
 		byte[] modFile = FileUtils.getBytesFromFile(modifiedFile.getAbsolutePath());
-		ArrayList<ChunksDao> newFileChunks = new ArrayList<ChunksDao>();
+		HashMap<Integer, ChunksDao> newFileChunks = new HashMap<Integer, ChunksDao>();
 		long modFileID = System.currentTimeMillis();
+		int chunk_number = 0;
 		
 		Checksum32 c32 = new Checksum32();
 		int lastIndex = 0;
@@ -401,49 +401,41 @@ public class Main {
 		for(int i = 0; i < amountChunk; i++) {
 			HColumn<String, String> columnAdler32 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(0);
 			HColumn<String, String> columnContent = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(1);
-			HColumn<String, String> columnIndex = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(2);
 			HColumn<String, String> columnLength = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(3);
+			
+			//TODO comparar também o md5 quando achar um adler32 no arquivo modificado
 			HColumn<String, String> columnMd5 = cdo.getValues(chunks.get(i).fileID, String.valueOf(i)).get().getColumns().get(4);
 			
 			byte[] chunk = columnContent.getValue().getBytes();
 			
-			c32.check(chunk, 0, chunk.length);
-			int index = EagleEye.searchDuplication(modFile, c32.getValue(), lastIndex, chunk.length);
+			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, chunk.length);
 			if(index != -1) {
-				/*newFileChunks.add(new ChunkDao(modFileID, String.valueOf(i), String.valueOf(i * chunk.length), 
-						chunks.get(0).fileID, ));*/
-				rebuild.put(index, new Chunk(index, chunk.length, 
-						(i * chunk.length)//position in the remote file TODO put this data in a database
-						));
+				newFileChunks.put(index, new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
+						chunks.get(i).fileID, chunks.get(i).chunkNumber));
 				lastIndex = index;
 			}
 		}
-				
-		log.info("\nProcessed in " + (System.currentTimeMillis() - time) + " miliseconds\n");		
-				
-		log.info("\nRebuilding the new file with chunks of the old file...");
-		byte[] rebuildFile = new byte[modFile.length];		
-		for(int j = 0; j < rebuildFile.length;) {
-			if(rebuild.containsKey(j)) {
-				byte[] oldChunk = cdo.getValues(chunks.get(0).fileID, String.valueOf((rebuild.get(j).getIndexInRemoteFile()/defaultChunkSize))).get().getColumns().get(1).getValue().getBytes();
-				
-				for(int b = j; b - j < oldChunk.length; b++) {
-					rebuildFile[b] = oldChunk[b - j];
-				}
-				j += rebuild.get(j).getLength();
-				
+		
+		int index = 0;
+		while(index < modFile.length) {
+			if(newFileChunks.containsKey(index)) {
+				index += Integer.parseInt(newFileChunks.get(index).length);
 			} else {
-				rebuildFile[j] = modFile[j];
-				j++;
+				byte[] newChunk = Arrays.copyOfRange(modFile, index, index + defaultChunkSize);
+				
+				c32.check(newChunk, 0, newChunk.length);
+				newFileChunks.put(index, new ChunksDao(String.valueOf(modFileID), String.valueOf(chunk_number), 
+						DigestUtils.md5Hex(newChunk), String.valueOf(c32.getValue()), String.valueOf(index), 
+						String.valueOf(newChunk.length), newChunk));
+				chunk_number++;
+				index += newChunk.length;
 			}
 		}
 		
-		System.out.print("[");
-		for(byte b: rebuildFile) {
-			System.out.print(b + " ");
+		for(ChunksDao chunk: newFileChunks.values()) {
+			cdo.insertRow(chunk);
 		}
-		System.out.print("]");
-		
+				
 		log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
 	}
 	

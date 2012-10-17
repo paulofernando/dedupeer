@@ -7,8 +7,8 @@ package deduplication.dao;
  */
 public class ChunksDao {
 	
-	public String fileID, chunkNumber, md5, adler32, index, length, pfile, pchunk, destination = "";
-		
+	public String fileID = "", chunkNumber = "", md5 = "", adler32 = "", index = "", length = "", pfile = "", pchunk = "", destination = "";
+	public byte[] content;
 	/**
 	 * @param chunkName Path to the chunk on storage device
 	 */
@@ -22,10 +22,16 @@ public class ChunksDao {
 		this.destination = destination;
 	}
 	
-	public ChunksDao(String fileID, String chunkNumber, String index, String pfile, String pchunk) {
+	public ChunksDao(String fileID, String chunkNumber, String md5, String adler32, String index, String length, byte[] content) {
+		this(fileID, chunkNumber, md5, adler32, index, length, "");
+		this.content = content.clone();
+	}
+	
+	public ChunksDao(String fileID, String chunkNumber, String index, String length, String pfile, String pchunk) {
 		this.fileID = fileID;
 		this.chunkNumber = chunkNumber;		
 		this.index = index;
+		this.length = length;
 		this.pfile = pfile;
 		this.pchunk = pchunk;
 	}
