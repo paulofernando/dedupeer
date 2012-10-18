@@ -38,10 +38,7 @@ public class Main {
 	public static void main (String[] args) {		
 		file = new File(defaultPartition + ":\\teste\\" + fileName);
 		modifiedFile = new File(defaultPartition + ":\\teste\\" + modifiedFileName);
-		
-		//test1();
-		//test2();
-		
+				
 		//analysis_1();
 		//analysis_2();
 		//analysis_3();
@@ -53,76 +50,7 @@ public class Main {
 	
 	private static void analysisBruteForce() {
 		RollingInBruteForce.duplicationIdentification(FileUtils.getBytesFromFile("D:/dedup.txt"), "tando a".getBytes());
-	}
-	
-	
-	/**
-	 * Teste para idetificar se o algoritmo de quebra de chunks estão quebrando o arquivo de forma correta.
-	 */
-	private static void test1() {
-		try { 
-			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
-		} catch (IOException e) { 
-			e.printStackTrace(); 
-		}
-		
-		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());		
-		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.1")).getAbsolutePath());
-		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.2")).getAbsolutePath());
-		
-		if((chunk0[chunk0.length - 1] == chunk1[0]) && (chunk1[chunk1.length - 1] == chunk2[0])) {
-			log.info("Probably buggy");
-		} else {
-			log.info("Jah reigns!\nchunk0[" + (chunk0.length - 1) + "] == " + chunk0[chunk0.length - 1] + " != " + " chunk1[0] == " + chunk1[0]);
-			log.info("chunk1[" + (chunk1.length - 1) + "] == " + chunk1[chunk1.length - 1] + " != " + " chunk2[0] == " + chunk2[0]);
-		}
-	}
-	
-	/**
-	 * Teste para verificar se o arquivo estão sendo divido corretamente.
-	 */	
-	private static void test2() {
-		defaultChunkSize = 4;
-		File txtFile = new File(defaultPartition + ":/teste/lorem.txt");
-		
-		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize); 
-		} catch (IOException e) { e.printStackTrace(); }
-		
-		String path = defaultPartition + ":\\teste\\chunks\\";
-		String initalNameOfCHunk = FileUtils.getOnlyName(txtFile) + "_chunk";
-				
-		byte[] txtFileBytes = FileUtils.getBytesFromFile(txtFile.getAbsolutePath());
-		
-		int currentChunk = 0;
-		boolean equals = true;
-		
-		int lastChunkSize = (int)txtFile.length() % defaultChunkSize;
-		long totalChunks = (long)Math.ceil((double)txtFile.length()/(double)defaultChunkSize);
-		
-		while(currentChunk < totalChunks) {
-			byte[] chunk = FileUtils.getBytesFromFile(path + initalNameOfCHunk + "." + currentChunk);
-						
-			String dividedChunk = new String(chunk);
-			String originalChunk = new String(Arrays.copyOfRange(txtFileBytes, currentChunk * defaultChunkSize, 
-					(currentChunk * defaultChunkSize) + (currentChunk == (totalChunks - 1) ? lastChunkSize : defaultChunkSize)));
-			
-			if(!dividedChunk.equals(originalChunk))  {
-				equals = false;
-				log.info(dividedChunk + " != " + originalChunk);
-			} else {
-				log.info(dividedChunk + " == " + originalChunk);
-			}
-			currentChunk++;
-		}
-		
-		if(!equals) {
-			log.info("Falha na divisão");
-		} else {
-			log.info("Divisão correta");
-		}
-		
-		defaultChunkSize = 64000;
-	}
+	}	
 	
 	/**
 	 * Quebra um arquivo e chunks e verifica se todos esses chunks estão no mesmo arquivo. O número de chunks encontrados
