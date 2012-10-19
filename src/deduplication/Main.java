@@ -17,6 +17,7 @@ import deduplication.checksum.rsync.Checksum32;
 import deduplication.dao.ChunksDao;
 import deduplication.dao.operation.ChunksDaoOperations;
 import deduplication.delta.Chunk;
+import deduplication.gui.MainGUI;
 import deduplication.processing.EagleEye;
 import deduplication.processing.RollingInBruteForce;
 import deduplication.processing.file.Chunking;
@@ -45,7 +46,9 @@ public class Main {
 		//analysis_4();
 		//analysis_5();
 		//analysis_6();
-		analysis_7();
+		//analysis_7();
+		
+		new MainGUI();
 	}
 	
 	private static void analysisBruteForce() {
