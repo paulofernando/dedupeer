@@ -32,9 +32,10 @@ public class Chunking {
 	 * @param file File to be sliced
 	 * @param destination Destination folder of the chunks
 	 * @param size Amount of bytes for chunk
+	 * @param fileID File ID that is been stored
 	 * @return chunks information and path to each chunk in hard disk 
 	 */
-	public static ArrayList<ChunksDao> slicingAndDicing(File file, String destination, int size) throws IOException {
+	public static ArrayList<ChunksDao> slicingAndDicing(File file, String destination, int size, String fileID) throws IOException {
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		
 		new File(destination).mkdir();
@@ -50,8 +51,6 @@ public class Chunking {
 	    int ch , chunkCount = 0;
 
 	    Checksum32 c32 = new Checksum32();
-	    
-	    String fileID = String.valueOf(System.currentTimeMillis());
 	    
 	    while(filesize > 0) {
 		    ch = fis.read(b,0,size);	

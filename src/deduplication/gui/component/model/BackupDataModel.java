@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import deduplication.backup.Backup;
+
 public class BackupDataModel extends AbstractTableModel {
 
 	private List<Backup> backupList = new ArrayList<Backup>();

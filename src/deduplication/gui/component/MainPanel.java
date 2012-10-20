@@ -5,17 +5,21 @@ import java.awt.FlowLayout;
 import java.awt.FontMetrics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
 
+import deduplication.backup.Backup;
+import deduplication.backup.BackupQueue;
 import deduplication.gui.component.model.BackupDataModel;
 import deduplication.gui.component.renderer.JButtonRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
@@ -28,9 +32,11 @@ public class MainPanel extends JPanel {
 	private BorderLayout borderLayout = new BorderLayout();
 	
 	private JTable table;
-	
+	private JFrame jframe;
 		
-	public MainPanel() {
+	public MainPanel(final JFrame jframe) {
+		this.jframe = jframe;
+		
 		initComponents();
 		
 		this.setLayout(borderLayout);		
@@ -41,12 +47,45 @@ public class MainPanel extends JPanel {
 		JButton button = new JButton("Long-Named Button 4 (PAGE_END)");
 		this.add(button, BorderLayout.PAGE_END);
 		
+		registerButtonListeners();		
+	}
+	
+	private void registerButtonListeners() {
 		btLogin.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				System.setProperty("username", JOptionPane.showInputDialog("Inform your username"));
+				String username = JOptionPane.showInputDialog("Inform your username");
+				if(username != null) {
+					registerUser(username);
+				}
 			}
 		});
+		
+		btAdd.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				JFileChooser fc = new JFileChooser();
+				fc.showOpenDialog(MainPanel.this);
+				File fileToBackup = fc.getSelectedFile();
+				
+				backupIt(fileToBackup);
+			}
+		});
+		
+	}
+	
+	private void backupIt(File fileToBackup) {
+		Backup backup = new Backup(fileToBackup, new JProgressBar(), "", new JButton(new ImageIcon("resources/images/restore.png")));
+		((BackupDataModel) table.getModel()).addBackup(backup);
+		BackupQueue.getInstance().addBackup(backup);
+	}
+
+	protected void registerUser(String username) {
+		System.setProperty("username", username);
+		this.jframe.setTitle(jframe.getTitle() + " [" + username + "]");
+		
+		//unlock components
+		this.btAdd.setEnabled(true);
 	}
 	
 	private void initComponents() {
@@ -76,7 +115,6 @@ public class MainPanel extends JPanel {
 		
 		table.getColumnModel().getColumn(1).setCellRenderer(new JProgressRenderer());
 		table.getColumnModel().getColumn(3).setCellRenderer(new JButtonRenderer());
-		
 				
 		JScrollPane scrollPane = new JScrollPane(table);
 		this.add(scrollPane, BorderLayout.CENTER);
