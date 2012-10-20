@@ -1,0 +1,34 @@
+package deduplication.gui.component.renderer;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+
+import javax.swing.JProgressBar;
+import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
+
+public class JProgressRenderer extends JProgressBar implements TableCellRenderer {
+
+	private static final long serialVersionUID = -4116117091520144073L;
+	private Color background;
+	
+	@Override
+	public Component getTableCellRendererComponent(JTable table, Object value,
+			boolean selected, boolean hasFocus, int row, int column) {
+		
+		this.setValue(((Float) value).intValue());		
+		background = table.getBackground();
+				
+		return this;
+	}
+	
+	public void paint(Graphics graphics) {
+		super.paint(graphics);
+		if(this.getValue() == 0) {
+			graphics.setColor(background);
+			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
+		}
+	}
+
+}

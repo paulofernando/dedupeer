@@ -13,6 +13,7 @@ import javax.swing.ListSelectionModel;
 
 public class MainPanel extends JPanel {
 	
+	private static final long serialVersionUID = -6912344879931889592L;
 	private JButton btLogin, btAdd;
 	private JPanel groupButtons = new JPanel();
 	private BorderLayout borderLayout = new BorderLayout();
@@ -58,7 +59,6 @@ public class MainPanel extends JPanel {
 			table.getColumnModel().getColumn(i).setMaxWidth(fontMetrics.stringWidth(columnNames[i]) + 20);
 			table.getColumnModel().getColumn(i).setMinWidth(fontMetrics.stringWidth(columnNames[i]) + 20);
 		}
-		
 		
 		
 		JScrollPane scrollPane = new JScrollPane(table);

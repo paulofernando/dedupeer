@@ -6,12 +6,11 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import org.pushingpixels.substance.api.skin.SubstanceGraphiteAquaLookAndFeel;
-
 import deduplication.gui.component.MainPanel;
 
 public class MainGUI extends JFrame {
 	
+	private static final long serialVersionUID = -1169498996174977654L;
 	private final int width = 500;
 	private final int height = 500;
 	
