@@ -16,19 +16,23 @@ public class MainGUI extends JFrame {
 	
 	public MainGUI() {
 		this.setTitle("Dedupeer");
+		
 		setup();
 		add(new MainPanel());
 		
+		pack();
 		this.setVisible(true);
 	}
 	
 	private void setup() {
+		//lookAndFeel();
+		
 		this.setSize(width, height);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);	    
 	    setLocation((Toolkit.getDefaultToolkit().getScreenSize().width - this.getSize().width)>>1, 
 	    		(Toolkit.getDefaultToolkit().getScreenSize().height - this.getSize().height)>>1);
 	    
-	    lookAndFeel();
+	    
 	}
 
 	
@@ -36,19 +40,16 @@ public class MainGUI extends JFrame {
 	/**
 	 * Sets up the look and feel to the application
 	 */
-	private void lookAndFeel() {
-		
-	    SwingUtilities.invokeLater(new Runnable() {
-	      public void run() {
-	        try {
-	          JFrame.setDefaultLookAndFeelDecorated(true);
-	          //UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel");
-	          UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceBusinessBlackSteelLookAndFeel");
-	        } catch (Exception e) {
-	          System.out.println("Substance failed to initialize");
-	        }
-	      }
-	    });
-	    
+	private void lookAndFeel() {		
+        try {
+          JFrame.setDefaultLookAndFeelDecorated(true);
+          //UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel");
+          UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceBusinessBlackSteelLookAndFeel");
+          
+          SwingUtilities.updateComponentTreeUI(this);
+          this.repaint();
+        } catch (Exception e) {
+          System.out.println("Substance failed to initialize");
+        }  
 	}
 }
