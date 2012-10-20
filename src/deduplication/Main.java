@@ -62,7 +62,7 @@ public class Main {
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()) ); 
 		} catch (IOException e) { e.printStackTrace(); }		
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		

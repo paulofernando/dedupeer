@@ -18,3 +18,8 @@ create column family UserFiles
     and key_validation_class = 'UTF8Type';
 assume UserFiles keys as utf8;
 assume UserFiles sub_comparator as utf8;
+
+create column family Files
+    with comparator = UTF8Type
+    and default_validation_class = 'UTF8Type'
+    and key_validation_class = 'UTF8Type';

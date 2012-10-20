@@ -6,6 +6,7 @@ import java.awt.FontMetrics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Vector;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -20,6 +21,7 @@ import javax.swing.ListSelectionModel;
 
 import deduplication.backup.Backup;
 import deduplication.backup.BackupQueue;
+import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.gui.component.model.BackupDataModel;
 import deduplication.gui.component.renderer.JButtonRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
@@ -64,11 +66,13 @@ public class MainPanel extends JPanel {
 		btAdd.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				JFileChooser fc = new JFileChooser();
-				fc.showOpenDialog(MainPanel.this);
-				File fileToBackup = fc.getSelectedFile();
-				
-				backupIt(fileToBackup);
+				if(btAdd.isEnabled()) {
+					JFileChooser fc = new JFileChooser();
+					fc.showOpenDialog(MainPanel.this);
+					File fileToBackup = fc.getSelectedFile();
+					
+					backupIt(fileToBackup);
+				}
 			}
 		});
 		
@@ -86,6 +90,13 @@ public class MainPanel extends JPanel {
 		
 		//unlock components
 		this.btAdd.setEnabled(true);
+		
+		Vector<String> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
+		
+		for(String filename: files) {			
+			((BackupDataModel) table.getModel()).addBackup(
+					new Backup(filename, new JProgressBar(), "", new JButton(new ImageIcon("resources/images/restore.png"))));
+		}
 	}
 	
 	private void initComponents() {

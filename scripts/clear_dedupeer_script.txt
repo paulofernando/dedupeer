@@ -2,3 +2,4 @@ drop keyspace Dedupeer;
 use Dedupeer;
 drop column family Chunks;
 drop column family UserFiles;
+drop column family Files;
