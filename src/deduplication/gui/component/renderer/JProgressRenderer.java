@@ -11,14 +11,18 @@ import javax.swing.table.TableCellRenderer;
 public class JProgressRenderer extends JProgressBar implements TableCellRenderer {
 
 	private static final long serialVersionUID = -4116117091520144073L;
-	private Color background;
+	private Color background, foreground;
 	
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value,
 			boolean selected, boolean hasFocus, int row, int column) {
 		
-		this.setValue(((Float) value).intValue());		
-		background = table.getBackground();
+		if(value != null) this.setValue(((Float) value).intValue());		
+		if(selected) {
+			background = table.getSelectionBackground();
+		} else {
+			background = table.getBackground();
+		}
 				
 		return this;
 	}
