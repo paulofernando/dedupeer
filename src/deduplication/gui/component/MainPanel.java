@@ -3,8 +3,12 @@ package deduplication.gui.component;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.FontMetrics;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.util.Vector;
 
@@ -12,8 +16,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -24,7 +30,6 @@ import deduplication.backup.BackupQueue;
 import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.gui.component.model.BackupDataModel;
 import deduplication.gui.component.renderer.IconLabelRenderer;
-import deduplication.gui.component.renderer.JButtonRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
 
 public class MainPanel extends JPanel {
@@ -36,6 +41,12 @@ public class MainPanel extends JPanel {
 	
 	private JTable table;
 	private JFrame jframe;
+	
+	private MouseListener mouseListener;
+	private ActionListener menuListener;
+	
+	private final String contextmenuDeduplicate = "Use it to deduplicate other file";
+	private final String contextmenuRestore = "Restore";
 		
 	public MainPanel(final JFrame jframe) {
 		this.jframe = jframe;
@@ -50,10 +61,10 @@ public class MainPanel extends JPanel {
 		JButton button = new JButton("Long-Named Button 4 (PAGE_END)");
 		this.add(button, BorderLayout.PAGE_END);
 		
-		registerButtonListeners();		
+		registerListeners();		
 	}
 	
-	private void registerButtonListeners() {
+	private void registerListeners() {
 		btLogin.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -79,6 +90,59 @@ public class MainPanel extends JPanel {
 			}
 		});
 		
+		mouseListener = new MouseListener() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if((e.getButton() == MouseEvent.BUTTON3) && (e.getClickCount() == 1)) {
+					if(table.getRowCount() > 0) {
+						Point point = e.getPoint();
+						
+						int row = table.rowAtPoint(point);
+						table.getSelectionModel().setSelectionInterval(row, row);
+						
+						String fileName = (String) (table.getValueAt(table.getSelectedRow(), 0));
+						
+						JPopupMenu contextmenu = new JPopupMenu();
+						
+						JMenuItem deduplicateMenu = new JMenuItem(contextmenuDeduplicate);
+						deduplicateMenu.addActionListener(menuListener);
+						contextmenu.add(deduplicateMenu);
+						
+						JMenuItem restoreMenu = new JMenuItem(contextmenuRestore);
+						restoreMenu.addActionListener(menuListener);
+						contextmenu.add(restoreMenu);
+						
+						contextmenu.show(e.getComponent(), e.getX(), e.getY());
+					}
+				}
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+
+			@Override
+			public void mouseExited(MouseEvent e) {}
+
+			@Override
+			public void mousePressed(MouseEvent e) {}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {}
+		};
+		
+		menuListener = new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent event) {
+				if(event.getActionCommand().equals(contextmenuDeduplicate)) {
+					System.out.println("Deduplicate called");
+				} else if(event.getActionCommand().equals(contextmenuRestore)) {
+					System.out.println("Restore called");
+				}
+			}
+		};
+		
+		table.addMouseListener(mouseListener);
 	}
 	
 	private void backupIt(File fileToBackup) {
