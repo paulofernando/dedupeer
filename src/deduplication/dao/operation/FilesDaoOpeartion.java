@@ -1,6 +1,9 @@
 package deduplication.dao.operation;
 
-import java.util.Vector;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.sun.org.apache.bcel.internal.generic.CPInstruction;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
@@ -36,15 +39,15 @@ public class FilesDaoOpeartion {
         mutator.insert(ownerName, "Files", HFactory.createStringColumn(fileName, fileID));
 	}
 	
-	public Vector<String> getAllFiles(String ownerName) {
+	public Map<String, Long> getAllFiles(String ownerName) {
 		SliceQuery<String,String,String> query = HFactory.createSliceQuery(keyspaceOperator, 
 				StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
 	    query.setColumnFamily("Files").setKey(ownerName).setRange(null, null, false, 100);
 	    
 	    QueryResult<ColumnSlice<String,String>> result = query.execute();
-	    Vector<String> files = new Vector<String>();
+	    Map<String, Long> files = new HashMap<String, Long>();
 	    for (HColumn<String, String> column : result.get().getColumns()) {
-	        files.add(column.getName());
+	        files.put(column.getName(), Long.parseLong(column.getValue()));
 	    }
 		return files;
 	}

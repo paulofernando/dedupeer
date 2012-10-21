@@ -389,8 +389,6 @@ public class Main {
 			buffer.clear();
 		}
 		
-		System.out.println("chunk 24 " + newFileChunks.get(24).content);
-		
 		for(ChunksDao chunk: newFileChunks.values()) {
 			cdo.insertRow(chunk);			
 		}

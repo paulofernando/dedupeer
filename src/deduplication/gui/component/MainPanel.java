@@ -10,7 +10,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
-import java.util.Vector;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -158,11 +159,11 @@ public class MainPanel extends JPanel {
 		//unlock components
 		this.btAdd.setEnabled(true);
 		
-		Vector<String> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
+		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
 		
-		for(String filename: files) {			
+		for(Entry<String, Long> file: files.entrySet()) {			
 			((BackupDataModel) table.getModel()).addBackup(
-					new Backup(filename, new JProgressBar(), "", new JButton(new ImageIcon("resources/images/restore.png"))));
+					new Backup((String)file.getKey(), new JProgressBar(), "", new JButton(new ImageIcon("resources/images/restore.png")), (Long)file.getValue()));
 		}
 	}
 	
