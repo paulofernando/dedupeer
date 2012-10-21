@@ -24,12 +24,12 @@ public class JButtonRenderer extends JButton implements TableCellRenderer {
 		return this;
 	}
 	
-	public void paint(Graphics graphics) {
+	/*public void paint(Graphics graphics) {
 		super.paint(graphics);
 		if(!this.isEnabled()) {
 			graphics.setColor(background);
 			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
 		}
-	}
+	}*/
 	
 }

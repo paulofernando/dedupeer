@@ -14,8 +14,7 @@ public class BackupDataModel extends AbstractTableModel {
 	private static final long serialVersionUID = 6620911388379308486L;
 	private String[] columnNames = {"File",
 			"Progress",
-            "Storage economy",
-            "Restore"};
+            "Storage economy"};
 	
 	@Override
 	public int getColumnCount() {		
@@ -48,8 +47,6 @@ public class BackupDataModel extends AbstractTableModel {
 				return new Float(backup.getProgress().getPercentComplete());
 			case Backup.ECONOMY:
 				return backup.getStorageEconomy();
-			case Backup.RESTORE:
-				return new Boolean(backup.getBtRestore().isEnabled());
 		}
 		
 		return null;

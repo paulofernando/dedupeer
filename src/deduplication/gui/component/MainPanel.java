@@ -23,6 +23,7 @@ import deduplication.backup.Backup;
 import deduplication.backup.BackupQueue;
 import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.gui.component.model.BackupDataModel;
+import deduplication.gui.component.renderer.IconLabelRenderer;
 import deduplication.gui.component.renderer.JButtonRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
 
@@ -71,7 +72,9 @@ public class MainPanel extends JPanel {
 					fc.showOpenDialog(MainPanel.this);
 					File fileToBackup = fc.getSelectedFile();
 					
-					backupIt(fileToBackup);
+					if(fileToBackup != null) {
+						backupIt(fileToBackup);
+					}
 				}
 			}
 		});
@@ -86,7 +89,7 @@ public class MainPanel extends JPanel {
 
 	protected void registerUser(String username) {
 		System.setProperty("username", username);
-		this.jframe.setTitle(jframe.getTitle() + " [" + username + "]");
+		this.jframe.setTitle(jframe.getTitle() + " [@" + username + "]");
 		
 		//unlock components
 		this.btAdd.setEnabled(true);
@@ -124,8 +127,8 @@ public class MainPanel extends JPanel {
 			table.getColumnModel().getColumn(i).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(i)) + 20);
 		}
 		
+		table.getColumnModel().getColumn(0).setCellRenderer(new IconLabelRenderer());
 		table.getColumnModel().getColumn(1).setCellRenderer(new JProgressRenderer());
-		table.getColumnModel().getColumn(3).setCellRenderer(new JButtonRenderer());
 				
 		JScrollPane scrollPane = new JScrollPane(table);
 		this.add(scrollPane, BorderLayout.CENTER);
