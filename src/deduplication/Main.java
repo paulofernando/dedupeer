@@ -10,6 +10,7 @@ import java.util.Random;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
+import org.apache.cassandra.thrift.Cassandra.system_add_column_family_args;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
@@ -51,6 +52,10 @@ public class Main {
 		//analysis_7();
 		
 		new MainGUI();
+		
+		/*ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
+		System.out.println(cdo.getValuesWithContent("paulo", "lorem.txt").size());*/
+		
 	}
 	
 	private static void analysisBruteForce() {

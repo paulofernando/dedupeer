@@ -2,14 +2,18 @@ package deduplication.dao.operation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Vector;
 
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.CounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SuperColumnQuery;
 
@@ -150,7 +154,7 @@ public class ChunksDaoOperations {
 	 * Retrieves the Column with the key and the column name specified
 	 * @param file_id The line key
 	 * @param columnName The column name to get the value
-	 * @return The Column with the parameters specified
+	 * @return The SuperColumn with the parameters specified
 	 */
 	public QueryResult<HSuperColumn<String, String, String>> getValues(String file_id, String chunk_number) {
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
@@ -159,6 +163,69 @@ public class ChunksDaoOperations {
 			
         superColumnQuery.setColumnFamily("Chunks").setKey(file_id).setSuperName(chunk_number);
         QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();    
+        return result;
+	}
+	
+	/**
+	 * Retrieves all columns with content in bytes of file
+	 * @param file_id The line key
+	 * @param chunk_number The column name to get the value
+	 * @return The SuperColumns with the column content
+	 */
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename) {
+		SuperColumnQuery<String, String, String, String> superColumnQuery = 
+	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
+	                    stringSerializer, stringSerializer);
+			
+		Vector<QueryResult<HSuperColumn<String, String, String>>> result = new Vector<QueryResult<HSuperColumn<String, String, String>>>();
+		
+		//--- retrieving the id ----
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getColumns().get(1);
+		String fileID = columnFileID.getValue();
+		//-------------------------
+		
+		long count = ufdo.getChunksCount(owner, filename);
+		for(int i = 0; i < count; i++) {
+	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
+	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
+	        
+	        if(column.get().getColumns().size() == 5) { //size 5 = datamodel with content
+	        	result.add(column);
+	        }
+		}
+        return result;
+	}
+	
+	/**
+	 * Retrieves all columns with content in bytes of file
+	 * @param file_id The line key
+	 * @param chunk_number The column name to get the value
+	 * @return The SuperColumns with the column content
+	 */
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithoutContent(String owner, String filename) {
+		SuperColumnQuery<String, String, String, String> superColumnQuery = 
+	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
+	                    stringSerializer, stringSerializer);
+			
+		Vector<QueryResult<HSuperColumn<String, String, String>>> result = new Vector<QueryResult<HSuperColumn<String, String, String>>>();
+		
+		//--- retrieving the id ----
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getColumns().get(1);
+		String fileID = columnFileID.getValue();
+		//-------------------------
+		
+		long count = ufdo.getChunksCount(owner, filename);
+		for(int i = 0; i < count; i++) {
+	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
+	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
+	        
+	        if(column.get().getColumns().size() == 3) { //size 3 = datamodel without content, 
+                                        	        	//but with reference to other chunk with content
+	        	result.add(column);
+	        }
+		}
         return result;
 	}
 	

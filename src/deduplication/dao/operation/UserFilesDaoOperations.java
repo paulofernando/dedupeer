@@ -5,6 +5,7 @@ import java.util.Arrays;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -71,6 +72,32 @@ public class UserFilesDaoOperations {
 		superColumnQuery.setColumnFamily("UserFiles").setKey(owner_name).setSuperName(fileName);
 		QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();
 		return result;
+	}
+	
+	/**
+	 * Retrieves the amount of chunk of a file 
+	 * @param owner File's owner
+	 * @param filename File name
+	 * @return
+	 */
+	public long getChunksCount(String owner, String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getColumns().get(0);
+		return Long.parseLong(columnAmountChunks.getValue());
+	}
+	
+	/**
+	 * Retrieves the size of file 
+	 * @param owner File's owner
+	 * @param filename File name
+	 * @return
+	 */
+	public int getFileLength(String owner, String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getColumns().get(2);
+		return Integer.parseInt(columnAmountChunks.getValue());
 	}
 
 	/**

@@ -101,9 +101,7 @@ public class MainPanel extends JPanel {
 						
 						int row = table.rowAtPoint(point);
 						table.getSelectionModel().setSelectionInterval(row, row);
-						
-						String fileName = (String) (table.getValueAt(table.getSelectedRow(), 0));
-						
+											
 						JPopupMenu contextmenu = new JPopupMenu();
 						
 						JMenuItem deduplicateMenu = new JMenuItem(contextmenuDeduplicate);

@@ -119,14 +119,13 @@ public class StoredFile {
 			public void run() {
 				long time = System.currentTimeMillis();
 				
-				String fileID = String.valueOf(System.currentTimeMillis());
-				
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 				
 				QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), getFilename());
 								
 				if(result.get() == null) { //File is not in the system yet
+					String fileID = String.valueOf(System.currentTimeMillis());
 					ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 					try { 
 						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("defaultPartition") + ":\\chunks\\"), defaultChunkSize, fileID); 
@@ -142,83 +141,7 @@ public class StoredFile {
 					
 					setId(Long.parseLong(fileID));
 				} else { //Other file version being stored
-					HColumn<String, String> columnFileID = result.get().getColumns().get(1);
-					HColumn<String, String> columnAmountChunks = result.get().getColumns().get(0);
-					
-					int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
-					String fileIDStored = columnFileID.getValue();
-					
-					byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath());
-					HashMap<Integer, ChunksDao> newFileChunks = new HashMap<Integer, ChunksDao>();
-					int chunk_number = 0;
-					
-					Checksum32 c32 = new Checksum32();
-					int lastIndex = 0;
-					
-					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
-					
-					//Find the duplicated chunk in the system
-					for(int i = 0; i < amountChunk; i++) {
-						HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(0);
-						HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(3);
-						
-						//TODO comparar também o md5 quando achar um adler32 no arquivo modificado
-						HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(4);
-												
-						int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, Integer.parseInt(columnLength.getValue()));
-						if(index != -1) {
-							newFileChunks.put(index, new ChunksDao(String.valueOf(fileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
-									fileIDStored, String.valueOf(i)));
-							lastIndex = index;
-						}
-					}
-					
-					int index = 0;
-					ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
-					while(index < modFile.length) {
-						if(newFileChunks.containsKey(index)) {
-							if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
-								byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
-								c32.check(newchunk, 0, newchunk.length);
-								newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(fileID), String.valueOf(chunk_number), 
-										DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
-										String.valueOf(buffer.capacity()), newchunk));
-								
-								buffer.clear();
-							}
-							index += Integer.parseInt(newFileChunks.get(index).length); //pula, porque o chunk já foi inserido na comparação com o outro arquivo
-						} else {
-							if(buffer.remaining() == 0) {
-								c32.check(buffer.array(), 0, buffer.capacity());
-								newFileChunks.put(index - buffer.capacity(), new ChunksDao(String.valueOf(fileID), String.valueOf(chunk_number), 
-										DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index - buffer.capacity()), 
-										String.valueOf(buffer.capacity()), buffer.array()));
-								chunk_number++;
-								
-								buffer.clear();
-							} else {
-								buffer.put(modFile[index]);
-								index++;
-							}
-						}
-					}
-					if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
-						chunk_number++;
-						newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(fileID), String.valueOf(chunk_number), 
-								DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
-								String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
-						
-						buffer.clear();
-					}
-					
-					for(ChunksDao chunk: newFileChunks.values()) {
-						cdo.insertRow(chunk);			
-					}
-					
-					String newFilename = "2_" + getFilename();
-					
-					ufdo.insertRow(System.getProperty("username"), newFilename, fileID, String.valueOf(file.length()), String.valueOf(amountChunk), "?");
-					fdo.insertRow(System.getProperty("username"), newFilename, fileID);
+					deduplicate(getFilename()); //the same name
 				}
 								
 				log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
@@ -228,8 +151,122 @@ public class StoredFile {
 		storageProcess.start();		
 	}
 	
+	/**
+	 * Deduplicates this file with a file passed as parameter
+	 * @param filenameStored File name stored in the system to use to deduplicate this file
+	 */
+	public void deduplicate(String filenameStored) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
+		
+		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
+		HColumn<String, String> columnAmountChunks = result.get().getColumns().get(0);		
+		int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
+				
+		String fileIDStored = ufdo.getValues(System.getProperty("username"), getFilename()).get().getColumns().get(1).getValue();		
+		String newFileID = String.valueOf(System.currentTimeMillis());
+		
+		byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath());
+		HashMap<Integer, ChunksDao> newFileChunks = new HashMap<Integer, ChunksDao>();
+		int chunk_number = 0;
+		
+		Checksum32 c32 = new Checksum32();
+		int lastIndex = 0;
+		
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
+		
+		//Find the duplicated chunk in the system
+		for(int i = 0; i < amountChunk; i++) {
+			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(0);
+			HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(3);
+			
+			//TODO comparar também o md5 quando achar um adler32 no arquivo modificado
+			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(4);
+									
+			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, Integer.parseInt(columnLength.getValue()));
+			if(index != -1) {
+				newFileChunks.put(index, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
+						fileIDStored, String.valueOf(i)));
+				lastIndex = index;
+			}
+		}
+		
+		int index = 0;
+		ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
+		while(index < modFile.length) {
+			if(newFileChunks.containsKey(index)) {
+				if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+					byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+					c32.check(newchunk, 0, newchunk.length);
+					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
+							String.valueOf(buffer.capacity()), newchunk));
+					
+					buffer.clear();
+				}
+				index += Integer.parseInt(newFileChunks.get(index).length); //pula, porque o chunk já foi inserido na comparação com o outro arquivo
+			} else {
+				if(buffer.remaining() == 0) {
+					c32.check(buffer.array(), 0, buffer.capacity());
+					newFileChunks.put(index - buffer.capacity(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index - buffer.capacity()), 
+							String.valueOf(buffer.capacity()), buffer.array()));
+					chunk_number++;
+					
+					buffer.clear();
+				} else {
+					buffer.put(modFile[index]);
+					index++;
+				}
+			}
+		}
+		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+			chunk_number++;
+			newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+					DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
+					String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+			
+			buffer.clear();
+		}
+		
+		for(ChunksDao chunk: newFileChunks.values()) {
+			cdo.insertRow(chunk);			
+		}
+		
+		String newFilename = "2_" + getFilename();
+		
+		ufdo.insertRow(System.getProperty("username"), newFilename, newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+		fdo.insertRow(System.getProperty("username"), newFilename, newFileID);
+	}
 	
 	public void restore() {
+		Thread restoreProcess = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
+				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
+								
+				long amountChunk = ufdo.getChunksCount(System.getProperty("username"), getFilename());
+				String fileID = fdo.getFileID(System.getProperty("username"), filename);
+				ByteBuffer byteBuffer = ByteBuffer.allocate(ufdo.getFileLength(System.getProperty("username"), getFilename()));
+				
+				for(int i = 0; i < amountChunk; i++) {
+					QueryResult<HSuperColumn<String, String, String>> result = cdo.getValues(fileID, String.valueOf(i));
+					
+					byteBuffer.position(Integer.parseInt(result.get().getColumns().get(2).getValue()));
+					byteBuffer.put(result.get().getColumns().get(1).getValueBytes());					
+				}
+				
+				byteBuffer.clear();
+								
+				FileUtils.storeFileLocally(byteBuffer.array(), pathToRestore + "\\" + filename);				
+			}
+		});
+		restoreProcess.start();
+	}
+	
+	public void restoreDeduplicated() {
 		Thread restoreProcess = new Thread(new Runnable() {
 			@Override
 			public void run() {
