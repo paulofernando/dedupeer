@@ -26,10 +26,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import deduplication.backup.Backup;
 import deduplication.backup.BackupQueue;
+import deduplication.backup.RestoreQueue;
+import deduplication.backup.StoredFile;
 import deduplication.dao.operation.FilesDaoOpeartion;
-import deduplication.gui.component.model.BackupDataModel;
+import deduplication.gui.component.model.StoredFileDataModel;
 import deduplication.gui.component.renderer.IconLabelRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
 
@@ -138,7 +139,7 @@ public class MainPanel extends JPanel {
 				if(event.getActionCommand().equals(contextmenuDeduplicate)) {
 					System.out.println("Deduplicate called");
 				} else if(event.getActionCommand().equals(contextmenuRestore)) {
-					System.out.println("Restore called");
+					restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));
 				}
 			}
 		};
@@ -146,10 +147,28 @@ public class MainPanel extends JPanel {
 		table.addMouseListener(mouseListener);
 	}
 	
+	/**
+	 * Add a file in the queue to backup
+	 */
 	private void backupIt(File fileToBackup) {
-		Backup backup = new Backup(fileToBackup, new JProgressBar(), "", new JButton(new ImageIcon("resources/images/restore.png")));
-		((BackupDataModel) table.getModel()).addBackup(backup);
+		StoredFile backup = new StoredFile(fileToBackup, new JProgressBar(), "");
+		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
 		BackupQueue.getInstance().addBackup(backup);
+	}
+	
+	/**
+	 * Adds a file in the queue to restore
+	 */
+	private void restoreIt(StoredFile storedFile) {
+		JFileChooser jfc = new JFileChooser();
+		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		jfc.showOpenDialog(this);
+		File file = jfc.getSelectedFile();
+		
+		if(file != null) {
+			storedFile.setPathToRestore(file.getAbsolutePath());		
+			RestoreQueue.getInstance().addRestore(storedFile);
+		}
 	}
 
 	protected void registerUser(String username) {
@@ -162,8 +181,8 @@ public class MainPanel extends JPanel {
 		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
 		
 		for(Entry<String, Long> file: files.entrySet()) {			
-			((BackupDataModel) table.getModel()).addBackup(
-					new Backup((String)file.getKey(), new JProgressBar(), "", new JButton(new ImageIcon("resources/images/restore.png")), (Long)file.getValue()));
+			((StoredFileDataModel) table.getModel()).addStoredFile(
+					new StoredFile((String)file.getKey(), new JProgressBar(), "", (Long)file.getValue()));
 		}
 	}
 	
@@ -180,7 +199,7 @@ public class MainPanel extends JPanel {
 	}
 	
 	private void createAndAddTable() {
-		table = new JTable(new BackupDataModel());
+		table = new JTable(new StoredFileDataModel());
 		table.setFillsViewportHeight(true);
 		table.setShowVerticalLines(false);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

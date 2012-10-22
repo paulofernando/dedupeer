@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -117,19 +118,43 @@ public class FileUtils {
 	 */
 	public static ImageIcon getIconByFileType(String filename) {
 		String extension = getOnlyExtension(filename);
-		
-		int filetype = extensions.get(extension);
-		switch(filetype) {
-			case TYPE_AUDIO:
-				return new ImageIcon("resources/images/file_audio.png");
-			case TYPE_VIDEO:
-				return new ImageIcon("resources/images/file_video.png");
-			case TYPE_IMAGE:
-				return new ImageIcon("resources/images/file_image.png");
-			case TYPE_TEXT:
-				return new ImageIcon("resources/images/file_text.png");
-			default:
-				return new ImageIcon("resources/images/file_unknown.png");
+
+		if(extension != null) {
+			int filetype = extensions.get(extension);
+			switch(filetype) {
+				case TYPE_AUDIO:
+					return new ImageIcon("resources/images/file_audio.png");
+				case TYPE_VIDEO:
+					return new ImageIcon("resources/images/file_video.png");
+				case TYPE_IMAGE:
+					return new ImageIcon("resources/images/file_image.png");
+				case TYPE_TEXT:
+					return new ImageIcon("resources/images/file_text.png");
+				default:
+					return new ImageIcon("resources/images/file_unknown.png");
+			}
+		} else {
+			return new ImageIcon("resources/images/file_unknown.png");
+		}
+	}
+	
+	public static void storeFileLocally(byte[] data, String path) {
+		File file = new File(path);
+		FileOutputStream fous = null;
+		try {
+			fous = new FileOutputStream(file);
+			fous.write(data);
+			fous.flush();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				fous.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

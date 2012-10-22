@@ -3,8 +3,6 @@ package deduplication.dao.operation;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sun.org.apache.bcel.internal.generic.CPInstruction;
-
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
@@ -12,6 +10,7 @@ import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
+import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 
@@ -51,4 +50,12 @@ public class FilesDaoOpeartion {
 	    }
 		return files;
 	}
+	
+	public String getFileID(String ownerName, String filename) {
+		ColumnQuery<String, String, String> columnQuery = HFactory.createStringColumnQuery(keyspaceOperator);
+        columnQuery.setColumnFamily("Files").setKey(ownerName).setName(filename);
+        QueryResult<HColumn<String, String>> result = columnQuery.execute();
+        return result.get().getValue();
+	}
+	
 }

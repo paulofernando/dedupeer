@@ -5,11 +5,11 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import deduplication.backup.Backup;
+import deduplication.backup.StoredFile;
 
-public class BackupDataModel extends AbstractTableModel {
+public class StoredFileDataModel extends AbstractTableModel {
 
-	private List<Backup> backupList = new ArrayList<Backup>();
+	private List<StoredFile> storedFileList = new ArrayList<StoredFile>();
 	
 	private static final long serialVersionUID = 6620911388379308486L;
 	private String[] columnNames = {"File",
@@ -23,7 +23,7 @@ public class BackupDataModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {		
-		return backupList.size();
+		return storedFileList.size();
 	}
 	
 	@Override
@@ -37,32 +37,36 @@ public class BackupDataModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		Backup backup =  backupList.get(rowIndex);
+		StoredFile backup =  storedFileList.get(rowIndex);
 		if(backup == null) return null;
 		
 		switch(columnIndex) {
-			case Backup.FILE_NAME:
+			case StoredFile.FILE_NAME:
 				return backup.getFilename();
-			case Backup.PROGRESS:
+			case StoredFile.PROGRESS:
 				return new Float(backup.getProgress().getPercentComplete());
-			case Backup.ECONOMY:
+			case StoredFile.ECONOMY:
 				return backup.getStorageEconomy();
 		}
 		
 		return null;
 	}
 	
-	public List<Backup> getBackupList() {
-		return backupList;
+	public List<StoredFile> getStoredFileList() {
+		return storedFileList;
 	}
 	
-	public void addBackup(Backup backup) {
-		backupList.add(backup);
+	public StoredFile getStoredFileByRow(int row) {
+		return storedFileList.get(row);
+	}
+	
+	public void addStoredFile(StoredFile backup) {
+		storedFileList.add(backup);
 		fireTableRowsInserted(getRowCount() - 1, getRowCount() - 1);
 	}
 	
-	public void removeBackup(Backup backup, int row) {
-		backupList.remove(row);
+	public void removeStoredFile(StoredFile backup, int row) {
+		storedFileList.remove(row);
 		fireTableRowsDeleted(row, row);
 	}
 

@@ -23,7 +23,7 @@ public class UserFilesDaoOperationsTest extends TestCase {
 		
 		HColumn<String, String> columnChunks = cdh.getValues(key, filename).get().getColumns().get(0);
 		HColumn<String, String> columnFileID = cdh.getValues(key, filename).get().getColumns().get(1);
-		HColumn<String, String> columnSize = cdh.getValues(key, filename).get().getColumns().get(2);		
+		HColumn<String, String> columnSize = cdh.getValues(key, filename).get().getColumns().get(2);	
 		HColumn<String, String> columnVersion = cdh.getValues(key, filename).get().getColumns().get(3);		
 		
 		log.info("chunks: " + chunks + " == " + columnChunks.getValue() + " ?");

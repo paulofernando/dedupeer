@@ -1,6 +1,8 @@
 package deduplication.backup;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -28,15 +30,14 @@ import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
-public class Backup {
+public class StoredFile {
 	
 	public static final int defaultChunkSize = 4;
-	private static final Logger log = Logger.getLogger(Backup.class);
+	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
 	public static final int PROGRESS = 1;
 	public static final int ECONOMY = 2;
-	public static final int RESTORE = 3;
 	
 	private File file;
 	private JProgressBar progress;
@@ -44,29 +45,29 @@ public class Backup {
 	private JButton btRestore;
 	private String filename;
 	
+	private String pathToRestore;
+	
 	private long id = -1;
 	
-	public Backup(File file, JProgressBar progress, String storageEconomy, JButton btRestore) {
+	public StoredFile(File file, JProgressBar progress, String storageEconomy) {
 		this.file = file;
 		this.progress = progress;
 		this.storageEconomy = storageEconomy;
-		this.btRestore = btRestore;
 	}
 	
-	public Backup(File file, JProgressBar progress, String storageEconomy, JButton btRestore, long id) {
-		this(file, progress, storageEconomy, btRestore);
+	public StoredFile(File file, JProgressBar progress, String storageEconomy, long id) {
+		this(file, progress, storageEconomy);
 		this.id = id;
 	}
 	
-	public Backup(String filename, JProgressBar progress, String storageEconomy, JButton btRestore) {
+	public StoredFile(String filename, JProgressBar progress, String storageEconomy) {
 		this.filename = filename;
 		this.progress = progress;
 		this.storageEconomy = storageEconomy;
-		this.btRestore = btRestore;		
 	}
 	
-	public Backup(String filename, JProgressBar progress, String storageEconomy, JButton btRestore, long id) {
-		this(filename, progress, storageEconomy, btRestore);
+	public StoredFile(String filename, JProgressBar progress, String storageEconomy, long id) {
+		this(filename, progress, storageEconomy);
 		this.id = id;
 	}
 	
@@ -104,8 +105,6 @@ public class Backup {
 			return progress;
 		case ECONOMY:
 			return storageEconomy;
-		case RESTORE:
-			return btRestore;
 		}
 		throw new FieldNotFoundException();
 	}
@@ -113,7 +112,7 @@ public class Backup {
 	/**
 	 * Start a distribute file process between the peers in the network
 	 */
-	public void storeTheFile() {
+	public void store() {
 		Thread storageProcess = new Thread(new Runnable() {
 			
 			@Override
@@ -156,12 +155,11 @@ public class Backup {
 					Checksum32 c32 = new Checksum32();
 					int lastIndex = 0;
 					
-					String newFilename = getFilename() + "_" + System.currentTimeMillis();
 					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
 					
 					//Find the duplicated chunk in the system
 					for(int i = 0; i < amountChunk; i++) {
-						HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(0);						
+						HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(0);
 						HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(3);
 						
 						//TODO comparar também o md5 quando achar um adler32 no arquivo modificado
@@ -217,6 +215,8 @@ public class Backup {
 						cdo.insertRow(chunk);			
 					}
 					
+					String newFilename = "2_" + getFilename();
+					
 					ufdo.insertRow(System.getProperty("username"), newFilename, fileID, String.valueOf(file.length()), String.valueOf(amountChunk), "?");
 					fdo.insertRow(System.getProperty("username"), newFilename, fileID);
 				}
@@ -228,12 +228,50 @@ public class Backup {
 		storageProcess.start();		
 	}
 	
+	
+	public void restore() {
+		Thread restoreProcess = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
+				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
+				
+				QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(System.getProperty("username"), getFilename());
+				HColumn<String, String> columnAmountChunks = userFileResult.get().getColumns().get(0);
+				HColumn<String, String> columnLength = userFileResult.get().getColumns().get(2);
+				
+				int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
+				
+				ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.parseInt(columnLength.getValue()));
+				
+				String fileID = fdo.getFileID(System.getProperty("username"), filename);
+				
+				for(int i = 0; i < amountChunk; i++) {
+					QueryResult<HSuperColumn<String, String, String>> result = cdo.getValues(fileID, String.valueOf(i));
+					
+					byteBuffer.position(Integer.parseInt(result.get().getColumns().get(2).getValue()));
+					byteBuffer.put(result.get().getColumns().get(1).getValueBytes());					
+				}
+				
+				byteBuffer.clear();
+								
+				FileUtils.storeFileLocally(byteBuffer.array(), pathToRestore + "\\" + filename);				
+			}
+		});
+		restoreProcess.start();
+	}
+	
 	public long getId() {
 		return id;
 	}
 
 	public void setId(long id) {
 		this.id = id;
+	}
+	
+	public void setPathToRestore(String path) {
+		this.pathToRestore = path;
 	}
 
 }
