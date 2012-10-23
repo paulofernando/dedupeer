@@ -32,7 +32,7 @@ public class ChunkingTest extends TestCase {
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
-		String initalNameOfCHunk = FileUtils.getOnlyName(txtFile) + "_chunk";
+		String initalNameOfCHunk = FileUtils.getOnlyName(txtFile.getName()) + "_chunk";
 				
 		byte[] txtFileBytes = FileUtils.getBytesFromFile(txtFile.getAbsolutePath());
 		
@@ -73,9 +73,9 @@ public class ChunkingTest extends TestCase {
 			e.printStackTrace(); 
 		}
 		
-		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());		
-		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.1")).getAbsolutePath());
-		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.2")).getAbsolutePath());
+		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.0")).getAbsolutePath());		
+		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.1")).getAbsolutePath());
+		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.2")).getAbsolutePath());
 		
 		assertTrue(!((chunk0[chunk0.length - 1] == chunk1[0]) && (chunk1[chunk1.length - 1] == chunk2[0])));		
 	}

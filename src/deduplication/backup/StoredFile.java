@@ -6,10 +6,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Observable;
 import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JProgressBar;
+import javax.swing.text.ChangedCharSetException;
 
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
@@ -28,7 +30,7 @@ import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
-public class StoredFile {
+public class StoredFile extends Observable {
 	
 	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
@@ -46,20 +48,22 @@ public class StoredFile {
 	private String pathToRestore;
 	
 	private long id = -1;
-	
-	public StoredFile(File file, JProgressBar progress, String storageEconomy) {
-		this.file = file;
-		this.progress = progress;
-		this.storageEconomy = storageEconomy;
-	}
-	
+		
 	public StoredFile(File file, JProgressBar progress, String storageEconomy, long id) {
 		this(file, progress, storageEconomy);
 		this.id = id;
 	}
 	
-	public StoredFile(String filename, JProgressBar progress, String storageEconomy) {
-		this.filename = filename;
+	public StoredFile(File file, JProgressBar progress, String storageEconomy) {
+		this(file, file.getName(), progress, storageEconomy);
+	}
+	
+	/**
+	 * Store a file in the system with another name
+	 */
+	public StoredFile(File file, String newFilename, JProgressBar progress, String storageEconomy) {
+		this.file = file;
+		this.filename = newFilename;
 		this.progress = progress;
 		this.storageEconomy = storageEconomy;
 	}
@@ -69,12 +73,18 @@ public class StoredFile {
 		this.id = id;
 	}
 	
+	public StoredFile(String filename, JProgressBar progress, String storageEconomy) {
+		this.filename = filename;
+		this.progress = progress;
+		this.storageEconomy = storageEconomy;
+	}
+	
 	public File getFile() {
 		return file;
 	}
 	
 	public String getFilename() {
-		return (file != null ? file.getName() : filename);
+		return filename;
 	}
 
 	public JProgressBar getProgress() {
@@ -120,9 +130,7 @@ public class StoredFile {
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 				
-				QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), getFilename());
-								
-				if(result.get() == null) { //File is not in the system yet
+				if(!ufdo.fileExists(System.getProperty("username"), file.getName())) { //File is not in the system yet
 					String fileID = String.valueOf(System.currentTimeMillis());
 					ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 					try { 
@@ -139,7 +147,7 @@ public class StoredFile {
 					
 					setId(Long.parseLong(fileID));
 				} else { //Other file version being stored
-					deduplicate(getFilename()); //the same name
+					deduplicate(file.getName()); //the same name
 				}
 								
 				log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
@@ -161,7 +169,7 @@ public class StoredFile {
 		HColumn<String, String> columnAmountChunks = result.get().getColumns().get(0);		
 		int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
 				
-		String fileIDStored = ufdo.getValues(System.getProperty("username"), getFilename()).get().getColumns().get(1).getValue();		
+		String fileIDStored = ufdo.getValues(System.getProperty("username"), file.getName()).get().getColumns().get(1).getValue();		
 		String newFileID = String.valueOf(System.currentTimeMillis());
 		
 		byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -231,12 +239,13 @@ public class StoredFile {
 			cdo.insertRow(chunk);			
 		}
 		
-		String newFilename = "2_" + getFilename();
-		
-		ufdo.insertRow(System.getProperty("username"), newFilename, newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
-		fdo.insertRow(System.getProperty("username"), newFilename, newFileID);
+		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 	}
 	
+	/**
+	 * Retrieves the file, even though it is deduplicated
+	 */
 	public void restore() {
 		Thread restoreProcess = new Thread(new Runnable() {
 			@Override
@@ -282,5 +291,27 @@ public class StoredFile {
 		this.pathToRestore = path;
 	}
 
+	public void setProgress(JProgressBar progress) {
+		this.progress = progress;
+		valueChanged();
+	}
+
+	public void setStorageEconomy(String storageEconomy) {
+		this.storageEconomy = storageEconomy;
+		valueChanged();
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;		 
+		valueChanged();
+	}
+
+	private void valueChanged() {
+		setChanged();
+		notifyObservers();
+	}
+	
+	
+	
 }
 

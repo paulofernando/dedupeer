@@ -45,7 +45,7 @@ public class Chunking {
 		
 		log.debug("Starting the slicing and dicing...");
 		long time = System.currentTimeMillis();
-		String prefix = FileUtils.getOnlyName(file);
+		String prefix = FileUtils.getOnlyName(file.getName());
 		
 		byte[] b = new byte[size];
 	    int ch , chunkCount = 0;

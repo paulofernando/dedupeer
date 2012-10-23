@@ -26,13 +26,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
+import me.prettyprint.hector.api.beans.HSuperColumn;
+import me.prettyprint.hector.api.query.QueryResult;
+
 import deduplication.backup.BackupQueue;
 import deduplication.backup.RestoreQueue;
 import deduplication.backup.StoredFile;
 import deduplication.dao.operation.FilesDaoOpeartion;
+import deduplication.dao.operation.UserFilesDaoOperations;
 import deduplication.gui.component.model.StoredFileDataModel;
 import deduplication.gui.component.renderer.IconLabelRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
+import deduplication.utils.FileUtils;
 
 public class MainPanel extends JPanel {
 	
@@ -149,7 +154,22 @@ public class MainPanel extends JPanel {
 	 * Add a file in the queue to backup
 	 */
 	private void backupIt(File fileToBackup) {
-		StoredFile backup = new StoredFile(fileToBackup, new JProgressBar(), "");
+		String filename = fileToBackup.getName();
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				
+		StoredFile backup;
+		int count = 1;
+		while(ufdo.fileExists(System.getProperty("username"), filename)) {
+			count++;
+			filename = FileUtils.getOnlyName(fileToBackup.getName()) + "(" + count + ")." + FileUtils.getOnlyExtension(fileToBackup.getName());			
+		}
+		
+		if(count == 1) {
+			backup = new StoredFile(fileToBackup, new JProgressBar(), "");
+		} else {
+			backup = new StoredFile(fileToBackup, filename, new JProgressBar(), "");
+		}
+		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
 		BackupQueue.getInstance().addBackup(backup);
 	}

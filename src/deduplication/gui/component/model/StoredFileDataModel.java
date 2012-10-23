@@ -2,12 +2,14 @@ package deduplication.gui.component.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.table.AbstractTableModel;
 
 import deduplication.backup.StoredFile;
 
-public class StoredFileDataModel extends AbstractTableModel {
+public class StoredFileDataModel extends AbstractTableModel implements Observer {
 
 	private List<StoredFile> storedFileList = new ArrayList<StoredFile>();
 	
@@ -61,13 +63,21 @@ public class StoredFileDataModel extends AbstractTableModel {
 	}
 	
 	public void addStoredFile(StoredFile backup) {
-		storedFileList.add(backup);
+		backup.addObserver(this);
+		storedFileList.add(backup);	
 		fireTableRowsInserted(getRowCount() - 1, getRowCount() - 1);
 	}
 	
 	public void removeStoredFile(StoredFile backup, int row) {
 		storedFileList.remove(row);
 		fireTableRowsDeleted(row, row);
+	}
+
+	@Override
+	public void update(Observable observable, Object obj) {
+		int row = storedFileList.indexOf(observable);
+		if(row > 0) 
+			fireTableRowsUpdated(row, row);
 	}
 
 }

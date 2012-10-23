@@ -71,9 +71,9 @@ public class Main {
 		} catch (IOException e) { e.printStackTrace(); }		
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
-		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk.0")).getAbsolutePath());
+		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.0")).getAbsolutePath());
 		
-		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(file) + "_chunk");
+		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(file.getName()) + "_chunk");
 				
 		long time = System.currentTimeMillis();		
 		Checksum32 c32 = new Checksum32();		
@@ -113,7 +113,7 @@ public class Main {
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
 		int random = (new Random()).nextInt(chunks - 1);
-		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file) + "_chunk." + random)).getAbsolutePath());
+		byte[] chunk = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk." + random)).getAbsolutePath());
 
 		log.info("Searching for chunk " + random);
 		EagleEye.searchDuplication(flac, chunk);
@@ -131,7 +131,7 @@ public class Main {
 		File file = new File(defaultPartition + ":/teste/matchless.flac");
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
 				
-		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(modifiedFile) + "_chunk");
+		ArrayList<Integer> hashes = Chunking.computeHashes(defaultPartition + ":\\teste\\chunks\\", FileUtils.getOnlyName(modifiedFile.getName()) + "_chunk");
 		
 		int count = 0;
 		int lastIndex = 0;
@@ -161,7 +161,7 @@ public class Main {
 		}
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
-		String initalNameOfChunk = FileUtils.getOnlyName(file) + "_chunk";
+		String initalNameOfChunk = FileUtils.getOnlyName(file.getName()) + "_chunk";
 		
 		long time = System.currentTimeMillis();
 		

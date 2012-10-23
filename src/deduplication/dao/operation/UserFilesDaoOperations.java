@@ -74,6 +74,12 @@ public class UserFilesDaoOperations {
 		return result;
 	}
 	
+	public boolean fileExists(String owner, String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(owner, filename);
+		return (result.get() != null);
+	}
+	
 	/**
 	 * Retrieves the amount of chunk of a file 
 	 * @param owner File's owner

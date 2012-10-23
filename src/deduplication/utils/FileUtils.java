@@ -95,9 +95,9 @@ public class FileUtils {
 		}
 		return result;
 	}
-	
-	public static String getOnlyName(File file) {
-		return (file.getName().indexOf(".") != -1 ? file.getName().substring(0, file.getName().lastIndexOf(".")) : file.getName());
+		
+	public static String getOnlyName(String filename) {
+		return (filename.indexOf(".") != -1 ? filename.substring(0, filename.lastIndexOf(".")) : filename);		
 	}
 	
 	public static String getOnlyExtension(String filename) {
