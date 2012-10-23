@@ -119,8 +119,8 @@ public class FileUtils {
 	public static ImageIcon getIconByFileType(String filename) {
 		String extension = getOnlyExtension(filename);
 
-		if(extension != null) {
-			int filetype = extensions.get(extension);
+		Integer filetype = extensions.get(extension);
+		if(filetype != null) {			
 			switch(filetype) {
 				case TYPE_AUDIO:
 					return new ImageIcon("resources/images/file_audio.png");
