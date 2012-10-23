@@ -1,18 +1,16 @@
 package deduplication.backup;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JProgressBar;
 
-import me.prettyprint.cassandra.model.QueryResultImpl;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.query.QueryResult;
@@ -245,50 +243,23 @@ public class StoredFile {
 			public void run() {
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
-				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 								
-				long amountChunk = ufdo.getChunksCount(System.getProperty("username"), getFilename());
-				String fileID = fdo.getFileID(System.getProperty("username"), filename);
 				ByteBuffer byteBuffer = ByteBuffer.allocate(ufdo.getFileLength(System.getProperty("username"), getFilename()));
-				
-				for(int i = 0; i < amountChunk; i++) {
-					QueryResult<HSuperColumn<String, String, String>> result = cdo.getValues(fileID, String.valueOf(i));
-					
-					byteBuffer.position(Integer.parseInt(result.get().getColumns().get(2).getValue()));
-					byteBuffer.put(result.get().getColumns().get(1).getValueBytes());					
+								
+				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename);
+				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
+					byteBuffer.position(Integer.parseInt(chunk.get().getColumns().get(2).getValue()));
+					byteBuffer.put(chunk.get().getColumns().get(1).getValueBytes());					
 				}
 				
-				byteBuffer.clear();
-								
-				FileUtils.storeFileLocally(byteBuffer.array(), pathToRestore + "\\" + filename);				
-			}
-		});
-		restoreProcess.start();
-	}
-	
-	public void restoreDeduplicated() {
-		Thread restoreProcess = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
-				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
-				
-				QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(System.getProperty("username"), getFilename());
-				HColumn<String, String> columnAmountChunks = userFileResult.get().getColumns().get(0);
-				HColumn<String, String> columnLength = userFileResult.get().getColumns().get(2);
-				
-				int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
-				
-				ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.parseInt(columnLength.getValue()));
-				
-				String fileID = fdo.getFileID(System.getProperty("username"), filename);
-				
-				for(int i = 0; i < amountChunk; i++) {
-					QueryResult<HSuperColumn<String, String, String>> result = cdo.getValues(fileID, String.valueOf(i));
+				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename);
+				for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
+					//retrieves by reference
+					QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getColumns().get(2).getValue(), 
+							chunkReference.get().getColumns().get(1).getValue());
 					
-					byteBuffer.position(Integer.parseInt(result.get().getColumns().get(2).getValue()));
-					byteBuffer.put(result.get().getColumns().get(1).getValueBytes());					
+					byteBuffer.position(Integer.parseInt(chunkReference.get().getColumns().get(0).getValue()));
+					byteBuffer.put(chunk.get().getColumns().get(1).getValueBytes());
 				}
 				
 				byteBuffer.clear();
