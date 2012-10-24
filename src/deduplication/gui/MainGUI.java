@@ -4,9 +4,9 @@ import java.awt.Toolkit;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
-import com.sun.corba.se.impl.encoding.CodeSetConversion.BTCConverter;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.skin.OfficeSilver2007Skin;
 
 import deduplication.gui.component.MainPanel;
 
@@ -45,7 +45,7 @@ public class MainGUI extends JFrame {
 	        try {
 	          JFrame.setDefaultLookAndFeelDecorated(true);
 	          //UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel");
-	          UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceBusinessBlackSteelLookAndFeel");
+	          SubstanceLookAndFeel.setSkin(new OfficeSilver2007Skin());
 	          SwingUtilities.updateComponentTreeUI(getRootPane());
 	        } catch (Exception e) {
 	          System.out.println("Substance failed to initialize");
