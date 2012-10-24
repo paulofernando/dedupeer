@@ -46,6 +46,7 @@ public class MainGUI extends JFrame {
 	          JFrame.setDefaultLookAndFeelDecorated(true);
 	          //UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel");
 	          UIManager.setLookAndFeel("org.pushingpixels.substance.api.skin.SubstanceBusinessBlackSteelLookAndFeel");
+	          SwingUtilities.updateComponentTreeUI(getRootPane());
 	        } catch (Exception e) {
 	          System.out.println("Substance failed to initialize");
 	        }

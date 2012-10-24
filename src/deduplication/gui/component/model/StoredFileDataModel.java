@@ -80,4 +80,8 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 			fireTableRowsUpdated(row, row);
 	}
 
+	public void updateAll() {
+		fireTableStructureChanged();
+	}
+	
 }

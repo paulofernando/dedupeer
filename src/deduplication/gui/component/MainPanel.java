@@ -103,6 +103,11 @@ public class MainPanel extends JPanel {
 					for(StoredFile sf: listStoredFiles) {
 						sf.calculateStorageEconomy();
 					}
+					FontMetrics fontMetrics = getFontMetrics(table.getFont());					
+					int lastCol = table.getColumnCount() - 1;
+					table.getColumnModel().getColumn(lastCol).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(lastCol)) + 20);
+					table.getColumnModel().getColumn(lastCol).setMaxWidth(fontMetrics.stringWidth(table.getModel().getColumnName(lastCol)) + 20);
+					((StoredFileDataModel)(table.getModel())).updateAll();
 				}
 			}
 		});
@@ -255,10 +260,13 @@ public class MainPanel extends JPanel {
 		table.setRowHeight(23);
 		
 		FontMetrics fontMetrics = this.getFontMetrics(table.getFont());
-		for(int i = 1; i < table.getColumnCount(); i++) {		
+		for(int i = 1; i < table.getColumnCount() - 1; i++) {		
 			table.getColumnModel().getColumn(i).setMaxWidth(fontMetrics.stringWidth(table.getModel().getColumnName(i) + 20));
 			table.getColumnModel().getColumn(i).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(i)) + 20);
 		}
+		
+		table.getColumnModel().getColumn(table.getColumnCount() - 1).setMinWidth(0);
+		table.getColumnModel().getColumn(table.getColumnCount() - 1).setMaxWidth(0);
 		
 		table.getColumnModel().getColumn(0).setCellRenderer(new IconLabelRenderer());
 		table.getColumnModel().getColumn(1).setCellRenderer(new JProgressRenderer());
