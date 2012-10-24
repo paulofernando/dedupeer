@@ -1,11 +1,19 @@
 package deduplication.backup;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class BackupQueue extends Thread {
 	
 	private int maxParallelBackups = 1;
 	private static BackupQueue instance;
+	
+	/**
+	 * Map to store the file name to use to deduplicate the other file. 
+	 */
+	private Map<String, String> deduplicateMap = new HashMap<String, String>();
+	
 	/**
 	 * Map with a file path as key and the backup as value
 	 */
@@ -22,13 +30,26 @@ public class BackupQueue extends Thread {
 	public void addBackup(StoredFile storedFile) {
 		backupQueue.add(storedFile);
 	}
+	
+	/**
+	 * Adds in the backup queue and informs the filename to compare the chunks
+	 */
+	public void addBackup(StoredFile storedFile, String deduplicateWith) {
+		addBackup(storedFile);
+		deduplicateMap.put(storedFile.getFilename(), deduplicateWith);
+	}
 
 	@Override
 	public void run() {
 		for(;;) {
 			try {
 				StoredFile currentBackup = backupQueue.take();
-				currentBackup.store();
+				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
+					currentBackup.deduplicate(deduplicateMap.get(currentBackup.getFilename()));
+					deduplicateMap.remove(currentBackup.getFilename());
+				} else {
+					currentBackup.store();
+				}				
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

@@ -10,6 +10,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -26,9 +27,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-import me.prettyprint.hector.api.beans.HSuperColumn;
-import me.prettyprint.hector.api.query.QueryResult;
-
 import deduplication.backup.BackupQueue;
 import deduplication.backup.RestoreQueue;
 import deduplication.backup.StoredFile;
@@ -42,7 +40,7 @@ import deduplication.utils.FileUtils;
 public class MainPanel extends JPanel {
 	
 	private static final long serialVersionUID = -6912344879931889592L;
-	private JButton btLogin, btAdd;
+	private JButton btLogin, btAdd, btCalculate;
 	private JPanel groupButtons = new JPanel();
 	private BorderLayout borderLayout = new BorderLayout();
 	
@@ -97,6 +95,18 @@ public class MainPanel extends JPanel {
 			}
 		});
 		
+		btCalculate.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(btCalculate.isEnabled()) {
+					List<StoredFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileList();
+					for(StoredFile sf: listStoredFiles) {
+						sf.calculateStorageEconomy();
+					}
+				}
+			}
+		});
+		
 		mouseListener = new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -140,7 +150,13 @@ public class MainPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				if(event.getActionCommand().equals(contextmenuDeduplicate)) {
-					System.out.println("Deduplicate called");
+					JFileChooser fc = new JFileChooser();
+					fc.showOpenDialog(MainPanel.this);
+					File fileToBackup = fc.getSelectedFile();
+					
+					if(fileToBackup != null) {
+						backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getFilename());
+					}
 				} else if(event.getActionCommand().equals(contextmenuRestore)) {
 					restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));
 				}
@@ -175,6 +191,17 @@ public class MainPanel extends JPanel {
 	}
 	
 	/**
+	 * Add a file in the queue to backup, and inform a file 
+	 * already stored to deduplicate this new file
+	 */
+	private void backupIt(File fileToBackup, String deduplicateWith) {
+		StoredFile backup = new StoredFile(fileToBackup, new JProgressBar(), "");
+		
+		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
+		BackupQueue.getInstance().addBackup(backup, deduplicateWith);
+	}
+	
+	/**
 	 * Adds a file in the queue to restore
 	 */
 	private void restoreIt(StoredFile storedFile) {
@@ -195,6 +222,7 @@ public class MainPanel extends JPanel {
 		
 		//unlock components
 		this.btAdd.setEnabled(true);
+		btCalculate.setEnabled(true);
 		
 		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
 		
@@ -208,11 +236,14 @@ public class MainPanel extends JPanel {
 		btLogin = new JButton(new ImageIcon("resources/images/login.png"));
 		btAdd = new JButton(new ImageIcon("resources/images/add.png"));
 		btAdd.setEnabled(false);
+		btCalculate = new JButton(new ImageIcon("resources/images/calculate_storage_economy.png"));
+		btCalculate.setEnabled(false);
 		
 		groupButtons.setLayout(new FlowLayout());
 		
 		groupButtons.add(btLogin);
 		groupButtons.add(btAdd);
+		groupButtons.add(btCalculate);
 				
 	}
 	

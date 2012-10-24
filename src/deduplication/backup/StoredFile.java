@@ -169,7 +169,7 @@ public class StoredFile extends Observable {
 		HColumn<String, String> columnAmountChunks = result.get().getColumns().get(0);		
 		int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
 				
-		String fileIDStored = ufdo.getValues(System.getProperty("username"), file.getName()).get().getColumns().get(1).getValue();		
+		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getColumns().get(1).getValue();		
 		String newFileID = String.valueOf(System.currentTimeMillis());
 		
 		byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -311,7 +311,23 @@ public class StoredFile extends Observable {
 		notifyObservers();
 	}
 	
-	
+	public void calculateStorageEconomy() {
+		log.info("Calculating storage economy of " + getFilename() + "...");
+		
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		int fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
+		
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
+		Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
+		
+		int bytesStored = 0;
+		for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
+			bytesStored += Integer.parseInt(chunk.get().getColumns().get(3).getValue());					
+		}
+		
+		setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
+		log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
+	}
 	
 }
 
