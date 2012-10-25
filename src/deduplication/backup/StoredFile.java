@@ -32,7 +32,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 32000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;

@@ -4,16 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 
+import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
-import me.prettyprint.hector.api.beans.HCounterColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
-import me.prettyprint.hector.api.query.CounterQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SuperColumnQuery;
 
@@ -83,8 +82,8 @@ public class ChunksDaoOperations {
 	                    Arrays.asList(HFactory.createStringColumn("length", chunk.length)), 
 	                    stringSerializer, stringSerializer, stringSerializer));
 	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
-	                    Arrays.asList(HFactory.createColumn("content", new String(chunk.content))), 
-	                    stringSerializer, stringSerializer, stringSerializer));
+	                    Arrays.asList(HFactory.createColumn("content", chunk.content)), 
+	                    stringSerializer, stringSerializer, BytesArraySerializer.get()));
 			} else { //deduplicated chunk
 				mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
 	                    Arrays.asList(HFactory.createStringColumn("index", chunk.index)), 
@@ -127,8 +126,8 @@ public class ChunksDaoOperations {
 		                    stringSerializer, stringSerializer, stringSerializer));
 		            if(!c.destination.equals("")) {
 		            	mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-			                    Arrays.asList( HFactory.createColumn("content", new String(FileUtils.getBytesFromFile(c.destination)))), 
-			                    stringSerializer, stringSerializer, stringSerializer));
+			                    Arrays.asList( HFactory.createColumn("content", FileUtils.getBytesFromFile(c.destination))), 
+			                    stringSerializer, stringSerializer,BytesArraySerializer.get()));
 		            }
 				} else { //deduplicated chunk
 		            mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
