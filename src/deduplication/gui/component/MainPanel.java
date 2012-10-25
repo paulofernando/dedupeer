@@ -239,9 +239,14 @@ public class MainPanel extends JPanel {
 	
 	private void initComponents() {
 		btLogin = new JButton(new ImageIcon("resources/images/login.png"));
+		btLogin.setToolTipText("Login");
+		
 		btAdd = new JButton(new ImageIcon("resources/images/add.png"));
+		btAdd.setToolTipText("Add a file");
 		btAdd.setEnabled(false);
+		
 		btCalculate = new JButton(new ImageIcon("resources/images/calculate_storage_economy.png"));
+		btCalculate.setToolTipText("Calculate the storage economy of the files stored");
 		btCalculate.setEnabled(false);
 		
 		groupButtons.setLayout(new FlowLayout());
