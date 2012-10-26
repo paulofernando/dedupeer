@@ -39,16 +39,16 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		StoredFile backup =  storedFileList.get(rowIndex);
-		if(backup == null) return null;
+		StoredFile storedFile =  storedFileList.get(rowIndex);
+		if(storedFile == null) return null;
 		
 		switch(columnIndex) {
 			case StoredFile.FILE_NAME:
-				return backup.getFilename();
+				return storedFile.getFilename();
 			case StoredFile.PROGRESS:
-				return new Float(backup.getProgress().getPercentComplete());
+				return new Float(storedFile.getProgress());
 			case StoredFile.ECONOMY:
-				return backup.getStorageEconomy();
+				return storedFile.getStorageEconomy();
 		}
 		
 		return null;
@@ -64,7 +64,7 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 	
 	public void addStoredFile(StoredFile backup) {
 		backup.addObserver(this);
-		storedFileList.add(backup);	
+		storedFileList.add(backup);
 		fireTableRowsInserted(getRowCount() - 1, getRowCount() - 1);
 	}
 	
@@ -74,9 +74,9 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 	}
 
 	@Override
-	public void update(Observable observable, Object obj) {
+	public void update(Observable observable, Object obj) {	
 		int row = storedFileList.indexOf(observable);
-		if(row > 0) 
+		if(row >= 0) 
 			fireTableRowsUpdated(row, row);
 	}
 

@@ -26,6 +26,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 
 import deduplication.backup.BackupQueue;
 import deduplication.backup.RestoreQueue;
@@ -40,7 +41,7 @@ import deduplication.utils.FileUtils;
 public class MainPanel extends JPanel {
 	
 	private static final long serialVersionUID = -6912344879931889592L;
-	private JButton btLogin, btAdd, btCalculate;
+	private JButton btLogin, btAdd, btCalculate, btSettings;
 	private JPanel groupButtons = new JPanel();
 	private BorderLayout borderLayout = new BorderLayout();
 	
@@ -108,6 +109,21 @@ public class MainPanel extends JPanel {
 					table.getColumnModel().getColumn(lastCol).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(lastCol)) + 20);
 					table.getColumnModel().getColumn(lastCol).setMaxWidth(fontMetrics.stringWidth(table.getModel().getColumnName(lastCol)) + 20);
 					((StoredFileDataModel)(table.getModel())).updateAll();
+				}
+			}
+		});
+		
+		btSettings.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(btSettings.isEnabled()) {
+					SwingUtilities.invokeLater(new Runnable(){
+						@Override
+						public void run() {							
+							JOptionPane.showMessageDialog(MainPanel.this, "Feature do not implemented yet");							
+						}
+					});
+					
 				}
 			}
 		});
@@ -186,9 +202,9 @@ public class MainPanel extends JPanel {
 		}
 		
 		if(count == 1) {
-			backup = new StoredFile(fileToBackup, new JProgressBar(), "");
+			backup = new StoredFile(fileToBackup, "");
 		} else {
-			backup = new StoredFile(fileToBackup, filename, new JProgressBar(), "");
+			backup = new StoredFile(fileToBackup, filename, "");
 		}
 		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
@@ -200,7 +216,7 @@ public class MainPanel extends JPanel {
 	 * already stored to deduplicate this new file
 	 */
 	private void backupIt(File fileToBackup, String deduplicateWith) {
-		StoredFile backup = new StoredFile(fileToBackup, new JProgressBar(), "");
+		StoredFile backup = new StoredFile(fileToBackup, "");
 		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
 		BackupQueue.getInstance().addBackup(backup, deduplicateWith);
@@ -226,14 +242,15 @@ public class MainPanel extends JPanel {
 		this.jframe.setTitle(jframe.getTitle() + " [@" + username + "]");
 		
 		//unlock components
-		this.btAdd.setEnabled(true);
+		btAdd.setEnabled(true);
 		btCalculate.setEnabled(true);
+		btSettings.setEnabled(true);
 		
 		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
 		
-		for(Entry<String, Long> file: files.entrySet()) {			
+		for(Entry<String, Long> file: files.entrySet()) {
 			((StoredFileDataModel) table.getModel()).addStoredFile(
-					new StoredFile((String)file.getKey(), new JProgressBar(), "", (Long)file.getValue()));
+					new StoredFile((String)file.getKey(), "", (Long)file.getValue()));
 		}
 	}
 	
@@ -249,12 +266,16 @@ public class MainPanel extends JPanel {
 		btCalculate.setToolTipText("Calculate the storage economy of the files stored");
 		btCalculate.setEnabled(false);
 		
+		btSettings = new JButton(new ImageIcon("resources/images/settings.png"));
+		btSettings.setToolTipText("Settings");
+		btSettings.setEnabled(false);
+		
 		groupButtons.setLayout(new FlowLayout());
 		
 		groupButtons.add(btLogin);
 		groupButtons.add(btAdd);
 		groupButtons.add(btCalculate);
-				
+		groupButtons.add(btSettings);				
 	}
 	
 	private void createAndAddTable() {

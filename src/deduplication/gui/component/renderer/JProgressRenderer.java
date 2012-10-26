@@ -17,13 +17,15 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	public Component getTableCellRendererComponent(JTable table, Object value,
 			boolean selected, boolean hasFocus, int row, int column) {
 		
-		if(value != null) this.setValue(((Float) value).intValue());		
+		if(value != null) 
+			this.setValue(((Float) value).intValue());
+		
 		if(selected) {
 			background = table.getSelectionBackground();
 		} else {
 			background = table.getBackground();
 		}
-				
+		invalidate();
 		return this;
 	}
 	
@@ -34,5 +36,4 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
 		}
 	}
-
 }

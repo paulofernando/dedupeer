@@ -18,6 +18,7 @@ import me.prettyprint.hector.api.query.SuperColumnQuery;
 
 import org.apache.log4j.Logger;
 
+import deduplication.backup.StoredFileFeedback;
 import deduplication.dao.ChunksDao;
 import deduplication.utils.FileUtils;
 
@@ -29,15 +30,28 @@ public class ChunksDaoOperations {
 	private Keyspace keyspaceOperator;
 	
 	private static StringSerializer stringSerializer = StringSerializer.get();
+	private StoredFileFeedback feedback;
+	
+	/**
+	 * Creates an object to manipulate the operations on the Chunks Column Family
+	 * @param clusterName The cluster name from instance of Cassandra
+	 * @param keyspaceName The Keyspace name where the Chunks Column Family was created
+	 */
+	public ChunksDaoOperations (String clusterName, String keyspaceName) {
+		cluster = HFactory.getOrCreateCluster(clusterName, "localhost:9160");
+		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
+		
+	}
 	
 	/**
 	 * Creates an object to manipulate the operations on the Chunks Column Family
 	 * @param clusterName The cluster name from instance of Cassandra
 	 * @param keyspaceName The Keyspace name where the Chunks Column Family was created 
+	 * @param StoredFileFeedback to inform the current progress
 	 */
-	public ChunksDaoOperations (String clusterName, String keyspaceName) {
-		cluster = HFactory.getOrCreateCluster(clusterName, "localhost:9160");
-		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
+	public ChunksDaoOperations (String clusterName, String keyspaceName, StoredFileFeedback feedback) {
+		this(clusterName, keyspaceName);
+		this.feedback = feedback;
 	}
 		
 	public void insertRow(String fileID, String chunk_num, String md5, String adler32, String index, String length, byte[] content) {
@@ -141,6 +155,13 @@ public class ChunksDaoOperations {
 		                    stringSerializer, stringSerializer, stringSerializer));		            
 				}
 	            chunk_number++;
+	            
+	            
+	            int porcentagem = (int)(((long)chunk_number * 100) / chunks.size());
+	            if(feedback != null) {
+	            	feedback.updateProgress(porcentagem);
+	            }
+	            log.info("Storing... " + porcentagem + "%");
 
 	        } catch (HectorException e) {
 	        	log.error("Data was not inserted");

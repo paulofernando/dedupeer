@@ -11,7 +11,6 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JProgressBar;
-import javax.swing.text.ChangedCharSetException;
 
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
@@ -30,7 +29,7 @@ import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
-public class StoredFile extends Observable {
+public class StoredFile extends Observable implements StoredFileFeedback {
 	
 	public static final int defaultChunkSize = 32000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
@@ -40,7 +39,7 @@ public class StoredFile extends Observable {
 	public static final int ECONOMY = 2;
 	
 	private File file;
-	private JProgressBar progress;
+	private int progress;
 	private String storageEconomy;
 	private JButton btRestore;
 	private String filename;
@@ -49,33 +48,31 @@ public class StoredFile extends Observable {
 	
 	private long id = -1;
 		
-	public StoredFile(File file, JProgressBar progress, String storageEconomy, long id) {
-		this(file, progress, storageEconomy);
+	public StoredFile(File file, String storageEconomy, long id) {
+		this(file, storageEconomy);
 		this.id = id;
 	}
 	
-	public StoredFile(File file, JProgressBar progress, String storageEconomy) {
-		this(file, file.getName(), progress, storageEconomy);
+	public StoredFile(File file, String storageEconomy) {
+		this(file, file.getName(), storageEconomy);
 	}
 	
 	/**
 	 * Store a file in the system with another name
 	 */
-	public StoredFile(File file, String newFilename, JProgressBar progress, String storageEconomy) {
+	public StoredFile(File file, String newFilename, String storageEconomy) {
 		this.file = file;
 		this.filename = newFilename;
-		this.progress = progress;
 		this.storageEconomy = storageEconomy;
 	}
 	
-	public StoredFile(String filename, JProgressBar progress, String storageEconomy, long id) {
-		this(filename, progress, storageEconomy);
+	public StoredFile(String filename, String storageEconomy, long id) {
+		this(filename, storageEconomy);
 		this.id = id;
 	}
 	
-	public StoredFile(String filename, JProgressBar progress, String storageEconomy) {
+	public StoredFile(String filename, String storageEconomy) {
 		this.filename = filename;
-		this.progress = progress;
 		this.storageEconomy = storageEconomy;
 	}
 	
@@ -87,7 +84,7 @@ public class StoredFile extends Observable {
 		return filename;
 	}
 
-	public JProgressBar getProgress() {
+	public int getProgress() {
 		return progress;
 	}
 
@@ -107,12 +104,12 @@ public class StoredFile extends Observable {
 	 */
 	public Object getItem(int item) throws FieldNotFoundException {
 		switch (item) {
-		case FILE_NAME:
-			return getFilename();
-		case PROGRESS:
-			return progress;
-		case ECONOMY:
-			return storageEconomy;
+			case FILE_NAME:
+				return getFilename();
+			case PROGRESS:
+				return progress;
+			case ECONOMY:
+				return storageEconomy;
 		}
 		throw new FieldNotFoundException();
 	}
@@ -142,7 +139,7 @@ public class StoredFile extends Observable {
 					ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(chunks.size()), "?");
 					fdo.insertRow(System.getProperty("username"), file.getName(), fileID);
 					
-					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");		
+					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);		
 					cdo.insertRows(chunks);
 					
 					setId(Long.parseLong(fileID));
@@ -294,11 +291,11 @@ public class StoredFile extends Observable {
 		this.pathToRestore = path;
 	}
 
-	public void setProgress(JProgressBar progress) {
+	public void setProgress(int progress) {		
 		this.progress = progress;
 		valueChanged();
 	}
-
+	
 	public void setStorageEconomy(String storageEconomy) {
 		this.storageEconomy = storageEconomy;
 		valueChanged();
@@ -330,6 +327,12 @@ public class StoredFile extends Observable {
 		
 		setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
 		log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
+	
+	}
+	
+	@Override
+	public void updateProgress(int progress) {
+		setProgress(progress);		
 	}
 	
 }
