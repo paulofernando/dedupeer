@@ -201,6 +201,7 @@ public class Checksum32 implements RollingChecksum, Cloneable,
 	 * @since 1.1
 	 */
 	public void check(byte[] buf, int off, int len) {
+		len = buf.length >= len ? len : buf.length;
 		block = new byte[len];
 		System.arraycopy(buf, off, block, 0, len);
 		reset();

@@ -85,10 +85,10 @@ public class MainPanel extends JPanel {
 			public void mouseClicked(MouseEvent e) {
 				if(btAdd.isEnabled()) {
 					JFileChooser fc = new JFileChooser();
-					fc.showOpenDialog(MainPanel.this);
+					int result = fc.showOpenDialog(MainPanel.this);
 					File fileToBackup = fc.getSelectedFile();
 					
-					if(fileToBackup != null) {
+					if(result == JFileChooser.APPROVE_OPTION) {
 						backupIt(fileToBackup);
 					}
 				}
@@ -156,10 +156,10 @@ public class MainPanel extends JPanel {
 			public void actionPerformed(ActionEvent event) {
 				if(event.getActionCommand().equals(contextmenuDeduplicate)) {
 					JFileChooser fc = new JFileChooser();
-					fc.showOpenDialog(MainPanel.this);
+					int result = fc.showOpenDialog(MainPanel.this);
 					File fileToBackup = fc.getSelectedFile();
 					
-					if(fileToBackup != null) {
+					if(result == JFileChooser.APPROVE_OPTION) {
 						backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getFilename());
 					}
 				} else if(event.getActionCommand().equals(contextmenuRestore)) {

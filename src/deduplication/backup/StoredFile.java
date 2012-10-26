@@ -207,7 +207,7 @@ public class StoredFile extends Observable {
 					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
 							String.valueOf(buffer.capacity()), newchunk));
-					
+					chunk_number++;
 					buffer.clear();
 				}
 				index += Integer.parseInt(newFileChunks.get(index).length); //pula, porque o chunk já foi inserido na comparação com o outro arquivo
@@ -226,8 +226,7 @@ public class StoredFile extends Observable {
 				}
 			}
 		}
-		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
-			chunk_number++;
+		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele			
 			newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 					DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
 					String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
@@ -239,7 +238,7 @@ public class StoredFile extends Observable {
 			cdo.insertRow(chunk);			
 		}
 		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 	}
 	
@@ -320,7 +319,7 @@ public class StoredFile extends Observable {
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
 		Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
 		
-		int bytesStored = 0;
+		long bytesStored = 0;
 		for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
 			bytesStored += Integer.parseInt(chunk.get().getColumns().get(3).getValue());					
 		}

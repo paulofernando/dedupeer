@@ -127,7 +127,7 @@ public class ChunksDaoOperations {
 		            if(!c.destination.equals("")) {
 		            	mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
 			                    Arrays.asList( HFactory.createColumn("content", FileUtils.getBytesFromFile(c.destination))), 
-			                    stringSerializer, stringSerializer,BytesArraySerializer.get()));
+			                    stringSerializer, stringSerializer, BytesArraySerializer.get()));
 		            }
 				} else { //deduplicated chunk
 		            mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
