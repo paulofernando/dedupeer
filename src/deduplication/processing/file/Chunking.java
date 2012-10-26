@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -142,4 +141,20 @@ public class Chunking {
 	    	log.error(ex);
 	    }
 	  }
+	
+	/**
+	 * Delete the chunks created in the hard disk to store in Cassandra
+	 * @param Folder path where the data were stored
+	 * @param filename File name of the file that chunks were created
+	 */
+	public static void cleanUpChunks(String destination, String filename) {
+		log.info("Deleting chunks of the " + filename + " stored on hard disk...");
+		int chunkCount = 0;
+		String fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + chunkCount;
+		while(new File(fname).delete()) {
+			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);
+		}
+		log.info("Done!");
+		
+	}
 }

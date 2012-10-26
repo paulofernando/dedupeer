@@ -151,6 +151,8 @@ public class StoredFile extends Observable {
 				}
 								
 				log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+				
+				Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
 			}
 		});
 		
@@ -239,7 +241,9 @@ public class StoredFile extends Observable {
 		}
 		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
-		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
+		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
+		
+		Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
 	}
 	
 	/**
