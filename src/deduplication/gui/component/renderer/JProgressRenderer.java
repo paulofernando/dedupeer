@@ -17,11 +17,15 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	private Color background;
 	private ProgressInfo progressInfo;
 	
-	Color[][] colors = new Color[][]{
+	private Color[][] colors = new Color[][]{
 			{new Color(0xa4dcb2), new Color(0x61e868)},
 			{new Color(0xc0cde0), new Color(0x76a1e3)},
+			{new Color(0xe8e6dd), new Color(0xe8c53a)},
+			{new Color(0xe8e6dd), new Color(0xe8c53a)},
 			{new Color(0xe8e6dd), new Color(0xe8c53a)}			
 	};
+	
+	private Color textColor = new Color(0x333333);
 	
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value,
@@ -41,7 +45,7 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	
 	public void paint(Graphics graphics) {
 		super.paint(graphics);
-		if(this.getValue() == 0) {
+		if((this.getValue() == 0) || (this.getValue() == 100)){
 			graphics.setColor(background);
 			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else {
@@ -52,7 +56,7 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	        g2.setPaint(gp);
 	        g2.fill(r);
 			
-			graphics.setColor(new Color(0x333333));
+			graphics.setColor(textColor);
 			graphics.drawString(progressInfo.getTypeString(), 2, ((this.getHeight()>>1) + (graphics.getFontMetrics().getHeight()>>1)));
 		}
 	}

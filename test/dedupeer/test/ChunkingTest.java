@@ -28,7 +28,7 @@ public class ChunkingTest extends TestCase {
 	public void testChunking() {
 		File txtFile = new File(defaultPartition + ":/teste/lorem.txt");
 		
-		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
@@ -68,7 +68,7 @@ public class ChunkingTest extends TestCase {
 	public void testChunkingBasic() {
 		file = new File(defaultPartition + ":\\teste\\" + fileName);
 		try { 
-			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}

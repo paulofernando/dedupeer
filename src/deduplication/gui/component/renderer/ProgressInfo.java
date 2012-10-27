@@ -7,7 +7,9 @@ public class ProgressInfo {
 	public final static int TYPE_STORING = 0;
 	public final static int TYPE_DEDUPLICATION = 1; 
 	public final static int TYPE_CHUNKING = 2;
-	public final static int TYPE_NONE = 3;
+	public final static int TYPE_RESTORING = 3;
+	public final static int TYPE_CALCULATION_STORAGY_ECONOMY = 4;
+	public final static int TYPE_NONE = 5;
 	
 	public ProgressInfo(int progress, int type) {
 		this.progress = progress;
@@ -34,6 +36,10 @@ public class ProgressInfo {
 				return "Deduplicating...";
 			case TYPE_CHUNKING:
 				return "Chunking...";
+			case TYPE_RESTORING:
+				return "Restoring...";
+			case TYPE_CALCULATION_STORAGY_ECONOMY:
+				return "Calculating...";
 			case TYPE_NONE:
 			default:
 				return "";

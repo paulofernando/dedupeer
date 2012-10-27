@@ -67,7 +67,7 @@ public class Main {
 	 * deve ser igual ao de chunks divididos inicialmente no método.
 	 */
 	private static void analysis_1() {
-		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()) ); 
+		try { Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { e.printStackTrace(); }		
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());		
@@ -108,7 +108,7 @@ public class Main {
 	private static void analysis_2(){
 		int chunks = 0;
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())).size(); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null).size(); 
 		} catch (IOException e) { e.printStackTrace(); }	
 		
 		byte[] flac = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -123,7 +123,7 @@ public class Main {
 	 * Quebra um arquivo modificado em pedaços e em seguida compara para identificar quando chunks são iguais aos do arquivo original
 	 */
 	private static void analysis_3() {
-		try { Chunking.slicingAndDicing(modifiedFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+		try { Chunking.slicingAndDicing(modifiedFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { e.printStackTrace(); }
 
 		long time = System.currentTimeMillis();
@@ -155,7 +155,7 @@ public class Main {
 	public static void analysis_4() {
 		HashMap<Integer, Chunk> rebuild = new HashMap<Integer, Chunk>();
 		try { 
-			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
@@ -228,7 +228,7 @@ public class Main {
 		long time = System.currentTimeMillis();
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
@@ -250,7 +250,7 @@ public class Main {
 		
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
@@ -319,7 +319,7 @@ public class Main {
 				
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		try { 
-			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis())); 
+			chunks = Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}

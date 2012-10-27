@@ -156,13 +156,9 @@ public class ChunksDaoOperations {
 				}
 	            chunk_number++;
 	            
-	            
-	            int porcentagem = (int)(((long)chunk_number * 100) / chunks.size());
 	            if(feedback != null) {
-	            	feedback.updateProgress(porcentagem);
+	            	feedback.updateProgress((int)(((long)chunk_number * 100) / chunks.size()));
 	            }
-	            log.info("Storing... " + porcentagem + "%");
-
 	        } catch (HectorException e) {
 	        	log.error("Data was not inserted");
 	            e.printStackTrace();
@@ -205,13 +201,16 @@ public class ChunksDaoOperations {
 		String fileID = columnFileID.getValue();
 		//-------------------------
 		
-		long count = ufdo.getChunksCount(owner, filename);
+		long count = ufdo.getChunksCount(owner, filename);		
 		for(int i = 0; i < count; i++) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
 	        if(column.get().getColumns().size() == 5) { //size 5 = datamodel with content
 	        	result.add(column);
+	        }
+	        if(feedback != null) {
+	        	feedback.updateProgress((int)(((long)i * 100) / count));
 	        }
 		}
         return result;

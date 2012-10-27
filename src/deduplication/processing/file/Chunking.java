@@ -13,8 +13,10 @@ import java.util.Vector;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
+import deduplication.backup.StoredFileFeedback;
 import deduplication.checksum.rsync.Checksum32;
 import deduplication.dao.ChunksDao;
+import deduplication.gui.component.renderer.ProgressInfo;
 import deduplication.utils.FileUtils;
 
 /**
@@ -32,9 +34,13 @@ public class Chunking {
 	 * @param destination Destination folder of the chunks
 	 * @param size Amount of bytes for chunk
 	 * @param fileID File ID that is been stored
+	 * @param feedback sends a feedback to the user about the progress                 
 	 * @return chunks information and path to each chunk in hard disk 
 	 */
-	public static ArrayList<ChunksDao> slicingAndDicing(File file, String destination, int size, String fileID) throws IOException {
+	public static ArrayList<ChunksDao> slicingAndDicing(File file, String destination, int size, String fileID, StoredFileFeedback feedback) throws IOException {
+		if(feedback != null)
+			feedback.setProgressType(ProgressInfo.TYPE_CHUNKING);
+		
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		
 		new File(destination).mkdir();
@@ -65,6 +71,10 @@ public class Chunking {
 		     
 		     c32.check(b, 0, b.length);
 		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * b.length), String.valueOf(ch), fname));
+		     
+		     if(feedback != null) {
+	        	feedback.updateProgress((int)(((long)(file.length() - filesize) * 100) / file.length()));
+	         }
 		     
 		     chunkCount++;
 	    }	    	    fis.close();	
