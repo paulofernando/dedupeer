@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 
 import deduplication.backup.StoredFile;

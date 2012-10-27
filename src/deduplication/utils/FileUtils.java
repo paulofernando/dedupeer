@@ -117,8 +117,10 @@ public class FileUtils {
 	 * @return Icon
 	 */
 	public static ImageIcon getIconByFileType(String filename) {
+		
+		if((filename == "") || (!filename.contains("."))) return null;
+		
 		String extension = getOnlyExtension(filename);
-
 		Integer filetype = extensions.get(extension);
 		if(filetype != null) {			
 			switch(filetype) {

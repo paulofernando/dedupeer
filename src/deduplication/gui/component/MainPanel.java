@@ -103,7 +103,7 @@ public class MainPanel extends JPanel {
 					List<StoredFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileList();
 					for(StoredFile sf: listStoredFiles) {						
 						sf.calculateStorageEconomy();													
-					}					
+					}
 				}
 			}
 		});
@@ -281,17 +281,18 @@ public class MainPanel extends JPanel {
 		table.setRowHeight(23);
 		
 		FontMetrics fontMetrics = this.getFontMetrics(table.getFont());
-		for(int i = 1; i < table.getColumnCount() - 1; i++) {		
-			table.getColumnModel().getColumn(i).setMaxWidth(fontMetrics.stringWidth(table.getModel().getColumnName(i)) + 50);
-			table.getColumnModel().getColumn(i).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(i)) + 50);
-		}
+				
+		table.getColumnModel().getColumn(1).setMaxWidth(fontMetrics.stringWidth(table.getModel().getColumnName(1)) + 50);
+		table.getColumnModel().getColumn(1).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(1)) + 50);
 		
-		table.getColumnModel().getColumn(table.getColumnCount() - 1).setMinWidth(0);
-		table.getColumnModel().getColumn(table.getColumnCount() - 1).setMaxWidth(0);
+		table.getColumnModel().getColumn(2).setMaxWidth(fontMetrics.stringWidth(table.getModel().getColumnName(2)) + 10);
+		table.getColumnModel().getColumn(2).setMinWidth(fontMetrics.stringWidth(table.getModel().getColumnName(2)) + 10);
+		
 		
 		table.getColumnModel().getColumn(0).setCellRenderer(new IconLabelRenderer());
 		table.getColumnModel().getColumn(1).setCellRenderer(new JProgressRenderer());
-				
+		table.getColumnModel().getColumn(2).setCellRenderer(new IconLabelRenderer());
+		
 		JScrollPane scrollPane = new JScrollPane(table);
 		this.add(scrollPane, BorderLayout.CENTER);
 	}
