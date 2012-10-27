@@ -325,23 +325,29 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		notifyObservers();
 	}
 	
-	public void calculateStorageEconomy() {		
-		log.info("Calculating storage economy of " + getFilename() + "...");
-		
-		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		int fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
-		
-		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
-		progressInfo.setProgress(ProgressInfo.TYPE_CALCULATION_STORAGY_ECONOMY);
-		Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
-		
-		long bytesStored = 0;
-		for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-			bytesStored += Integer.parseInt(chunk.get().getColumns().get(3).getValue());					
-		}
-		
-		setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
-		log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
+	public void calculateStorageEconomy() {
+		Thread calculateProcess = new Thread(new Runnable() {
+			@Override
+			public void run() {				
+				log.info("Calculating storage economy of " + getFilename() + "...");
+				
+				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				int fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
+				
+				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
+				progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGY_ECONOMY);
+				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
+				
+				long bytesStored = 0;
+				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
+					bytesStored += Integer.parseInt(chunk.get().getColumns().get(3).getValue());					
+				}
+				
+				setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
+				log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
+			}
+		});
+		calculateProcess.start();
 	
 	}
 	

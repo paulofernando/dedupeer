@@ -157,7 +157,7 @@ public class ChunksDaoOperations {
 	            chunk_number++;
 	            
 	            if(feedback != null) {
-	            	feedback.updateProgress((int)(((long)chunk_number * 100) / chunks.size()));
+	            	feedback.updateProgress((int) Math.ceil((((double)chunk_number) * 100) / chunks.size()));
 	            }
 	        } catch (HectorException e) {
 	        	log.error("Data was not inserted");
@@ -210,7 +210,7 @@ public class ChunksDaoOperations {
 	        	result.add(column);
 	        }
 	        if(feedback != null) {
-	        	feedback.updateProgress((int)(((long)i * 100) / count));
+	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
 	        }
 		}
         return result;

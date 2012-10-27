@@ -45,7 +45,7 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	
 	public void paint(Graphics graphics) {
 		super.paint(graphics);
-		if((this.getValue() == 0) || (this.getValue() == 100)){
+		if((this.getValue() == 0) || (this.getValue() == 100)) {
 			graphics.setColor(background);
 			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
 		} else {

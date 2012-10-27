@@ -35,8 +35,8 @@ public class BackupQueue extends Thread {
 	 * Adds in the backup queue and informs the filename to compare the chunks
 	 */
 	public void addBackup(StoredFile storedFile, String deduplicateWith) {
-		addBackup(storedFile);
 		deduplicateMap.put(storedFile.getFilename(), deduplicateWith);
+		addBackup(storedFile);		
 	}
 
 	@Override

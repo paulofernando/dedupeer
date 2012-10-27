@@ -73,7 +73,7 @@ public class Chunking {
 		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * b.length), String.valueOf(ch), fname));
 		     
 		     if(feedback != null) {
-	        	feedback.updateProgress((int)(((long)(file.length() - filesize) * 100) / file.length()));
+	        	feedback.updateProgress((int)Math.ceil(((double)(file.length() - filesize) * 100) / file.length()));
 	         }
 		     
 		     chunkCount++;

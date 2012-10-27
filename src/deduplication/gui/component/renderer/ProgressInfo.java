@@ -50,5 +50,4 @@ public class ProgressInfo {
 		this.type = type;
 	}
 	
-	
 }
