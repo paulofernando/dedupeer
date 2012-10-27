@@ -10,7 +10,6 @@ import java.util.Observable;
 import java.util.Vector;
 
 import javax.swing.JButton;
-import javax.swing.JProgressBar;
 
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
@@ -25,6 +24,7 @@ import deduplication.dao.operation.ChunksDaoOperations;
 import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.dao.operation.UserFilesDaoOperations;
 import deduplication.exception.FieldNotFoundException;
+import deduplication.gui.component.renderer.ProgressInfo;
 import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
@@ -39,7 +39,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	public static final int ECONOMY = 2;
 	
 	private File file;
-	private int progress;
+	private ProgressInfo progressInfo = new ProgressInfo(0, ProgressInfo.TYPE_CHUNKING);
 	private String storageEconomy;
 	private JButton btRestore;
 	private String filename;
@@ -85,9 +85,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	}
 
 	public int getProgress() {
-		return progress;
+		return progressInfo.getProgress();
 	}
 
+	public ProgressInfo getProgressInfo() {
+		return progressInfo;
+	}
+	
 	public String getStorageEconomy() {
 		return storageEconomy;
 	}
@@ -107,7 +111,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			case FILE_NAME:
 				return getFilename();
 			case PROGRESS:
-				return progress;
+				return progressInfo.getProgress();
 			case ECONOMY:
 				return storageEconomy;
 		}
@@ -292,7 +296,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	}
 
 	public void setProgress(int progress) {		
-		this.progress = progress;
+		this.progressInfo.setProgress(progress);
 		valueChanged();
 	}
 	

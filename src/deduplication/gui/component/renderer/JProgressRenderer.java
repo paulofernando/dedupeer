@@ -12,13 +12,14 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 
 	private static final long serialVersionUID = -4116117091520144073L;
 	private Color background, foreground;
+	private ProgressInfo progressInfo;
 	
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value,
 			boolean selected, boolean hasFocus, int row, int column) {
 		
-		if(value != null) 
-			this.setValue(((Float) value).intValue());
+		progressInfo = (ProgressInfo) value;
+		this.setValue(progressInfo.getProgress());
 		
 		if(selected) {
 			background = table.getSelectionBackground();
@@ -34,6 +35,8 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 		if(this.getValue() == 0) {
 			graphics.setColor(background);
 			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
+		} else {
+			graphics.drawString(progressInfo.getTypeString(), (this.getWidth()>>1) - (graphics.getFontMetrics().stringWidth(progressInfo.getTypeString())), ((this.getHeight()>>1) - (graphics.getFontMetrics().getHeight()>>1)));
 		}
 	}
 }

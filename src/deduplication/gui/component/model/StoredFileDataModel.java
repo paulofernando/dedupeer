@@ -46,7 +46,7 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 			case StoredFile.FILE_NAME:
 				return storedFile.getFilename();
 			case StoredFile.PROGRESS:
-				return new Float(storedFile.getProgress());
+				return storedFile.getProgressInfo();
 			case StoredFile.ECONOMY:
 				return storedFile.getStorageEconomy();
 		}
