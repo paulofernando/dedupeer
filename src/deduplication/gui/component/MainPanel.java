@@ -25,6 +25,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
@@ -47,6 +48,7 @@ public class MainPanel extends JPanel {
 	
 	private JTable table;
 	private JFrame jframe;
+	public static JTextArea infoTextArea;
 	
 	private MouseListener mouseListener;
 	private ActionListener menuListener;
@@ -64,8 +66,9 @@ public class MainPanel extends JPanel {
 
 		createAndAddTable();
 
-		JButton button = new JButton("Long-Named Button 4 (PAGE_END)");
-		this.add(button, BorderLayout.PAGE_END);
+		infoTextArea = new JTextArea();
+		infoTextArea.setEditable(false);
+		this.add(infoTextArea, BorderLayout.PAGE_END);
 		
 		registerListeners();		
 	}
@@ -145,6 +148,10 @@ public class MainPanel extends JPanel {
 						
 						contextmenu.show(e.getComponent(), e.getX(), e.getY());
 					}
+				} else if (e.getButton() == MouseEvent.BUTTON1) {					
+					StoredFile sf = ((StoredFileDataModel)(table.getModel())).getStoredFileList().get(table.getSelectedRow());
+					if(sf.getSmallestChunk() != -1)
+						infoTextArea.setText("Smallest chunk of '" + sf.getFilename() + "' = [" + sf.getSmallestChunk() + "]");
 				}
 			}
 

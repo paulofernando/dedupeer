@@ -24,6 +24,7 @@ import deduplication.dao.operation.ChunksDaoOperations;
 import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.dao.operation.UserFilesDaoOperations;
 import deduplication.exception.FieldNotFoundException;
+import deduplication.gui.component.MainPanel;
 import deduplication.gui.component.renderer.ProgressInfo;
 import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
@@ -31,7 +32,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 32000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -43,6 +44,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	private String storageEconomy;
 	private JButton btRestore;
 	private String filename;
+	
+	private int smallestChunk = -1;
 	
 	private String pathToRestore;
 	
@@ -213,7 +216,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					c32.check(newchunk, 0, newchunk.length);
 					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
-							String.valueOf(buffer.capacity()), newchunk));
+							String.valueOf(newchunk.length), newchunk));
 					chunk_number++;
 					buffer.clear();
 				}
@@ -223,7 +226,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					c32.check(buffer.array(), 0, buffer.capacity());
 					newFileChunks.put(index - buffer.capacity(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index - buffer.capacity()), 
-							String.valueOf(buffer.capacity()), buffer.array()));
+							String.valueOf(buffer.array().length), buffer.array()));
 					chunk_number++;
 					
 					buffer.clear();
@@ -339,12 +342,27 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
 				
 				long bytesStored = 0;
+				smallestChunk = defaultChunkSize + 1;
 				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-					bytesStored += Integer.parseInt(chunk.get().getColumns().get(3).getValue());					
+					int bytes = Integer.parseInt(chunk.get().getColumns().get(3).getValue());
+					bytesStored += bytes;
+					if(bytes > 0)
+						smallestChunk = Math.min(smallestChunk, bytes);
+				}
+				
+				if(smallestChunk == (defaultChunkSize + 1)) { // all zero
+					smallestChunk = 0;
 				}
 				
 				setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
 				log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
+				log.info("Smallest chunk of " + getFilename() + " = " + smallestChunk);
+				
+				progressInfo.setProgress(100);
+				
+				if(MainPanel.infoTextArea != null) {
+					MainPanel.infoTextArea.setText("Smallest chunk of '" + getFilename() + "' = [" + smallestChunk + "]");
+				}
 			}
 		});
 		calculateProcess.start();
@@ -359,6 +377,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	@Override
 	public void setProgressType(int type) {
 		progressInfo.setType(type);
+	}
+
+	public int getSmallestChunk() {
+		return smallestChunk;
 	}
 	
 }
