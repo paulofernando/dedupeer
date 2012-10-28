@@ -17,13 +17,15 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	private Color background;
 	private ProgressInfo progressInfo;
 	
-	private Color[][] colors = new Color[][]{
-			{new Color(0xa4dcb2), new Color(0x61e868)},
-			{new Color(0xc0cde0), new Color(0x76a1e3)},
-			{new Color(0xe8e6dd), new Color(0xe8c53a)},
-			{new Color(0xe8e6dd), new Color(0xe8c53a)},
-			{new Color(0xe8e6dd), new Color(0xe8c53a)}			
-	};
+	/*private Color[][] colors = new Color[][]{
+			{new Color(0xa4dcb2), new Color(0x61e868)}, // storing
+			{new Color(0xc0cde0), new Color(0x76a1e3)}, // deduplicating
+			{new Color(0xe8e6dd), new Color(0xe8c53a)}, // chunking
+			{new Color(0xcdc0e0), new Color(0x9f76e3)}, // restoring
+			{new Color(0xbabd84), new Color(0xb3bc21)}	// calculating storage economy
+	};*/
+	
+	private Color[] colors = new Color[]{ new Color(0xe8e6dd), new Color(0xe8c53a) };
 	
 	private Color textColor = new Color(0x333333);
 	
@@ -51,8 +53,8 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 		} else {
 			Graphics2D g2 = (Graphics2D) graphics;
 	        Rectangle2D r = new Rectangle2D.Double(2, 1, (progressInfo.getProgress() * this.getWidth()) / 100, this.getHeight() - 2);
-	        GradientPaint gp = new GradientPaint(0, 0, colors[progressInfo.getType()][0], 0, this.getHeight(),
-	        		colors[progressInfo.getType()][1], true);
+	        GradientPaint gp = new GradientPaint(0, 0, colors[0], 0, this.getHeight(),
+	        		colors[1], true);
 	        g2.setPaint(gp);
 	        g2.fill(r);
 			

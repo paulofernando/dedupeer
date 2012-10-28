@@ -8,7 +8,7 @@ public class ProgressInfo {
 	public final static int TYPE_DEDUPLICATION = 1; 
 	public final static int TYPE_CHUNKING = 2;
 	public final static int TYPE_RESTORING = 3;
-	public final static int TYPE_CALCULATION_STORAGY_ECONOMY = 4;
+	public final static int TYPE_CALCULATION_STORAGE_ECONOMY = 4;
 	public final static int TYPE_NONE = 5;
 	
 	public ProgressInfo(int progress, int type) {
@@ -38,7 +38,7 @@ public class ProgressInfo {
 				return "Chunking...";
 			case TYPE_RESTORING:
 				return "Restoring...";
-			case TYPE_CALCULATION_STORAGY_ECONOMY:
+			case TYPE_CALCULATION_STORAGE_ECONOMY:
 				return "Calculating...";
 			case TYPE_NONE:
 			default:

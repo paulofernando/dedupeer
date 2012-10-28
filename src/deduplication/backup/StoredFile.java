@@ -335,7 +335,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				int fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
 				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
-				progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGY_ECONOMY);
+				progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
 				
 				long bytesStored = 0;
