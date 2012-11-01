@@ -32,7 +32,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 32000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -282,8 +282,6 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
 					byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
 					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
-					
-					System.out.println(chunk.get().getSubColumnByName("content").getValueBytes().toString());
 					
 					count++;					
 					int prog = (int)(Math.ceil((((double)count) * 100) / totalChunks));
