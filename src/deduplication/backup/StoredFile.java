@@ -197,10 +197,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5");				
 			
 			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, Integer.parseInt(columnLength.getValue()));
-			if(index != -1) {				
-				newFileChunks.put(index, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
-						fileIDStored, String.valueOf(i)));
-				lastIndex = index;				
+			if(index != -1) {
+				if(DigestUtils.md5Hex(Arrays.copyOfRange(modFile, index, index + Integer.parseInt(columnLength.getValue())))
+						.equals(columnMd5.getValue())) {
+					newFileChunks.put(index, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
+							fileIDStored, String.valueOf(i)));
+					lastIndex = index;
+				}
 			}
 			setProgress((int)(((long)i * 100) / amountChunk));
 		}
@@ -250,7 +253,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
 		}
 		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
+		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 		
 		Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
@@ -279,6 +282,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
 					byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
 					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+					
+					System.out.println(chunk.get().getSubColumnByName("content").getValueBytes().toString());
 					
 					count++;					
 					int prog = (int)(Math.ceil((((double)count) * 100) / totalChunks));
