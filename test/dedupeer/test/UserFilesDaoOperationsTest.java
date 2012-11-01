@@ -21,13 +21,13 @@ public class UserFilesDaoOperationsTest extends TestCase {
 		UserFilesDaoOperations cdh = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		cdh.insertRow(key, filename, file_id, size, chunks, version);
 		
-		HColumn<String, String> columnChunks = cdh.getValues(key, filename).get().getColumns().get(0);
-		HColumn<String, String> columnFileID = cdh.getValues(key, filename).get().getColumns().get(1);
-		HColumn<String, String> columnSize = cdh.getValues(key, filename).get().getColumns().get(2);	
-		HColumn<String, String> columnVersion = cdh.getValues(key, filename).get().getColumns().get(3);		
+		HColumn<String, String> columnChunks = cdh.getValues(key, filename).get().getSubColumnByName("chunks");
+		HColumn<String, String> columnFileID = cdh.getValues(key, filename).get().getSubColumnByName("file_id");
+		HColumn<String, String> columnSize = cdh.getValues(key, filename).get().getSubColumnByName("size");	
+		HColumn<String, String> columnVersion = cdh.getValues(key, filename).get().getSubColumnByName("version");		
 		
 		log.info("chunks: " + chunks + " == " + columnChunks.getValue() + " ?");
-		assertTrue(version.equals(columnChunks.getValue()));
+		assertTrue(chunks.equals(columnChunks.getValue()));
 		
 		log.info("file_id: " + file_id + " == " + columnFileID.getValue() + " ?");
 		assertTrue(file_id.equals(columnFileID.getValue()));

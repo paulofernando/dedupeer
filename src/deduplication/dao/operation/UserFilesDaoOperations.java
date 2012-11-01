@@ -89,7 +89,7 @@ public class UserFilesDaoOperations {
 	public long getChunksCount(String owner, String filename) {
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
-		HColumn<String, String> columnAmountChunks = userFileResult.get().getColumns().get(0);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("chunks");
 		return Long.parseLong(columnAmountChunks.getValue());
 	}
 	
@@ -102,7 +102,7 @@ public class UserFilesDaoOperations {
 	public int getFileLength(String owner, String filename) {
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
-		HColumn<String, String> columnAmountChunks = userFileResult.get().getColumns().get(2);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("size");
 		return Integer.parseInt(columnAmountChunks.getValue());
 	}
 

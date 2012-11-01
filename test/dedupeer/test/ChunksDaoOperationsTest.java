@@ -27,7 +27,7 @@ public class ChunksDaoOperationsTest extends TestCase {
 	@Override
 	protected void setUp() throws java.lang.Exception {
 		try {
-			file = new File("E:\\lorem.txt");
+			file = new File("D:\\lorem.txt");
 			FileOutputStream fos = new FileOutputStream(file);
 			fos.write(content.getBytes());
 			fos.flush();
@@ -42,13 +42,13 @@ public class ChunksDaoOperationsTest extends TestCase {
 	public void testGetValues() {
 		ChunksDaoOperations cdh = new ChunksDaoOperations("TestCluster", "Dedupeer");
 		
-		cdh.insertRow(file_id, chunk_number, md5, adler32, index, length, FileUtils.getBytesFromFile("E:\\lorem.txt"));
+		cdh.insertRow(file_id, chunk_number, md5, adler32, index, length, FileUtils.getBytesFromFile("D:\\lorem.txt"));
 		
-		HColumn<String, String> columnAdler32 = cdh.getValues(file_id, chunk_number).get().getColumns().get(0);
-		HColumn<String, String> columnContent = cdh.getValues(file_id, chunk_number).get().getColumns().get(1);
-		HColumn<String, String> columnIndex = cdh.getValues(file_id, chunk_number).get().getColumns().get(2);
-		HColumn<String, String> columnLength = cdh.getValues(file_id, chunk_number).get().getColumns().get(3);
-		HColumn<String, String> columnMd5 = cdh.getValues(file_id, chunk_number).get().getColumns().get(4);
+		HColumn<String, String> columnAdler32 = cdh.getValues(file_id, chunk_number).get().getSubColumnByName("adler32");
+		HColumn<String, String> columnContent = cdh.getValues(file_id, chunk_number).get().getSubColumnByName("content");
+		HColumn<String, String> columnIndex = cdh.getValues(file_id, chunk_number).get().getSubColumnByName("index");
+		HColumn<String, String> columnLength = cdh.getValues(file_id, chunk_number).get().getSubColumnByName("length");
+		HColumn<String, String> columnMd5 = cdh.getValues(file_id, chunk_number).get().getSubColumnByName("md5");
 		
 		log.info("content: " + content + " == " + columnContent.getValue() + " ?");
 		assertTrue(content.equals(columnContent.getValue()));

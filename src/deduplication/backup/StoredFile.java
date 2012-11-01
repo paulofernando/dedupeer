@@ -174,10 +174,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 		
 		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
-		HColumn<String, String> columnAmountChunks = result.get().getColumns().get(0);		
+		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
 		int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
 				
-		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getColumns().get(1).getValue();		
+		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
 		String newFileID = String.valueOf(System.currentTimeMillis());
 		
 		byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath());
@@ -191,11 +191,11 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		//Find the duplicated chunk in the system
 		for(int i = 0; i < amountChunk; i++) {
-			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(0);
-			HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(3);
+			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32");
+			HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("length");
 			
 			//TODO comparar também o md5 quando achar um adler32 no arquivo modificado
-			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getColumns().get(4);
+			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5");
 				
 			
 			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, Integer.parseInt(columnLength.getValue()));
@@ -274,18 +274,18 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename);
 				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
-					byteBuffer.position(Integer.parseInt(chunk.get().getColumns().get(2).getValue()));
-					byteBuffer.put(chunk.get().getColumns().get(1).getValueBytes());					
+					byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
+					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());					
 				}
 				
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename);
 				for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
 					//retrieves by reference
-					QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getColumns().get(2).getValue(), 
-							chunkReference.get().getColumns().get(1).getValue());
+					QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
+							chunkReference.get().getSubColumnByName("pchunk").getValue());
 					
-					byteBuffer.position(Integer.parseInt(chunkReference.get().getColumns().get(0).getValue()));
-					byteBuffer.put(chunk.get().getColumns().get(1).getValueBytes());
+					byteBuffer.position(Integer.parseInt(chunkReference.get().getSubColumnByName("index").getValue()));
+					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
 				}
 				
 				byteBuffer.clear();
@@ -344,7 +344,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				long bytesStored = 0;
 				smallestChunk = defaultChunkSize + 1;
 				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-					int bytes = Integer.parseInt(chunk.get().getColumns().get(3).getValue());
+					int bytes = Integer.parseInt(chunk.get().getSubColumnByName("length").getValue());
 					bytesStored += bytes;
 					if(bytes > 0)
 						smallestChunk = Math.min(smallestChunk, bytes);

@@ -197,7 +197,7 @@ public class ChunksDaoOperations {
 		
 		//--- retrieving the id ----
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getColumns().get(1);
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
 		String fileID = columnFileID.getValue();
 		//-------------------------
 		
@@ -206,7 +206,7 @@ public class ChunksDaoOperations {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
-	        if(column.get().getColumns().size() == 5) { //size 5 = datamodel with content
+	        if(column.get().getSubColumnByName("content") != null) {
 	        	result.add(column);
 	        }
 	        if(feedback != null) {
@@ -231,7 +231,7 @@ public class ChunksDaoOperations {
 		
 		//--- retrieving the id ----
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getColumns().get(1);
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
 		String fileID = columnFileID.getValue();
 		//-------------------------
 		
@@ -240,8 +240,7 @@ public class ChunksDaoOperations {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
-	        if(column.get().getColumns().size() == 3) { //size 3 = datamodel without content, 
-                                        	        	//but with reference to other chunk with content
+	        if(column.get().getSubColumnByName("pfile") != null) { 
 	        	result.add(column);
 	        }
 		}
