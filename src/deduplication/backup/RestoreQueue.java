@@ -28,7 +28,7 @@ public class RestoreQueue extends Thread {
 		for(;;) {
 			try {
 				StoredFile currentBackup = restoreQueue.take();
-				currentBackup.restore();
+				currentBackup.rehydrate();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

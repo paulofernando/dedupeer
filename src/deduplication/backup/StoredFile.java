@@ -194,15 +194,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32");
 			HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("length");
 			
-			//TODO comparar também o md5 quando achar um adler32 no arquivo modificado
-			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5");
-				
+			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5");				
 			
 			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, Integer.parseInt(columnLength.getValue()));
-			if(index != -1) {
+			if(index != -1) {				
 				newFileChunks.put(index, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
 						fileIDStored, String.valueOf(i)));
-				lastIndex = index;
+				lastIndex = index;				
 			}
 			setProgress((int)(((long)i * 100) / amountChunk));
 		}
@@ -249,7 +247,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		progressInfo.setType(ProgressInfo.TYPE_STORING);
 		for(ChunksDao chunk: newFileChunks.values()) {
 			cdo.insertRow(chunk);
-			setProgress((int)(((long)count * 100) / newFileChunks.size()));
+			setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
 		}
 		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
@@ -261,21 +259,30 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	/**
 	 * Retrieves the file, even though it is deduplicated
 	 */
-	public void restore() {
+	public void rehydrate() {
 		Thread restoreProcess = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				progressInfo.setType(ProgressInfo.TYPE_RESTORING);
+				progressInfo.setType(ProgressInfo.TYPE_REHYDRATING);
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-				//TODO fazer o cálculo do restore.
-				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer"/*, StoredFile.this*/);
+				
+				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 								
 				ByteBuffer byteBuffer = ByteBuffer.allocate(ufdo.getFileLength(System.getProperty("username"), getFilename()));
 								
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename);
+				
+				long totalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
+				long count = 0;
+				
+				progressInfo.setType(ProgressInfo.TYPE_WRITING);
 				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
 					byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
-					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());					
+					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+					
+					count++;					
+					int prog = (int)(Math.ceil((((double)count) * 100) / totalChunks));
+					setProgress(prog);
 				}
 				
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename);
@@ -286,6 +293,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					
 					byteBuffer.position(Integer.parseInt(chunkReference.get().getSubColumnByName("index").getValue()));
 					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+					
+					count++;
+					int prog = (int)(Math.ceil((((double)count) * 100) / totalChunks));
+					setProgress(prog);
 				}
 				
 				byteBuffer.clear();

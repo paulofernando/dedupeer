@@ -54,7 +54,7 @@ public class MainPanel extends JPanel {
 	private ActionListener menuListener;
 	
 	private final String contextmenuDeduplicate = "Use it to deduplicate other file";
-	private final String contextmenuRestore = "Restore";
+	private final String contextmenuRestore = "Rehydrate";
 		
 	public MainPanel(final JFrame jframe) {
 		this.jframe = jframe;

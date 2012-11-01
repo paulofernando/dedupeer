@@ -12,6 +12,8 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 
+import deduplication.backup.StoredFileFeedback;
+
 public class FileUtils {
 	
 	private static final int TYPE_AUDIO = 0;
