@@ -69,7 +69,7 @@ public class Chunking {
 		     fos.flush();
 		     fos.close();
 		     
-		     c32.check(b, 0, b.length);
+		     c32.check(b, 0, ch);
 		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * b.length), String.valueOf(ch), fname));
 		     
 		     if(feedback != null) {

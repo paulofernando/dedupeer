@@ -29,7 +29,7 @@ public class EagleEye {
 		
 		hash = c32.getValue();
 		if(chunkHash == hash) {
-			//System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");
+			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");
 			return index;
 		}			
 		index++;
@@ -38,7 +38,7 @@ public class EagleEye {
 			c32.roll(file[index]);
 			hash = c32.getValue();
 			if(chunkHash == hash) {
-				//System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
+				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
 				return index;
 			}			
 			index++;
@@ -52,7 +52,7 @@ public class EagleEye {
 	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
 	 * @param file File where the block will be searched
 	 * @param chunkHash Hash computed of a chunk
-	 * @param offset Initial position to search
+	 * @param offset Position of the last byte of new chunk to search
 	 * @param sizeOfChunk Size of the chunk from which the {@code hash} was computed
 	 * @return index on the {@code file} where the pattern matches. -1 if not found it.
 	 */
@@ -65,7 +65,7 @@ public class EagleEye {
 		
 		hash = c32.getValue();
 		if(chunkHash == hash) {			
-			//System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "] *");
+			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "] *");
 			return index;
 		}			
 		index++;
@@ -73,14 +73,15 @@ public class EagleEye {
 		while(index <= file.length - sizeOfChunk) {
 			c32.roll(file[index]);
 			hash = c32.getValue();
+			
 			if(chunkHash == hash) {
 				index -= (sizeOfChunk - 1); //the index informed to roll() is the index of the last byte
-				//System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
+				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
 				return index;
 			}			
 			index++;
 		}
-		//System.out.println("-> Pattern not found!");	
+		System.out.println("-> Pattern not found!");	
 		return -1;
 	}
 	

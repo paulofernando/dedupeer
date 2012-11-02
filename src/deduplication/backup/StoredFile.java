@@ -32,7 +32,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 32000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -186,6 +186,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		Checksum32 c32 = new Checksum32();
 		int lastIndex = 0;
+		int lastLength = 0;
 		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);
 		
@@ -196,13 +197,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5");				
 			
-			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex, Integer.parseInt(columnLength.getValue()));
+			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex + lastLength, Integer.parseInt(columnLength.getValue()));
 			if(index != -1) {
 				if(DigestUtils.md5Hex(Arrays.copyOfRange(modFile, index, index + Integer.parseInt(columnLength.getValue())))
 						.equals(columnMd5.getValue())) {
 					newFileChunks.put(index, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue(),
 							fileIDStored, String.valueOf(i)));
 					lastIndex = index;
+					lastLength = Integer.parseInt(columnLength.getValue());
 				}
 			}
 			setProgress((int)(((long)i * 100) / amountChunk));
