@@ -44,7 +44,7 @@ public class Chunking {
 		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 		
 		new File(destination).mkdir();
-		int filesize = (int) file.length();
+		long filesize = file.length();
 		
 		FileInputStream fis = new FileInputStream(file.getAbsolutePath()); 
 		

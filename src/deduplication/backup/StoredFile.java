@@ -32,7 +32,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 256000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -259,6 +259,15 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 		
 		Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
+	}
+	
+	/**
+	 * Uses a new way of to deduplicate a file, comparing a current adler32 with a special HashMap that contains
+	 * the adler32 pointing to an object <<md5, chunkkNumber>,...>
+	 * @param filenameStored
+	 */
+	public void deduplicateABigFile(String filenameStored) {
+		
 	}
 	
 	/**
