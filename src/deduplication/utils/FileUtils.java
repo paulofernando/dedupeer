@@ -64,13 +64,25 @@ public class FileUtils {
 	}
 	
 	/**
-	 * Read a file in a storage device
+	 * Read a whole file in a storage device
 	 * @param filePath Path of the file in the storage device
 	 * @return Bytes of the file
 	 */
 	public static byte[] getBytesFromFile(String filePath) {
+		File file = new File(filePath);		
+		return getBytesFromFile(filePath, 0, (int) file.length());
+	}
+	
+	/**
+	 * Read a piece of a file in a storage device
+	 * @param filePath Path of the file in the storage device
+	 * @param bytesToRead amount of bytes to read
+	 * @return Bytes of the file
+	 */
+	public static byte[] getBytesFromFile(String filePath, int offset, int bytesToRead) {
+		//TODO ainda está lendo os bytes usando inteiro, mudar pra long
 		File file = new File(filePath);
-		byte[] result = new byte[(int) file.length()];
+		byte[] result = new byte[bytesToRead];
 
 		InputStream input = null;
 		try {
@@ -78,7 +90,7 @@ public class FileUtils {
 			input = new BufferedInputStream(new FileInputStream(file));
 			while (totalBytesRead < result.length) {
 				int bytesRemaining = result.length - totalBytesRead;
-				int bytesRead = input.read(result, totalBytesRead,
+				int bytesRead = input.read(result, offset + totalBytesRead,
 						bytesRemaining);
 				if (bytesRead > 0) {
 					totalBytesRead = totalBytesRead + bytesRead;

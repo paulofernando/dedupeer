@@ -6,7 +6,10 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Observable;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -263,10 +266,56 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	
 	/**
 	 * Uses a new way of to deduplicate a file, comparing a current adler32 with a special HashMap that contains
-	 * the adler32 pointing to an object <<md5, chunkkNumber>,...>
+	 * the adler32 in the key and other HashMap with <md5, chunkkNumber> how value
+	 * divideInTimes divide the processing in <code> divideInTimes </code> times
 	 * @param filenameStored
 	 */
-	public void deduplicateABigFile(String filenameStored) {
+	public void deduplicateABigFile(String filenameStored, int divideInTimes) {
+		progressInfo.setType(ProgressInfo.TYPE_DEDUPLICATION);
+		
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
+		
+		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
+		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
+		int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
+				
+		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
+		
+		//----------  Retrieving the information about the stored file -----------------		
+		/** Map<adler32, Map<md5, chunkNumber>> */
+		Map<String, Map<String, String>> fileInStorageServer = new HashMap<String, Map<String, String>>();		
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);	
+		for(int i = 0; i < amountChunk; i++) {			
+			String adler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32").getValue();
+			
+			if(!fileInStorageServer.containsKey(adler32)) {
+				Map<String, String> chunkInfo = new HashMap<String, String>();
+				chunkInfo.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
+						String.valueOf(i));
+				fileInStorageServer.put(adler32, chunkInfo);
+			} else {
+				Map<String, String> md5Set = fileInStorageServer.get(adler32);
+				md5Set.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
+						String.valueOf(i));
+			}			
+		}
+		//--------------------------------------------------------------------------------
+		
+		String newFileID = String.valueOf(System.currentTimeMillis());
+		HashMap<Integer, ChunksDao> newFileChunks = new HashMap<Integer, ChunksDao>();
+		int chunk_number = 0;
+		
+		Checksum32 c32 = new Checksum32();
+		int lastIndex = 0;
+		int lastLength = 0;
+		
+		int offset = 0;
+		for(int i = 0; i < divideInTimes - 1; i++) {
+			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (int) ((file.length() / divideInTimes) * i));
+			//...
+		}
+		//last time
 		
 	}
 	
