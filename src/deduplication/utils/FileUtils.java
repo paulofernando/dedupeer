@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,6 +106,35 @@ public class FileUtils {
 				input.close();
 			} catch (IOException e) {
 				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+	
+	public static byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
+		byte[] result = null;
+		RandomAccessFile raf = null;
+		try {
+			raf = new RandomAccessFile(filePath, "r");
+			result = new byte[bytesToRead];
+			
+			raf.seek(offset);
+			
+			int totalBytesRead = 0;
+			while(totalBytesRead < bytesToRead) {
+				result[totalBytesRead++] = raf.readByte();
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (raf != null) {
+				try {
+					raf.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return result;

@@ -284,7 +284,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		//----------  Retrieving the information about the stored file -----------------		
 		/** Map<adler32, Map<md5, chunkNumber>> */
-		Map<String, Map<String, String>> fileInStorageServer = new HashMap<String, Map<String, String>>();		
+		Map<Integer, Map<String, String>> fileInStorageServer = new HashMap<Integer, Map<String, String>>();		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);	
 		for(int i = 0; i < amountChunk; i++) {			
 			String adler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32").getValue();
@@ -293,7 +293,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				Map<String, String> chunkInfo = new HashMap<String, String>();
 				chunkInfo.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
 						String.valueOf(i));
-				fileInStorageServer.put(adler32, chunkInfo);
+				fileInStorageServer.put(Integer.parseInt(adler32), chunkInfo);
 			} else {
 				Map<String, String> md5Set = fileInStorageServer.get(adler32);
 				md5Set.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
@@ -303,19 +303,54 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		//--------------------------------------------------------------------------------
 		
 		String newFileID = String.valueOf(System.currentTimeMillis());
-		HashMap<Integer, ChunksDao> newFileChunks = new HashMap<Integer, ChunksDao>();
+		HashMap<Long, ChunksDao> newFileChunks = new HashMap<Long, ChunksDao>();
 		int chunk_number = 0;
 		
 		Checksum32 c32 = new Checksum32();
 		int lastIndex = 0;
 		int lastLength = 0;
 		
-		int offset = 0;
+		long offset = 0;		
 		for(int i = 0; i < divideInTimes - 1; i++) {
-			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (int) ((file.length() / divideInTimes) * i));
-			//...
+			int bytesToRead = (int) ((file.length() / divideInTimes) * i);
+			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
+			byte[] currentChunk = new byte[defaultChunkSize];
+			
+			/* current index in the divided byte array */
+			int localIndex = 0;
+			/* index in the whole file */
+			long globalIndex = 0;
+			while(localIndex < modFile.length) {
+				currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+				c32.check(currentChunk, 0, currentChunk.length);
+				if(fileInStorageServer.containsKey(c32.getValue())) {
+					String MD5 = DigestUtils.md5Hex(currentChunk);
+					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
+						newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
+						
+						chunk_number++;
+						globalIndex += currentChunk.length;
+						localIndex += currentChunk.length;
+						
+						currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+						c32.check(currentChunk, 0, currentChunk.length);
+					}		
+				} else {
+					globalIndex++;
+					localIndex++;
+					c32.roll(modFile[localIndex + defaultChunkSize]);
+				}
+			}
+			
+			
+			
+			
+			
+			offset += bytesToRead;
 		}
 		//last time
+		//...
 		
 	}
 	

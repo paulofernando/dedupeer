@@ -84,7 +84,7 @@ public class EagleEye {
 		System.out.println("-> Pattern not found!");	
 		return -1;
 	}
-	
+		
 	/**
 	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
 	 * @param file File where the block will be searched
