@@ -310,47 +310,66 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		int lastIndex = 0;
 		int lastLength = 0;
 		
-		long offset = 0;		
+		long offset = 0;
+		ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
+		/* current index in the divided byte array */
+		int localIndex = 0;
+		/* index in the whole file */
+		long globalIndex = 0;	
+		
 		for(int i = 0; i < divideInTimes - 1; i++) {
+			localIndex = 0;
 			int bytesToRead = (int) ((file.length() / divideInTimes) * i);
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
-			
-			/* current index in the divided byte array */
-			int localIndex = 0;
-			/* index in the whole file */
-			long globalIndex = 0;
-			while(localIndex < modFile.length) {
-				currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
-				c32.check(currentChunk, 0, currentChunk.length);
-				if(fileInStorageServer.containsKey(c32.getValue())) {
-					String MD5 = DigestUtils.md5Hex(currentChunk);
-					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
-						newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
+					
+			while(localIndex < modFile.length) {				
+					currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+					c32.check(currentChunk, 0, currentChunk.length);
+					if(fileInStorageServer.containsKey(c32.getValue())) {						
+						if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+							byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+							c32.check(newchunk, 0, newchunk.length);
+							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+									DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+									String.valueOf(newchunk.length), newchunk));
+							chunk_number++;
+							buffer.clear();
+						}
 						
-						chunk_number++;
-						globalIndex += currentChunk.length;
-						localIndex += currentChunk.length;
+						String MD5 = DigestUtils.md5Hex(currentChunk);
+						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
+							newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+								String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
+							
+							chunk_number++;
+							globalIndex += currentChunk.length;
+							localIndex += currentChunk.length;
+							
+							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+							c32.check(currentChunk, 0, currentChunk.length);							
+						}		
+					} else {
+						buffer.put(modFile[localIndex]);
 						
-						currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
-						c32.check(currentChunk, 0, currentChunk.length);
-					}		
-				} else {
-					globalIndex++;
-					localIndex++;
-					c32.roll(modFile[localIndex + defaultChunkSize]);
-				}
+						globalIndex++;
+						localIndex++;
+						c32.roll(modFile[localIndex + defaultChunkSize]);						
+					}			
 			}
-			
-			
-			
-			
+						
+			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele			
+				newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+						DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+						String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));			
+				buffer.clear();
+			}
 			
 			offset += bytesToRead;
 		}
+		
 		//last time
-		//...
+		
 		
 	}
 	
