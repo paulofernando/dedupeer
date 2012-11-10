@@ -317,9 +317,20 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		/* index in the whole file */
 		long globalIndex = 0;	
 		
-		for(int i = 0; i < divideInTimes - 1; i++) {
+		for(int i = 0; i < divideInTimes; i++) {
 			localIndex = 0;
-			int bytesToRead = (int) ((file.length() / divideInTimes) * i);
+			int bytesToRead;
+			if(i != (divideInTimes - 1)) {
+				bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
+			} else {
+				if(file.length() % divideInTimes == 0) {
+					bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
+				} else {
+					bytesToRead = (int)(file.length() - (Math.ceil(((double)file.length() / (double)divideInTimes) * (i - 1))));
+				}
+				
+			}
+			
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
 					
@@ -364,6 +375,18 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));			
 				buffer.clear();
 			}
+			
+			int count = 0;
+			progressInfo.setType(ProgressInfo.TYPE_STORING);
+			for(ChunksDao chunk: newFileChunks.values()) {
+				cdo.insertRow(chunk);
+				setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
+			}
+			
+			ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+			fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
+			
+			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
 			
 			offset += bytesToRead;
 		}
