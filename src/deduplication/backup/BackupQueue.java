@@ -45,7 +45,8 @@ public class BackupQueue extends Thread {
 			try {
 				StoredFile currentBackup = backupQueue.take();
 				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
-					currentBackup.deduplicate(deduplicateMap.get(currentBackup.getFilename()));
+					//currentBackup.deduplicate(deduplicateMap.get(currentBackup.getFilename()));
+					currentBackup.deduplicateABigFile(deduplicateMap.get(currentBackup.getFilename()), 3);
 					deduplicateMap.remove(currentBackup.getFilename());
 				} else {
 					currentBackup.store();
