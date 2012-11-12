@@ -35,7 +35,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 256000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -370,16 +370,23 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							buffer.clear();
 						} else {
 							buffer.put(modFile[localIndex]);
+							c32.roll(modFile[localIndex]);
 							globalIndex++;
 							localIndex++;
 						}			
 					}			
 			}
 						
-			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele			
+			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
+				
+				//TODO Otimizar aqui para utilizar o roll da linha 373
+				c32.check(buffer.array(), 0, buffer.capacity());
+				
 				newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 						DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
-						String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));			
+						String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+				
+				chunk_number++;
 				buffer.clear();
 			}
 			
@@ -397,7 +404,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		//last time
 		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 	}
 	
