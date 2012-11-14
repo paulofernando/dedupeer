@@ -35,7 +35,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 256000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -334,25 +334,28 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
 					
+			currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);	
 			c32.check(currentChunk, 0, currentChunk.length);
 			while(localIndex < modFile.length) {				
-					currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);					
+					//currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);					
 					if(fileInStorageServer.containsKey(c32.getValue())) {						
-						if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
-							log.info("Creating new chunk");
-							byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
-							Checksum32 c32_2 = new Checksum32();
-							c32_2.check(newchunk, 0, newchunk.length);
-							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-									DigestUtils.md5Hex(newchunk), String.valueOf(c32_2.getValue()), String.valueOf(globalIndex - buffer.position()), 
-									String.valueOf(newchunk.length), newchunk));
-							chunk_number++;
-							buffer.clear();
-						}
-						
+												
 						String MD5 = DigestUtils.md5Hex(currentChunk);
-						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
+						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {							
 							log.info("Duplicated chunk: " + MD5);
+							
+							if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+								log.info("Creating new chunk");
+								byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+								Checksum32 c32_2 = new Checksum32();
+								c32_2.check(newchunk, 0, newchunk.length);
+								newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+										DigestUtils.md5Hex(newchunk), String.valueOf(c32_2.getValue()), String.valueOf(globalIndex - buffer.position()), 
+										String.valueOf(newchunk.length), newchunk));
+								chunk_number++;
+								buffer.clear();
+							}							
+							
 							newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
 							
@@ -362,15 +365,34 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							
 							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
 							c32.check(currentChunk, 0, currentChunk.length);							
+						} else {
+							if(buffer.remaining() == 0) { //same of the else below, but for do not calculate the MD5 always it was copied
+								log.info("Creating new chunk");
+								//c32.check(buffer.array(), 0, buffer.capacity());
+								newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+										DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+										String.valueOf(buffer.array().length), buffer.array()));
+								chunk_number++;
+								currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+								
+								buffer.clear();
+							} else {
+								buffer.put(modFile[localIndex]);
+								c32.roll(modFile[localIndex]);
+								globalIndex++;
+								localIndex++;
+							}
 						}
 					} else {
 						if(buffer.remaining() == 0) {
 							log.info("Creating new chunk");
-							c32.check(buffer.array(), 0, buffer.capacity());
+							//c32.check(buffer.array(), 0, buffer.capacity());
 							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 									String.valueOf(buffer.array().length), buffer.array()));
 							chunk_number++;
+							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+							
 							buffer.clear();
 						} else {
 							buffer.put(modFile[localIndex]);

@@ -127,6 +127,8 @@ public class ChunksDaoOperations {
 				String chunk_num = String.valueOf(chunk_number);
 				Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 				
+				log.info("Chunk " + chunk_num + " [adler32 = " + c.adler32 + "] e [MD5 = " + c.md5 + "]");
+				
 				if(c.pfile.equals("")) {
 					mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
 		                    Arrays.asList(HFactory.createStringColumn("md5", c.md5)), 
