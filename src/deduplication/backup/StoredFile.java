@@ -281,6 +281,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
 		
+		long timeToRetrieve = System.currentTimeMillis();
 		//----------  Retrieving the information about the stored file -----------------		
 		/** Map<adler32, Map<md5, chunkNumber>> */
 		Map<Integer, Map<String, String>> fileInStorageServer = new HashMap<Integer, Map<String, String>>();		
@@ -300,7 +301,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			}			
 		}
 		//--------------------------------------------------------------------------------
-		
+		System.out.println("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
 		String newFileID = String.valueOf(System.currentTimeMillis());
 		HashMap<Long, ChunksDao> newFileChunks = new HashMap<Long, ChunksDao>();
 		int chunk_number = 0;
@@ -333,11 +334,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
 					
+			c32.check(currentChunk, 0, currentChunk.length);
 			while(localIndex < modFile.length) {				
-					currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
-					c32.check(currentChunk, 0, currentChunk.length);
+					currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);					
 					if(fileInStorageServer.containsKey(c32.getValue())) {						
 						if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+							log.info("Creating new chunk");
 							byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 							Checksum32 c32_2 = new Checksum32();
 							c32_2.check(newchunk, 0, newchunk.length);
@@ -350,6 +352,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						
 						String MD5 = DigestUtils.md5Hex(currentChunk);
 						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
+							log.info("Duplicated chunk: " + MD5);
 							newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
 							
@@ -359,9 +362,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							
 							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
 							c32.check(currentChunk, 0, currentChunk.length);							
-						}		
+						}
 					} else {
 						if(buffer.remaining() == 0) {
+							log.info("Creating new chunk");
 							c32.check(buffer.array(), 0, buffer.capacity());
 							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
@@ -378,6 +382,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			}
 						
 			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
+				log.info("Creating new chunk");
 				
 				//TODO Otimizar aqui para utilizar o roll da linha 373
 				c32.check(buffer.array(), 0, buffer.capacity());

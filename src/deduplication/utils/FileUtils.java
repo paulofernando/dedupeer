@@ -8,12 +8,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
-
-import deduplication.backup.StoredFileFeedback;
 
 public class FileUtils {
 	
@@ -116,14 +116,12 @@ public class FileUtils {
 		RandomAccessFile raf = null;
 		try {
 			raf = new RandomAccessFile(filePath, "r");
-			result = new byte[bytesToRead];
+			ByteBuffer bb = ByteBuffer.allocate(bytesToRead);		
+			FileChannel fc = raf.getChannel();
+			fc.position(offset);
+			fc.read(bb);
 			
-			raf.seek(offset);
-			
-			int totalBytesRead = 0;
-			while(totalBytesRead < bytesToRead) {
-				result[totalBytesRead++] = raf.readByte();
-			}
+			result = bb.array();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

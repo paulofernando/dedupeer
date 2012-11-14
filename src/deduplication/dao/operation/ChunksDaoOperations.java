@@ -6,6 +6,7 @@ import java.util.Vector;
 
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.service.ColumnSliceIterator;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -14,6 +15,7 @@ import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
+import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.api.query.SuperColumnQuery;
 
 import org.apache.log4j.Logger;
@@ -180,6 +182,19 @@ public class ChunksDaoOperations {
         superColumnQuery.setColumnFamily("Chunks").setKey(file_id).setSuperName(chunk_number);
         QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();    
         return result;
+	}
+	
+	public void getAllChunks(String file_id) {
+		SliceQuery<String, String, String> query = HFactory.createSliceQuery(keyspaceOperator, StringSerializer.get(),
+			    StringSerializer.get(), StringSerializer.get()).
+			    setKey(file_id).setColumnFamily("Chunks");
+
+			ColumnSliceIterator<String, String, String> iterator = 
+			    new ColumnSliceIterator<String, String, String>(query, null, "\uFFFF", false);
+						
+			while (iterator.hasNext()) {
+			    System.out.println(iterator.next().getValue());
+			}
 	}
 	
 	/**
