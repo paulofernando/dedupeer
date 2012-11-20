@@ -345,7 +345,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							log.info("Duplicated chunk: " + MD5);
 							
 							if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
-								log.info("Creating new chunk");
+								log.info("Creating new chunk: " + new String(buffer.array()));
 								byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
@@ -377,15 +377,46 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								
 								buffer.clear();
 							} else {
-								buffer.put(modFile[localIndex]);
-								c32.roll(modFile[localIndex]);
-								globalIndex++;
-								localIndex++;
+								if(modFile.length - (localIndex + defaultChunkSize) > 0) {
+									buffer.put(modFile[localIndex]);
+									c32.roll(modFile[localIndex + defaultChunkSize]);									
+									globalIndex++;
+									localIndex++;
+									
+									//TODO colocar uma forma mais eficiente de adicionar um byte novo
+									currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+								} else { //o roll passa do tamanho do arquivo, então ele é dividido em dois chunks e esses salvos
+									buffer.put(Arrays.copyOfRange(modFile, localIndex, localIndex + (defaultChunkSize - buffer.position())));
+									log.info("Creating new chunk: " + new String(buffer.array()));
+									
+									c32.check(buffer.array(), 0, buffer.capacity());
+									
+									newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+											DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+											String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+									
+									chunk_number++;
+									buffer.clear();
+									
+									localIndex += (defaultChunkSize - buffer.position());
+									globalIndex += (defaultChunkSize - buffer.position());
+									
+									//------------- chunk final --------------------
+									
+									/*byte[] finalChunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
+									c32.check(finalChunk, 0, finalChunk.length);
+									
+									newFileChunks.put(globalIndex - finalChunk.length, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+											DigestUtils.md5Hex(Arrays.copyOfRange(finalChunk, 0, finalChunk.length)), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+											String.valueOf(finalChunk.length), Arrays.copyOfRange(finalChunk, 0, finalChunk.length)));
+									
+									chunk_number++;*/
+								}
 							}
 						}
 					} else {
 						if(buffer.remaining() == 0) {
-							log.info("Creating new chunk");
+							log.info("Creating new chunk:" + new String(buffer.array()));
 							//c32.check(buffer.array(), 0, buffer.capacity());
 							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
@@ -395,16 +426,47 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							
 							buffer.clear();
 						} else {
-							buffer.put(modFile[localIndex]);
-							c32.roll(modFile[localIndex]);
-							globalIndex++;
-							localIndex++;
+							if(modFile.length - (localIndex + defaultChunkSize) > 0) {
+								buffer.put(modFile[localIndex]);
+								c32.roll(modFile[localIndex + defaultChunkSize]);
+								globalIndex++;
+								localIndex++;
+								
+								//TODO colocar uma forma mais eficiente de adicionar um byte novo
+								currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+							} else { //o roll passa do tamanho do arquivo, então ele é dividido em dois chunks e esses salvos
+								buffer.put(Arrays.copyOfRange(modFile, localIndex, localIndex + (defaultChunkSize - buffer.position())));
+								log.info("Creating new chunk: " + new String(buffer.array()));
+								
+								c32.check(buffer.array(), 0, buffer.capacity());
+								
+								newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+										DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+										String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+								
+								chunk_number++;
+								buffer.clear();
+								
+								localIndex += (defaultChunkSize - buffer.position());
+								globalIndex += (defaultChunkSize - buffer.position());
+								
+								//------------- chunk final --------------------
+								
+								/*byte[] finalChunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
+								c32.check(finalChunk, 0, finalChunk.length);
+								
+								newFileChunks.put(globalIndex - finalChunk.length, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+										DigestUtils.md5Hex(Arrays.copyOfRange(finalChunk, 0, finalChunk.length)), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
+										String.valueOf(finalChunk.length), Arrays.copyOfRange(finalChunk, 0, finalChunk.length)));
+								
+								chunk_number++;*/
+							}
 						}			
 					}			
 			}
 						
 			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
-				log.info("Creating new chunk");
+				log.info("Creating new chunk:" + new String(buffer.array()));
 				
 				//TODO Otimizar aqui para utilizar o roll da linha 373
 				c32.check(buffer.array(), 0, buffer.capacity());
