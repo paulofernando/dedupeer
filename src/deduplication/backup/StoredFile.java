@@ -35,7 +35,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 128000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -318,6 +318,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		long globalIndex = 0;	
 		
 		for(int i = 0; i < divideInTimes; i++) {
+			log.info("Searching in part " + i + "...");
 			localIndex = 0;
 			int bytesToRead;
 			if(i != (divideInTimes - 1)) {
@@ -338,12 +339,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			c32.check(currentChunk, 0, currentChunk.length);
 			while(localIndex < modFile.length) {
 					if(fileInStorageServer.containsKey(c32.getValue())) {						
-												
+						currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
 						String MD5 = DigestUtils.md5Hex(currentChunk);
 						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
 							if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele								
 								byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
-								log.info("Creating new chunk: " + (globalIndex - newchunk.length) + ": " + new String(newchunk));
+								log.info("Creating new chunk: " + (globalIndex - newchunk.length));
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
 								newFileChunks.put(globalIndex - newchunk.length, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
@@ -366,12 +367,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							c32.check(currentChunk, 0, currentChunk.length);							
 						} else {
 							if(buffer.remaining() == 0) { //same of the else below, but for do not calculate the MD5 always it was copied
-								log.info("Creating new chunk " + (globalIndex - buffer.position()) + ": " + new String(buffer.array()));
+								log.info("Creating new chunk " + (globalIndex - buffer.position()));
 								newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 										String.valueOf(buffer.array().length), buffer.array()));
 								chunk_number++;
-								currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+								
 								
 								buffer.clear();
 							} else {
@@ -379,22 +380,17 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 									buffer.put(modFile[localIndex]);
 									c32.roll(modFile[localIndex + defaultChunkSize]);									
 									globalIndex++;
-									localIndex++;
-									
-									//TODO colocar uma forma mais eficiente de adicionar um byte novo
-									currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+									localIndex++;									
 								}
 							}
 						}
 					} else {
 						if(buffer.remaining() == 0) {
-							log.info("Creating new chunk" + (globalIndex - buffer.position()) + ":" + new String(buffer.array()));
+							log.info("Creating new chunk" + (globalIndex - buffer.position()));
 							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 									String.valueOf(buffer.array().length), buffer.array()));
 							chunk_number++;
-							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
-							
 							buffer.clear();
 						} else {
 							if(modFile.length - (localIndex + defaultChunkSize) > 0) {
@@ -402,12 +398,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								c32.roll(modFile[localIndex + defaultChunkSize]);
 								globalIndex++;
 								localIndex++;
-								
-								//TODO colocar uma forma mais eficiente de adicionar um byte novo
-								currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
 							} else {
 								byte[] newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length); //não utiliza o byteBuffer porque o chunk pode ser menor que defaulChunkSize, daí o cálculo do hash fica errado
-								log.info("Creating new chunk in " + (globalIndex) + ": " + new String(newchunk));
+								log.info("Creating new chunk in " + (globalIndex));
 								
 								c32.check(newchunk, 0, newchunk.length);
 								
@@ -426,7 +419,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			}
 						
 			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
-				log.info("Creating new chunk" + (globalIndex - buffer.position()) + ":" + new String(buffer.array()));
+				log.info("Creating new chunk" + (globalIndex - buffer.position()));
 				
 				//TODO Otimizar aqui para utilizar o roll da linha 373
 				c32.check(buffer.array(), 0, buffer.capacity());
