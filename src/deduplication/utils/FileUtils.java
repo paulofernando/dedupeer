@@ -15,6 +15,8 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 
+import android.util.Log;
+
 public class FileUtils {
 	
 	private static final int TYPE_AUDIO = 0;
@@ -122,6 +124,9 @@ public class FileUtils {
 			fc.read(bb);
 			
 			result = bb.array();
+		} catch (OutOfMemoryError e) {
+			System.out.println("Bytes to read: " + bytesToRead);
+			e.printStackTrace();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

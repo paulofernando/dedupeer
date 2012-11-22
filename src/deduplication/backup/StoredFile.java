@@ -35,7 +35,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 128000;
+	public static final int defaultChunkSize = 256000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -286,6 +286,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		/** Map<adler32, Map<md5, chunkNumber>> */
 		Map<Integer, Map<String, String>> fileInStorageServer = new HashMap<Integer, Map<String, String>>();		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);	
+		log.info("Retrieving chunks information...");
 		for(int i = 0; i < amountChunk; i++) {			
 			String adler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32").getValue();
 			
@@ -298,7 +299,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				Map<String, String> md5Set = fileInStorageServer.get(adler32);
 				md5Set.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
 						String.valueOf(i));
-			}			
+			}
+			log.info("chunk " + i);
 		}
 		//--------------------------------------------------------------------------------
 		System.out.println("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
