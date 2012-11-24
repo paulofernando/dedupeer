@@ -158,13 +158,11 @@ public class Chunking {
 	 * @param filename File name of the file that chunks were created
 	 */
 	public static void cleanUpChunks(String destination, String filename) {
-		//log.info("Deleting chunks of the " + filename + " stored on hard disk...");
+		log.info("Deleting chunks of the " + filename + " stored on hard disk...");
 		int chunkCount = 0;
 		String fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + chunkCount;
 		while(new File(fname).delete()) {
 			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);
 		}
-		//log.info("Done!");
-		
 	}
 }

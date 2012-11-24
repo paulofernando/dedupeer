@@ -99,11 +99,11 @@ public class UserFilesDaoOperations {
 	 * @param filename File name
 	 * @return
 	 */
-	public int getFileLength(String owner, String filename) {
+	public long getFileLength(String owner, String filename) {
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
 		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("size");
-		return Integer.parseInt(columnAmountChunks.getValue());
+		return Long.parseLong(columnAmountChunks.getValue());
 	}
 
 	/**

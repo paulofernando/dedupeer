@@ -444,11 +444,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			int count = 0;
 			progressInfo.setType(ProgressInfo.TYPE_STORING);
-			for(ChunksDao chunk: newFileChunks.values()) {
+			System.out.println("Storing...");
+			for(ChunksDao chunk: newFileChunks.values()) {				
 				cdo.insertRow(chunk);
 				setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
 			}
 			
+			newFileChunks.clear();			
 			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
 			
 			offset += bytesToRead;
@@ -550,7 +552,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				log.info("Calculating storage economy of " + getFilename() + "...");
 				
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-				int fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
+				long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
 				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 				progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);
