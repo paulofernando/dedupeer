@@ -18,6 +18,7 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.query.QueryResult;
 
+import org.apache.cassandra.thrift.Cassandra.system_add_column_family_args;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
@@ -47,6 +48,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	private String storageEconomy;
 	private JButton btRestore;
 	private String filename;
+	
+	private byte[] newchunk;
 	
 	private int smallestChunk = -1;
 	
@@ -218,7 +221,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		while(index < modFile.length) {
 			if(newFileChunks.containsKey(index)) {
 				if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
-					byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+					newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 					c32.check(newchunk, 0, newchunk.length);
 					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
@@ -302,6 +305,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			}
 			log.info("chunk " + i);
 		}
+				
 		//--------------------------------------------------------------------------------
 		System.out.println("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
 		String newFileID = String.valueOf(System.currentTimeMillis());
@@ -334,6 +338,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				}
 			}
 			
+			System.out.println("Total memory: " + Runtime.getRuntime().totalMemory());
+			System.out.println("Free memory: " + Runtime.getRuntime().freeMemory());
+			System.out.println("Usage memory:" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()));
+			
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
 					
@@ -345,7 +353,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						String MD5 = DigestUtils.md5Hex(currentChunk);
 						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
 							if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele								
-								byte[] newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+								newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 								log.info("Creating new chunk: " + (globalIndex - newchunk.length));
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
@@ -401,7 +409,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								globalIndex++;
 								localIndex++;
 							} else {
-								byte[] newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length); //não utiliza o byteBuffer porque o chunk pode ser menor que defaulChunkSize, daí o cálculo do hash fica errado
+								newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length); //não utiliza o byteBuffer porque o chunk pode ser menor que defaulChunkSize, daí o cálculo do hash fica errado
 								log.info("Creating new chunk in " + (globalIndex));
 								
 								c32.check(newchunk, 0, newchunk.length);

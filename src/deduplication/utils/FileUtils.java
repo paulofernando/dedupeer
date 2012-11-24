@@ -15,6 +15,8 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 
+import deduplication.backup.StoredFile;
+
 import android.util.Log;
 
 public class FileUtils {
@@ -26,6 +28,8 @@ public class FileUtils {
 	private static final int TYPE_UNKNOWN = 4;
 	
 	private static Map<String, Integer> extensions;	
+	
+	private static ByteBuffer byteBuffer = ByteBuffer.allocate(StoredFile.defaultChunkSize);
 	
 	static {
 		extensions = new HashMap<String, Integer>();
@@ -113,17 +117,26 @@ public class FileUtils {
 		return result;
 	}
 	
-	public static byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
+	public synchronized static byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
 		byte[] result = null;
 		RandomAccessFile raf = null;
 		try {
 			raf = new RandomAccessFile(filePath, "r");
-			ByteBuffer bb = ByteBuffer.allocate(bytesToRead);		
+			
+			if(byteBuffer.capacity() != bytesToRead) {
+				byteBuffer = ByteBuffer.allocate(bytesToRead);
+			}
+			
+			byteBuffer.mark();
+			
 			FileChannel fc = raf.getChannel();
 			fc.position(offset);
-			fc.read(bb);
+			fc.read(byteBuffer);
 			
-			result = bb.array();
+			result = byteBuffer.array();
+			
+			byteBuffer.reset();
+		
 		} catch (OutOfMemoryError e) {
 			System.out.println("Bytes to read: " + bytesToRead);
 			e.printStackTrace();
