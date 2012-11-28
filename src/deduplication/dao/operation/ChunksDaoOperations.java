@@ -199,13 +199,36 @@ public class ChunksDaoOperations {
 			}
 	}
 	
-	/**
-	 * Retrieves all columns with content in bytes of file
-	 * @param file_id The line key
-	 * @param chunk_number The column name to get the value
-	 * @return The SuperColumns with the column content
-	 */
-	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename) {
+	
+	public long getSpaceOccupiedByTheFile(String owner, String filename) {
+		SuperColumnQuery<String, String, String, String> superColumnQuery = 
+	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
+	                    stringSerializer, stringSerializer);
+		long bytesStored = 0;
+		
+		//--- retrieving the id ----
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
+		String fileID = columnFileID.getValue();
+		//-------------------------
+		
+		long count = ufdo.getChunksCount(owner, filename);	
+		for(int i = 0; i < count; i++) {
+	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
+	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
+	        
+	        if(column.get().getSubColumnByName("content") != null) {
+				bytesStored += Integer.parseInt(column.get().getSubColumnByName("length").getValue());
+	        }
+	        
+	        if(feedback != null) {
+            	feedback.updateProgress((int) Math.ceil((((double)i) * 100) / count));
+            }
+		}
+        return bytesStored;
+	}
+	
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getAllValuesWithContent(String owner, String filename) {
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
 	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
 	                    stringSerializer, stringSerializer);
@@ -220,6 +243,35 @@ public class ChunksDaoOperations {
 		
 		long count = ufdo.getChunksCount(owner, filename);		
 		for(int i = 0; i < count; i++) {
+	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
+	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
+	        
+	        if(column.get().getSubColumnByName("content") != null) {
+	        	result.add(column);
+	        }
+	        if(feedback != null) {
+	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
+	        }
+		}
+        return result;
+	}
+	
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename, long initialChunk, long amountOfChunks) {
+		SuperColumnQuery<String, String, String, String> superColumnQuery = 
+	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
+	                    stringSerializer, stringSerializer);
+			
+		Vector<QueryResult<HSuperColumn<String, String, String>>> result = new Vector<QueryResult<HSuperColumn<String, String, String>>>();
+		
+		//--- retrieving the id ----
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
+		String fileID = columnFileID.getValue();
+		//-------------------------
+		
+		long count = ufdo.getChunksCount(owner, filename);
+		long finalChunk = initialChunk + amountOfChunks;
+		for(long i = initialChunk; i < finalChunk; i++) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        

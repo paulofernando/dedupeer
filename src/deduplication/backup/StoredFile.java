@@ -473,9 +473,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
-								
-				ByteBuffer byteBuffer = ByteBuffer.allocate(ufdo.getFileLength(System.getProperty("username"), getFilename()));
-								
+				
+				long filelength = ufdo.getFileLength(System.getProperty("username"), getFilename());
+				long storedBytes = 0;				
+				ByteBuffer byteBuffer = ByteBuffer.allocate(defaultChunkSize * 100);
+				
+				while(storedBytes)
 				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename);
 				
 				long totalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
@@ -556,30 +559,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 				progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);
-				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), getFilename());
 				
-				long bytesStored = 0;
-				smallestChunk = defaultChunkSize + 1;
-				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-					int bytes = Integer.parseInt(chunk.get().getSubColumnByName("length").getValue());
-					bytesStored += bytes;
-					if(bytes > 0)
-						smallestChunk = Math.min(smallestChunk, bytes);
-				}
-				
-				if(smallestChunk == (defaultChunkSize + 1)) { // all zero
-					smallestChunk = 0;
-				}
-				
+				long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());
+								
 				setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
 				log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
-				log.info("Smallest chunk of " + getFilename() + " = " + smallestChunk);
 				
-				progressInfo.setProgress(100);
-				
-				if(MainPanel.infoTextArea != null) {
-					MainPanel.infoTextArea.setText("Smallest chunk of '" + getFilename() + "' = [" + smallestChunk + "]");
-				}
+				progressInfo.setProgress(100);				
 			}
 		});
 		calculateProcess.start();
