@@ -270,8 +270,8 @@ public class ChunksDaoOperations {
 		//-------------------------
 		
 		long count = ufdo.getChunksCount(owner, filename);
-		long finalChunk = initialChunk + amountOfChunks;
-		for(long i = initialChunk; i < finalChunk; i++) {
+		long i = 0;
+		while(result.size() < amountOfChunks) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
@@ -281,6 +281,7 @@ public class ChunksDaoOperations {
 	        if(feedback != null) {
 	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
 	        }
+	        i++;
 		}
         return result;
 	}
@@ -305,8 +306,8 @@ public class ChunksDaoOperations {
 		//-------------------------
 		
 		long count = ufdo.getChunksCount(owner, filename);
-		long finalChunk = initialChunk + amountOfChunks;
-		for(long i = initialChunk; i < finalChunk; i++) {
+		long i = 0;
+		while(result.size() < amountOfChunks) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
@@ -316,6 +317,7 @@ public class ChunksDaoOperations {
 	        if(feedback != null) {
 	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
 	        }
+	        i++;
 		}
         return result;
 	}

@@ -36,7 +36,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 256000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -535,6 +535,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						setProgress(prog);
 					}
 					
+					amountChunksWithoutContentLoaded += chunksReference.size();
 					byteBuffer.clear();
 				}
 								
