@@ -152,8 +152,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					fdo.insertRow(System.getProperty("username"), file.getName(), fileID);
 					
 					progressInfo.setType(ProgressInfo.TYPE_STORING);
-					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);		
+					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
 					cdo.insertRows(chunks);
+					
+					UserFilesDaoOperations udo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+					udo.setAmountChunksWithContent(System.getProperty("username"), file.getName(), chunks.size());
+					udo.setAmountChunksWithoutContent(System.getProperty("username"), file.getName(), 0l);
 					
 					setId(Long.parseLong(fileID));
 				} else { //Other file version being stored
@@ -196,6 +200,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);
 		
+		long referencesCount = 0;
 		//Find the duplicated chunk in the system
 		for(int i = 0; i < amountChunk; i++) {
 			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32");
@@ -211,6 +216,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							fileIDStored, String.valueOf(i)));
 					lastIndex = index;
 					lastLength = Integer.parseInt(columnLength.getValue());
+					referencesCount++;
 				}
 			}
 			setProgress((int)(((long)i * 100) / amountChunk));
@@ -261,6 +267,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		}
 		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), newFileChunks.size() - referencesCount);
+		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), referencesCount);
+		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 		
 		Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
@@ -323,6 +332,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		/* index in the whole file */
 		long globalIndex = 0;	
 		
+		long referencesCount = 0;
+		
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
 			localIndex = 0;
@@ -374,7 +385,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							localIndex += currentChunk.length;
 							
 							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
-							c32.check(currentChunk, 0, currentChunk.length);							
+							c32.check(currentChunk, 0, currentChunk.length);
+							
+							referencesCount++;
 						} else {
 							if(buffer.remaining() == 0) { //same of the else below, but for do not calculate the MD5 always it was copied
 								log.info("Creating new chunk " + (globalIndex - buffer.position()));
@@ -459,6 +472,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		//last time
 		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
+		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), chunk_number - referencesCount);
+		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
+		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 	}
 	
@@ -478,37 +494,49 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				long storedBytes = 0;				
 				ByteBuffer byteBuffer = ByteBuffer.allocate(defaultChunkSize * 100);
 				
-				while(storedBytes)
-				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename);
+				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
+				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());
 				
-				long totalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
 				long count = 0;
-				
-				progressInfo.setType(ProgressInfo.TYPE_WRITING);
-				for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
-					byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
-					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+				long amountChunksWithContentLoaded = 0;
+				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {				
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, (amountChunksWithContent - amountChunksWithContentLoaded >= 20 ? 20 : amountChunksWithContent - amountChunksWithContentLoaded));
 					
-					count++;					
-					int prog = (int)(Math.ceil((((double)count) * 100) / totalChunks));
-					setProgress(prog);
+					progressInfo.setType(ProgressInfo.TYPE_WRITING);
+					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
+						byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
+						byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+						
+						count++;					
+						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+						setProgress(prog);
+					}
+					
+					amountChunksWithContentLoaded += chunksWithContent.size();
+					chunksWithContent.clear();
 				}
 				
-				Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename);
-				for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
-					//retrieves by reference
-					QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
-							chunkReference.get().getSubColumnByName("pchunk").getValue());
-					
-					byteBuffer.position(Integer.parseInt(chunkReference.get().getSubColumnByName("index").getValue()));
-					byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
-					
-					count++;
-					int prog = (int)(Math.ceil((((double)count) * 100) / totalChunks));
-					setProgress(prog);
-				}
+				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
 				
-				byteBuffer.clear();
+				count = 0;
+				long amountChunksWithoutContentLoaded = 0;
+				while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, amountChunksWithoutContentLoaded, (amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= 20 ? 20 : amountChunksWithoutContent - amountChunksWithoutContentLoaded));
+					for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
+						//retrieves by reference
+						QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
+								chunkReference.get().getSubColumnByName("pchunk").getValue());
+						
+						byteBuffer.position(Integer.parseInt(chunkReference.get().getSubColumnByName("index").getValue()));
+						byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+						
+						count++;
+						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+						setProgress(prog);
+					}
+					
+					byteBuffer.clear();
+				}
 								
 				FileUtils.storeFileLocally(byteBuffer.array(), pathToRestore + "\\" + filename);				
 			}

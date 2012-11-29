@@ -56,6 +56,28 @@ public class UserFilesDaoOperations {
 			e.printStackTrace();
 		}
 	}
+	
+	public void setAmountChunksWithContent(String owner_name, String fileName, long amountChunks) {
+		try {
+			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
+			mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(
+					fileName, Arrays.asList(HFactory.createStringColumn("chunks_with_content", String.valueOf(amountChunks))), stringSerializer, stringSerializer, stringSerializer));			
+		} catch (HectorException e) {
+			log.error("Data was not inserted");
+			e.printStackTrace();
+		}		
+	}
+	
+	public void setAmountChunksWithoutContent(String owner_name, String fileName, long amountChunks) {
+		try {
+			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
+			mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(
+					fileName, Arrays.asList(HFactory.createStringColumn("chunks_without_content", String.valueOf(amountChunks))), stringSerializer, stringSerializer, stringSerializer));			
+		} catch (HectorException e) {
+			log.error("Data was not inserted");
+			e.printStackTrace();
+		}		
+	}
 
 	/**
 	 * Retrieves the Super Column with the key and the column specified
@@ -90,6 +112,20 @@ public class UserFilesDaoOperations {
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
 		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("chunks");
+		return Long.parseLong(columnAmountChunks.getValue());
+	}
+	
+	public long getChunksWithContentCount(String owner, String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("chunks_with_content");
+		return Long.parseLong(columnAmountChunks.getValue());
+	}
+	
+	public long getChunksWithoutContentCount(String owner, String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("chunks_without_content");
 		return Long.parseLong(columnAmountChunks.getValue());
 	}
 	

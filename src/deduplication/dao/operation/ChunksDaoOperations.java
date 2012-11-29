@@ -291,7 +291,7 @@ public class ChunksDaoOperations {
 	 * @param chunk_number The column name to get the value
 	 * @return The SuperColumns with the column content
 	 */
-	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithoutContent(String owner, String filename) {
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithoutContent(String owner, String filename, long initialChunk, long amountOfChunks) {
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
 	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
 	                    stringSerializer, stringSerializer);
@@ -305,12 +305,16 @@ public class ChunksDaoOperations {
 		//-------------------------
 		
 		long count = ufdo.getChunksCount(owner, filename);
-		for(int i = 0; i < count; i++) {
+		long finalChunk = initialChunk + amountOfChunks;
+		for(long i = initialChunk; i < finalChunk; i++) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
 	        if(column.get().getSubColumnByName("pfile") != null) { 
 	        	result.add(column);
+	        }
+	        if(feedback != null) {
+	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
 	        }
 		}
         return result;
