@@ -133,6 +133,7 @@ public class FileUtils {
 			fc.position(offset);
 			fc.read(byteBuffer);
 			
+			
 			result = byteBuffer.array();
 			
 			byteBuffer.reset();
@@ -200,23 +201,20 @@ public class FileUtils {
 		}
 	}
 	
-	public static void storeFileLocally(byte[] data, String path) {
-		File file = new File(path);
-		FileOutputStream fous = null;
+	public static void storeFileLocally(RandomAccessFile newFile, ByteBuffer data, long index) {		
 		try {
-			fous = new FileOutputStream(file);
-			fous.write(data);
-			fous.flush();
+			System.out.println("Writing chunk with index... [" + index + "]");
+			newFile.seek(index);
+			newFile.write(data.array());
+			
+			/*
+			FileChannel fc = newFile.getChannel();
+			fc.position(index);
+			fc.write(data);*/
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				fous.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 }

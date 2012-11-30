@@ -1,7 +1,9 @@
 package deduplication.backup;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +38,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 128000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -490,56 +492,69 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 				
-				long filelength = ufdo.getFileLength(System.getProperty("username"), getFilename());
-				long storedBytes = 0;				
-				ByteBuffer byteBuffer = ByteBuffer.allocate(defaultChunkSize * 100);
+				/*long filelength = ufdo.getFileLength(System.getProperty("username"), getFilename());
+				long storedBytes = 0;*/
 				
 				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
 				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());
 				
 				long count = 0;
 				long amountChunksWithContentLoaded = 0;
-				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {				
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, (amountChunksWithContent - amountChunksWithContentLoaded >= 20 ? 20 : amountChunksWithContent - amountChunksWithContentLoaded));
-					
-					progressInfo.setType(ProgressInfo.TYPE_WRITING);
-					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {					
-						byteBuffer.position(Integer.parseInt(chunk.get().getSubColumnByName("index").getValue()));
-						byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
+				
+				RandomAccessFile newFile = null;
+				try {
+					newFile = new RandomAccessFile(new File(pathToRestore + "\\" + filename), "rw");
+				
+					while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {	
+						Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, (amountChunksWithContent - amountChunksWithContentLoaded >= 20 ? 20 : amountChunksWithContent - amountChunksWithContentLoaded));
 						
-						count++;					
-						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
-						setProgress(prog);
+						progressInfo.setType(ProgressInfo.TYPE_WRITING);
+						for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
+							FileUtils.storeFileLocally(newFile, chunk.get().getSubColumnByName("content").getValueBytes(),
+									Long.parseLong(chunk.get().getSubColumnByName("index").getValue()));
+							
+							count++;					
+							int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+							setProgress(prog);
+						}
+						
+						amountChunksWithContentLoaded += chunksWithContent.size();
+						chunksWithContent.clear();
 					}
 					
-					amountChunksWithContentLoaded += chunksWithContent.size();
-					chunksWithContent.clear();
-				}
-				
-				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
-				
-				count = 0;
-				long amountChunksWithoutContentLoaded = 0;
-				while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, amountChunksWithoutContentLoaded, (amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= 20 ? 20 : amountChunksWithoutContent - amountChunksWithoutContentLoaded));
-					for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
-						//retrieves by reference
-						QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
-								chunkReference.get().getSubColumnByName("pchunk").getValue());
-						
-						byteBuffer.position(Integer.parseInt(chunkReference.get().getSubColumnByName("index").getValue()));
-						byteBuffer.put(chunk.get().getSubColumnByName("content").getValueBytes());
-						
-						count++;
-						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
-						setProgress(prog);
-					}
+					long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
 					
-					amountChunksWithoutContentLoaded += chunksReference.size();
-					byteBuffer.clear();
+					count = 0;
+					long amountChunksWithoutContentLoaded = 0;
+					while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
+						System.out.println("Loading references... [" + count + "]");
+						Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, amountChunksWithoutContentLoaded, (amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= 20 ? 20 : amountChunksWithoutContent - amountChunksWithoutContentLoaded));
+						for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
+							//retrieves by reference
+							QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
+									chunkReference.get().getSubColumnByName("pchunk").getValue());
+							
+							FileUtils.storeFileLocally(newFile, chunk.get().getSubColumnByName("content").getValueBytes(),
+									Long.parseLong(chunkReference.get().getSubColumnByName("index").getValue()));
+							
+							count++;
+							int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+							setProgress(prog);
+						}
+						
+						amountChunksWithoutContentLoaded += chunksReference.size();
+					}
+				} catch (FileNotFoundException e1) {
+					e1.printStackTrace();
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				} finally {
+					try {
+						newFile.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-								
-				FileUtils.storeFileLocally(byteBuffer.array(), pathToRestore + "\\" + filename);				
 			}
 		});
 		restoreProcess.start();
