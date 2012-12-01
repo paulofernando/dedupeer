@@ -201,20 +201,25 @@ public class FileUtils {
 		}
 	}
 	
-	public static void storeFileLocally(RandomAccessFile newFile, ByteBuffer data, long index) {		
-		try {
-			System.out.println("Writing chunk with index... [" + index + "]");
+	public static void storeFileLocally(byte[] data, long index, String path) {
+		RandomAccessFile newFile = null;
+		try {			
+			newFile = new RandomAccessFile(new File(path), "rw");
+			System.out.println("Writing chunk with index... [" + index + "] -> " + new String(data));
 			newFile.seek(index);
-			newFile.write(data.array());
-			
-			/*
-			FileChannel fc = newFile.getChannel();
-			fc.position(index);
-			fc.write(data);*/
+			newFile.write(data);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				newFile.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (NullPointerException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

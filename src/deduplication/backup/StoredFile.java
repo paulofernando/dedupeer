@@ -1,26 +1,22 @@
 package deduplication.backup;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Observable;
-import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.JButton;
 
+import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.query.QueryResult;
 
-import org.apache.cassandra.thrift.Cassandra.system_add_column_family_args;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
@@ -30,7 +26,6 @@ import deduplication.dao.operation.ChunksDaoOperations;
 import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.dao.operation.UserFilesDaoOperations;
 import deduplication.exception.FieldNotFoundException;
-import deduplication.gui.component.MainPanel;
 import deduplication.gui.component.renderer.ProgressInfo;
 import deduplication.processing.EagleEye;
 import deduplication.processing.file.Chunking;
@@ -38,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 128000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -58,6 +53,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	private String pathToRestore;
 	
 	private long id = -1;
+	
+	private static final int CHUNKS_TO_LOAD = 20;
 		
 	public StoredFile(File file, String storageEconomy, long id) {
 		this(file, storageEconomy);
@@ -492,69 +489,54 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 				
-				/*long filelength = ufdo.getFileLength(System.getProperty("username"), getFilename());
-				long storedBytes = 0;*/
-				
 				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
 				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());
 				
 				long count = 0;
 				long amountChunksWithContentLoaded = 0;
 				
-				RandomAccessFile newFile = null;
-				try {
-					newFile = new RandomAccessFile(new File(pathToRestore + "\\" + filename), "rw");
-				
-					while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {	
-						Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, (amountChunksWithContent - amountChunksWithContentLoaded >= 20 ? 20 : amountChunksWithContent - amountChunksWithContentLoaded));
-						
-						progressInfo.setType(ProgressInfo.TYPE_WRITING);
-						for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-							FileUtils.storeFileLocally(newFile, chunk.get().getSubColumnByName("content").getValueBytes(),
-									Long.parseLong(chunk.get().getSubColumnByName("index").getValue()));
-							
-							count++;					
-							int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
-							setProgress(prog);
-						}
-						
-						amountChunksWithContentLoaded += chunksWithContent.size();
-						chunksWithContent.clear();
-					}
+				progressInfo.setType(ProgressInfo.TYPE_WRITING);
+				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {
+					int amountChunksToLoad = (int)(amountChunksWithContent - amountChunksWithContentLoaded >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithContent - amountChunksWithContentLoaded);
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, amountChunksToLoad);
 					
-					long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
-					
-					count = 0;
-					long amountChunksWithoutContentLoaded = 0;
-					while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
-						System.out.println("Loading references... [" + count + "]");
-						Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, amountChunksWithoutContentLoaded, (amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= 20 ? 20 : amountChunksWithoutContent - amountChunksWithoutContentLoaded));
-						for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
-							//retrieves by reference
-							QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
-									chunkReference.get().getSubColumnByName("pchunk").getValue());
-							
-							FileUtils.storeFileLocally(newFile, chunk.get().getSubColumnByName("content").getValueBytes(),
-									Long.parseLong(chunkReference.get().getSubColumnByName("index").getValue()));
-							
-							count++;
-							int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
-							setProgress(prog);
-						}
+					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
+												
+						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunk.get().getSubColumnByName("index").getValue())
+								, pathToRestore + "\\" + filename);
 						
-						amountChunksWithoutContentLoaded += chunksReference.size();
+						count++;					
+						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+						setProgress(prog);
 					}
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
-				} catch (Exception e2) {
-					e2.printStackTrace();
-				} finally {
-					try {
-						newFile.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+					amountChunksWithContentLoaded += chunksWithContent.size();
+					chunksWithContent.clear();
 				}
+				
+				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
+				
+				count = 0;
+				long amountChunksWithoutContentLoaded = 0;
+				while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
+					int amountChunksToLoad = (int)(amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithoutContent - amountChunksWithoutContentLoaded);
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, amountChunksWithoutContentLoaded, amountChunksToLoad);
+					
+					for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
+						//retrieves by reference
+						QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
+								chunkReference.get().getSubColumnByName("pchunk").getValue());
+					
+						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunkReference.get().getSubColumnByName("index").getValue())
+								, pathToRestore + "\\" + filename);	
+						
+						count++;
+						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+						setProgress(prog);
+					}
+							
+					amountChunksWithoutContentLoaded += chunksReference.size();
+					chunksReference.clear();
+				}				
 			}
 		});
 		restoreProcess.start();
@@ -631,4 +613,3 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	}
 	
 }
-

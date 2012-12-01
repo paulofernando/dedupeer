@@ -72,8 +72,8 @@ public class ChunksDaoOperations {
                     Arrays.asList(HFactory.createStringColumn("length", length)), 
                     stringSerializer, stringSerializer, stringSerializer));
             mutator.insert(fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-                    Arrays.asList(HFactory.createColumn("content", new String(content))), 
-                    stringSerializer, stringSerializer, stringSerializer));          
+                    Arrays.asList(HFactory.createColumn("content", content)), 
+                    stringSerializer, stringSerializer, BytesArraySerializer.get()));          
         } catch (HectorException e) {
         	log.error("Data was not inserted");
             e.printStackTrace();
