@@ -163,7 +163,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					deduplicate(file.getName()); //the same name
 				}
 								
-				log.info("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");
 				
 				Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
 			}
@@ -178,6 +178,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	 */
 	public void deduplicate(String filenameStored) {
 		progressInfo.setType(ProgressInfo.TYPE_DEDUPLICATION);
+		
+		long time = System.currentTimeMillis();
 		
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
@@ -271,6 +273,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 		
+		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " milisecods");
+		
 		Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
 	}
 	
@@ -282,6 +286,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	 */
 	public void deduplicateABigFile(String filenameStored, int divideInTimes) {
 		progressInfo.setType(ProgressInfo.TYPE_DEDUPLICATION);
+		
+		long time = System.currentTimeMillis();
 		
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
@@ -475,6 +481,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
+		
+		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");
+		
 	}
 	
 	/**
@@ -484,6 +493,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		Thread restoreProcess = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				long time = System.currentTimeMillis();
 				progressInfo.setType(ProgressInfo.TYPE_REHYDRATING);
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				
@@ -536,7 +546,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							
 					amountChunksWithoutContentLoaded += chunksReference.size();
 					chunksReference.clear();
-				}				
+				}
+				
+				log.info("Rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
+				
 			}
 		});
 		restoreProcess.start();
@@ -582,16 +595,24 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
+				long amountOfChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());
+				long totalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
 				
-				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
-				progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);
+				if(totalChunks == amountOfChunksWithContent) {					
+					setStorageEconomy("0%");
+					progressInfo.setProgress(100);
+				} else {
 				
-				long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());
-								
-				setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
-				log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
-				
-				progressInfo.setProgress(100);				
+					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
+					progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);
+					
+					long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());
+									
+					setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
+					log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());
+					
+					progressInfo.setProgress(100);
+				}
 			}
 		});
 		calculateProcess.start();
