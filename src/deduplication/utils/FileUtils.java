@@ -205,7 +205,6 @@ public class FileUtils {
 		RandomAccessFile newFile = null;
 		try {			
 			newFile = new RandomAccessFile(new File(path), "rw");
-			System.out.println("Writing chunk with index... [" + index + "] -> " + new String(data));
 			newFile.seek(index);
 			newFile.write(data);
 		} catch (FileNotFoundException e) {

@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 128000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -236,7 +236,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					chunk_number++;
 					buffer.clear();
 				}
-				index += Integer.parseInt(newFileChunks.get(index).length); //pula, porque o chunk já foi inserido na comparação com o outro arquivo
+				index += Long.parseLong(newFileChunks.get(index).length); //pula, porque o chunk já foi inserido na comparação com o outro arquivo
 			} else {
 				if(buffer.remaining() == 0) {
 					c32.check(buffer.array(), 0, buffer.capacity());

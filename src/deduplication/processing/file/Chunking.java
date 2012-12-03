@@ -53,7 +53,8 @@ public class Chunking {
 		String prefix = FileUtils.getOnlyName(file.getName());
 		
 		byte[] b = new byte[size];
-	    int ch , chunkCount = 0;
+	    int ch = 0;
+	    long chunkCount = 0l;
 
 	    Checksum32 c32 = new Checksum32();
 	    
@@ -70,7 +71,7 @@ public class Chunking {
 		     fos.close();
 		     
 		     c32.check(b, 0, ch);
-		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * b.length), String.valueOf(ch), fname));
+		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * ((long)b.length)), String.valueOf(ch), fname));
 		     
 		     if(feedback != null) {
 	        	feedback.updateProgress((int)Math.ceil(((double)(file.length() - filesize) * 100) / file.length()));
@@ -164,5 +165,6 @@ public class Chunking {
 		while(new File(fname).delete()) {
 			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);
 		}
+		log.info("Chunks of the " + filename + " deleted");
 	}
 }
