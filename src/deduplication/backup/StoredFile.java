@@ -15,6 +15,7 @@ import javax.swing.JButton;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
+import me.prettyprint.hector.api.beans.SuperSlice;
 import me.prettyprint.hector.api.query.QueryResult;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -33,7 +34,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 128000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -165,7 +166,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								
 				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");
 				
-				Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
+				Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());				
 			}
 		});
 		
@@ -302,9 +303,34 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		//----------  Retrieving the information about the stored file -----------------		
 		/** Map<adler32, Map<md5, chunkNumber>> */
 		Map<Integer, Map<String, String>> fileInStorageServer = new HashMap<Integer, Map<String, String>>();		
-		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);	
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);
+		
+		SuperSlice<String, String, String> superColumns = cdo.getHashesOfAFile(fileIDStored);
+		
 		log.info("Retrieving chunks information...");
-		for(int i = 0; i < amountChunk; i++) {			
+		
+		HSuperColumn<String, String, String> column = superColumns.getColumnByName("0");
+		int chunkCount = 0;
+		while(column != null) {
+			String adler32 = column.getSubColumnByName("adler32").getValue();
+			
+			if(!fileInStorageServer.containsKey(adler32)) {
+				Map<String, String> chunkInfo = new HashMap<String, String>();
+				chunkInfo.put(column.getSubColumnByName("md5").getValue(),
+						String.valueOf(chunkCount));
+				fileInStorageServer.put(Integer.parseInt(adler32), chunkInfo);
+			} else {
+				Map<String, String> md5Set = fileInStorageServer.get(adler32);
+				md5Set.put(column.getSubColumnByName("md5").getValue(),
+						String.valueOf(chunkCount));
+			}
+			log.info("chunk " + chunkCount);
+			
+			chunkCount++;
+			column = superColumns.getColumnByName(String.valueOf(chunkCount));
+		}
+		
+		/*for(int i = 0; i < amountChunk; i++) {			
 			String adler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32").getValue();
 			
 			if(!fileInStorageServer.containsKey(adler32)) {
@@ -318,7 +344,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						String.valueOf(i));
 			}
 			log.info("chunk " + i);
-		}
+		}*/
 				
 		//--------------------------------------------------------------------------------
 		System.out.println("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
@@ -361,11 +387,17 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
 					
-			currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);	
+			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
+					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
 			c32.check(currentChunk, 0, currentChunk.length);
 			while(localIndex < modFile.length) {
-					if(fileInStorageServer.containsKey(c32.getValue())) {						
-						currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+					if(fileInStorageServer.containsKey(c32.getValue())) {
+						
+						if(currentChunk == null) { //para evitar ter que carregar o currentChunk quando ele já tiver sido carregado
+							currentChunk = Arrays.copyOfRange(modFile, localIndex, 
+									(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
+						}
+						
 						String MD5 = DigestUtils.md5Hex(currentChunk);
 						if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
 							if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele								
@@ -389,19 +421,20 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							globalIndex += currentChunk.length;
 							localIndex += currentChunk.length;
 							
-							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+							currentChunk = Arrays.copyOfRange(modFile, localIndex, 
+									(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
 							c32.check(currentChunk, 0, currentChunk.length);
 							
 							referencesCount++;
 						} else {
+							currentChunk = null;
 							if(buffer.remaining() == 0) { //same of the else below, but for do not calculate the MD5 always it was copied
 								log.info("Creating new chunk " + (globalIndex - buffer.position()));
 								newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 										String.valueOf(buffer.array().length), buffer.array()));
 								chunk_number++;
-								
-								
+																
 								buffer.clear();
 							} else {
 								if(modFile.length - (localIndex + defaultChunkSize) > 0) {
@@ -413,6 +446,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							}
 						}
 					} else {
+						currentChunk = null;
 						if(buffer.remaining() == 0) {
 							log.info("Creating new chunk" + (globalIndex - buffer.position()));
 							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 

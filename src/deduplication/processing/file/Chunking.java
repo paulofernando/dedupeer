@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -71,6 +72,11 @@ public class Chunking {
 		     fos.close();
 		     
 		     c32.check(b, 0, ch);
+		     
+		     if(ch < size) { //if a chunk size is smaller than default
+		    	 b = Arrays.copyOf(b, ch);
+		     }
+		     
 		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * ((long)b.length)), String.valueOf(ch), fname));
 		     
 		     if(feedback != null) {

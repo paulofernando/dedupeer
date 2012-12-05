@@ -2,6 +2,7 @@ package deduplication.dao.operation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
@@ -11,12 +12,14 @@ import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
+import me.prettyprint.hector.api.beans.SuperSlice;
 import me.prettyprint.hector.api.exceptions.HectorException;
 import me.prettyprint.hector.api.factory.HFactory;
 import me.prettyprint.hector.api.mutation.Mutator;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.api.query.SuperColumnQuery;
+import me.prettyprint.hector.api.query.SuperSliceQuery;
 
 import org.apache.log4j.Logger;
 
@@ -185,6 +188,24 @@ public class ChunksDaoOperations {
         QueryResult<HSuperColumn<String, String, String>> result = superColumnQuery.execute();    
         return result;
 	}
+	
+	public SuperSlice<String, String, String> getHashesOfAFile(String file_id) {
+		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
+				stringSerializer, stringSerializer, stringSerializer);
+
+		query.setRange("", "", false, Integer.MAX_VALUE); 
+		query.setColumnFamily("Chunks"); 
+		query.setKey(file_id); 
+		
+		QueryResult<SuperSlice<String, String, String>> result = query 
+                .execute(); 
+		
+		SuperSlice<String, String, String> superColumns = result.get();
+		
+		return result.get();
+	}
+	
+	
 	
 	public void getAllChunks(String file_id) {
 		SliceQuery<String, String, String> query = HFactory.createSliceQuery(keyspaceOperator, StringSerializer.get(),
