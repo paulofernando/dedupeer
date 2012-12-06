@@ -3,6 +3,7 @@ package deduplication.dao.operation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
@@ -22,6 +23,8 @@ import me.prettyprint.hector.api.query.SuperColumnQuery;
 import me.prettyprint.hector.api.query.SuperSliceQuery;
 
 import org.apache.log4j.Logger;
+
+import com.sun.org.apache.bcel.internal.generic.LADD;
 
 import deduplication.backup.StoredFileFeedback;
 import deduplication.dao.ChunksDao;
@@ -189,20 +192,53 @@ public class ChunksDaoOperations {
         return result;
 	}
 	
-	public SuperSlice<String, String, String> getHashesOfAFile(String file_id) {
+	/**
+	 * 
+	 * @param file_id File ID
+	 * @param amountChunks Amount of chunks to retrieve the information
+	 * @param chunksToLoadByTime Amount of chunks to load by time
+	 * @return HashMap with <adler32, <MD5, chunkNum>>
+	 */
+	public Map<Integer, Map<String, String>> getHashesOfAFile(String file_id, int amountChunks, int chunksToLoadByTime) {
 		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
 				stringSerializer, stringSerializer, stringSerializer);
-
-		query.setRange("", "", false, Integer.MAX_VALUE); 
 		query.setColumnFamily("Chunks"); 
 		query.setKey(file_id); 
 		
-		QueryResult<SuperSlice<String, String, String>> result = query 
-                .execute(); 
+		Map<Integer, Map<String, String>> chunksLoaded = new HashMap<Integer, Map<String, String>>();
 		
-		SuperSlice<String, String, String> superColumns = result.get();
+		int loaded = 0;
+		while(loaded < amountChunks) {			
+			int toLoad = (loaded + chunksToLoadByTime > amountChunks ? amountChunks - loaded : chunksToLoadByTime); 
+			
+			query.setRange(String.valueOf(loaded), String.valueOf(loaded + toLoad), false, Integer.MAX_VALUE); 			
+			
+			QueryResult<SuperSlice<String, String, String>> result = query.execute(); 
+						
+			HSuperColumn<String, String, String> column = result.get().getColumnByName(String.valueOf(loaded));
+			int chunkCount = 0;
+			while(column != null) {		
+				String adler32 = column.getSubColumnByName("adler32").getValue();
+				
+				if(!chunksLoaded.containsKey(adler32)) {
+					Map<String, String> chunkInfo = new HashMap<String, String>();
+					chunkInfo.put(column.getSubColumnByName("md5").getValue(),
+							String.valueOf(chunkCount));
+					chunksLoaded.put(Integer.parseInt(adler32), chunkInfo);
+				} else {
+					Map<String, String> md5Set = chunksLoaded.get(adler32);
+					md5Set.put(column.getSubColumnByName("md5").getValue(),
+							String.valueOf(chunkCount));
+				}
+				chunkCount++;
+				column = result.get().getColumnByName(String.valueOf(loaded + chunkCount));
+			}
+			
+			loaded += toLoad;
+			log.info("Last chunk loaded: " + loaded);
+		}
 		
-		return result.get();
+		return chunksLoaded;
 	}
 	
 	

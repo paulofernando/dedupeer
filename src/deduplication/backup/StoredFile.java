@@ -295,57 +295,18 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
 		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
-		int amountChunk = Integer.parseInt(columnAmountChunks.getValue());
+		int amountChunks = Integer.parseInt(columnAmountChunks.getValue());
 				
 		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
 		
 		long timeToRetrieve = System.currentTimeMillis();
 		//----------  Retrieving the information about the stored file -----------------		
-		/** Map<adler32, Map<md5, chunkNumber>> */
-		Map<Integer, Map<String, String>> fileInStorageServer = new HashMap<Integer, Map<String, String>>();		
+		/** Map<adler32, Map<md5, chunkNumber>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);
 		
-		SuperSlice<String, String, String> superColumns = cdo.getHashesOfAFile(fileIDStored);
-		
 		log.info("Retrieving chunks information...");
+		Map<Integer, Map<String, String>> fileInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks, 20);
 		
-		HSuperColumn<String, String, String> column = superColumns.getColumnByName("0");
-		int chunkCount = 0;
-		while(column != null) {
-			String adler32 = column.getSubColumnByName("adler32").getValue();
-			
-			if(!fileInStorageServer.containsKey(adler32)) {
-				Map<String, String> chunkInfo = new HashMap<String, String>();
-				chunkInfo.put(column.getSubColumnByName("md5").getValue(),
-						String.valueOf(chunkCount));
-				fileInStorageServer.put(Integer.parseInt(adler32), chunkInfo);
-			} else {
-				Map<String, String> md5Set = fileInStorageServer.get(adler32);
-				md5Set.put(column.getSubColumnByName("md5").getValue(),
-						String.valueOf(chunkCount));
-			}
-			log.info("chunk " + chunkCount);
-			
-			chunkCount++;
-			column = superColumns.getColumnByName(String.valueOf(chunkCount));
-		}
-		
-		/*for(int i = 0; i < amountChunk; i++) {			
-			String adler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32").getValue();
-			
-			if(!fileInStorageServer.containsKey(adler32)) {
-				Map<String, String> chunkInfo = new HashMap<String, String>();
-				chunkInfo.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
-						String.valueOf(i));
-				fileInStorageServer.put(Integer.parseInt(adler32), chunkInfo);
-			} else {
-				Map<String, String> md5Set = fileInStorageServer.get(adler32);
-				md5Set.put(cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5").getValue(),
-						String.valueOf(i));
-			}
-			log.info("chunk " + i);
-		}*/
-				
 		//--------------------------------------------------------------------------------
 		System.out.println("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
 		String newFileID = String.valueOf(System.currentTimeMillis());
