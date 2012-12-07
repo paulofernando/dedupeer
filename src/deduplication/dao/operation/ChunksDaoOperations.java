@@ -196,45 +196,82 @@ public class ChunksDaoOperations {
 	 * 
 	 * @param file_id File ID
 	 * @param amountChunks Amount of chunks to retrieve the information
-	 * @param chunksToLoadByTime Amount of chunks to load by time
 	 * @return HashMap with <adler32, <MD5, chunkNum>>
 	 */
-	public Map<Integer, Map<String, String>> getHashesOfAFile(String file_id, int amountChunks, int chunksToLoadByTime) {
+	public Map<Integer, Map<String, String>> getHashesOfAFile(String file_id, int amountChunks) {
 		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
 				stringSerializer, stringSerializer, stringSerializer);
 		query.setColumnFamily("Chunks"); 
 		query.setKey(file_id); 
 		
+		int loadByTime = 10;
+		
 		Map<Integer, Map<String, String>> chunksLoaded = new HashMap<Integer, Map<String, String>>();
 		
-		int loaded = 0;
-		while(loaded < amountChunks) {			
-			int toLoad = (loaded + chunksToLoadByTime > amountChunks ? amountChunks - loaded : chunksToLoadByTime); 
+		long loaded = 0;
+		while(loaded < amountChunks) {
 			
-			query.setRange(String.valueOf(loaded), String.valueOf(loaded + toLoad), false, Integer.MAX_VALUE); 			
+			if(amountChunks - loaded >= loadByTime) {
+				query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3), String.valueOf(loaded + 4),
+						String.valueOf(loaded + 5), String.valueOf(loaded + 6), String.valueOf(loaded + 7), String.valueOf(loaded + 8), String.valueOf(loaded + 9));
+			} else {
+				int remains = (int)(amountChunks - loaded);
+				switch(remains) {
+					case 9:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3), 
+								String.valueOf(loaded + 4), String.valueOf(loaded + 5), String.valueOf(loaded + 6), String.valueOf(loaded + 7), 
+								String.valueOf(loaded + 8));						
+						break;
+					case 8:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3), 
+								String.valueOf(loaded + 4), String.valueOf(loaded + 5), String.valueOf(loaded + 6), String.valueOf(loaded + 7));
+						break;
+					case 7:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3), 
+								String.valueOf(loaded + 4), String.valueOf(loaded + 5), String.valueOf(loaded + 6));
+						break;
+					case 6:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), 
+								String.valueOf(loaded + 3), String.valueOf(loaded + 4), String.valueOf(loaded + 5));
+						break;
+					case 5:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3),
+								String.valueOf(loaded + 4));
+						break;
+					case 4:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3));
+						break;						
+					case 3:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2));
+						break;						
+					case 2:
+						query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1));
+						break;						
+					case 1:
+						query.setColumnNames(String.valueOf(loaded));
+						break;
+				}				
+			}
 			
 			QueryResult<SuperSlice<String, String, String>> result = query.execute(); 
 						
-			HSuperColumn<String, String, String> column = result.get().getColumnByName(String.valueOf(loaded));
-			int chunkCount = 0;
-			while(column != null) {		
+			for(HSuperColumn<String, String, String> column: result.get().getSuperColumns()) {
 				String adler32 = column.getSubColumnByName("adler32").getValue();
 				
 				if(!chunksLoaded.containsKey(adler32)) {
 					Map<String, String> chunkInfo = new HashMap<String, String>();
 					chunkInfo.put(column.getSubColumnByName("md5").getValue(),
-							String.valueOf(chunkCount));
+							String.valueOf(loaded));
 					chunksLoaded.put(Integer.parseInt(adler32), chunkInfo);
 				} else {
 					Map<String, String> md5Set = chunksLoaded.get(adler32);
 					md5Set.put(column.getSubColumnByName("md5").getValue(),
-							String.valueOf(chunkCount));
+							String.valueOf(loaded));
 				}
-				chunkCount++;
-				column = result.get().getColumnByName(String.valueOf(loaded + chunkCount));
+				
+				loaded++;
 			}
 			
-			loaded += toLoad;
 			log.info("Last chunk loaded: " + loaded);
 		}
 		
