@@ -286,7 +286,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	 * divideInTimes divide the processing in <code> divideInTimes </code> times
 	 * @param filenameStored
 	 */
-	public void deduplicateABigFile(String filenameStored, int divideInTimes) {
+	public void deduplicateABigFile(String filenameStored, int bytesToLoadByTime) {
 		System.out.println("");
 		log.info("[Deduplicating...]");
 		progressInfo.setType(ProgressInfo.TYPE_DEDUPLICATION);
@@ -317,38 +317,29 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		int chunk_number = 0;
 		
 		Checksum32 c32 = new Checksum32();
-		int lastIndex = 0;
-		int lastLength = 0;
 		
 		long offset = 0;
 		ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
 		/* current index in the divided byte array */
 		int localIndex = 0;
 		/* index in the whole file */
-		long globalIndex = 0;	
-		
+		long globalIndex = 0;		
 		long referencesCount = 0;
 		
+		bytesToLoadByTime = (bytesToLoadByTime % defaultChunkSize == 0 ? bytesToLoadByTime : bytesToLoadByTime + (defaultChunkSize - (bytesToLoadByTime % defaultChunkSize)));
+		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime); 
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
 			localIndex = 0;
-			int bytesToRead;
-			if(i != (divideInTimes - 1)) {
-				bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
-				bytesToRead = (bytesToRead % defaultChunkSize == 0 ? bytesToRead : bytesToRead + (defaultChunkSize - (bytesToRead % defaultChunkSize)));
-			} else {
-				bytesToRead = (int)(file.length() - globalIndex); //globalindex errado
-				/*bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
-				bytesToRead = (bytesToRead % defaultChunkSize == 0 ? bytesToRead : bytesToRead + (defaultChunkSize - (bytesToRead % defaultChunkSize)));
-				if(file.length() % divideInTimes != 0) {
-					bytesToRead = (int)(file.length() - (bytesToRead * (i)));
-				}*/
+			
+			if(i == (divideInTimes - 1)) {
+				bytesToLoadByTime = (int)(file.length() - globalIndex); //globalindex errado				
 			}
 			
 			log.info("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
 					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");
 			
-			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
+			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
 			byte[] currentChunk = new byte[defaultChunkSize];
 					
 			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
@@ -471,7 +462,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			newFileChunks.clear();			
 			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
 			
-			offset += bytesToRead;
+			offset += bytesToLoadByTime;
 		}
 		
 		//last time
