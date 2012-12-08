@@ -59,8 +59,9 @@ public class Chunking {
 
 	    Checksum32 c32 = new Checksum32();
 	    
+	    long globalIndex = 0;
 	    while(filesize > 0) {
-		    ch = fis.read(b,0,size);	
+		     ch = fis.read(b,0,size);	
 		
 		     filesize = filesize-ch;
 		
@@ -76,14 +77,15 @@ public class Chunking {
 		     if(ch < size) { //if a chunk size is smaller than default
 		    	 b = Arrays.copyOf(b, ch);
 		     }
-		     
-		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(chunkCount * ((long)b.length)), String.valueOf(ch), fname));
+		     		     
+		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(globalIndex), String.valueOf(ch), fname));
 		     
 		     if(feedback != null) {
 	        	feedback.updateProgress((int)Math.ceil(((double)(file.length() - filesize) * 100) / file.length()));
 	         }
 		     
 		     chunkCount++;
+		     globalIndex += b.length;
 	    }	    	    fis.close();	
 		
 		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");

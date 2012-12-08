@@ -15,7 +15,6 @@ import javax.swing.JButton;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
-import me.prettyprint.hector.api.beans.SuperSlice;
 import me.prettyprint.hector.api.query.QueryResult;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -34,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 512000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -338,16 +337,16 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
 				bytesToRead = (bytesToRead % defaultChunkSize == 0 ? bytesToRead : bytesToRead + (defaultChunkSize - (bytesToRead % defaultChunkSize)));
 			} else {
-				bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
+				bytesToRead = (int)(file.length() - globalIndex); //globalindex errado
+				/*bytesToRead = (int) Math.ceil(((double)file.length() / (double)divideInTimes));
 				bytesToRead = (bytesToRead % defaultChunkSize == 0 ? bytesToRead : bytesToRead + (defaultChunkSize - (bytesToRead % defaultChunkSize)));
 				if(file.length() % divideInTimes != 0) {
 					bytesToRead = (int)(file.length() - (bytesToRead * (i)));
-				}
+				}*/
 			}
 			
-			/*System.out.println("Total memory: " + Runtime.getRuntime().totalMemory());
-			System.out.println("Free memory: " + Runtime.getRuntime().freeMemory());
-			System.out.println("Usage memory:" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()));*/
+			log.info("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
+					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");
 			
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToRead);
 			byte[] currentChunk = new byte[defaultChunkSize];
@@ -356,6 +355,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
 			c32.check(currentChunk, 0, currentChunk.length);
 			while(localIndex < modFile.length) {
+				if(globalIndex % 1048576 == 0)
+					System.out.println("globalIndex = " + globalIndex);
 					if(fileInStorageServer.containsKey(c32.getValue())) {
 						
 						if(currentChunk == null) { //para evitar ter que carregar o currentChunk quando ele já tiver sido carregado
