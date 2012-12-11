@@ -400,7 +400,7 @@ public class ChunksDaoOperations {
 		//-------------------------
 		
 		long count = ufdo.getChunksCount(owner, filename);
-		long i = 0;
+		long i = initialChunk;
 		while(result.size() < amountOfChunks) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();

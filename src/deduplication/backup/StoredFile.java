@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 512000;
+	public static final int defaultChunkSize = 128000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -336,8 +336,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				bytesToLoadByTime = (int)(file.length() - globalIndex); //globalindex errado				
 			}
 			
-			log.info("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
-					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");
+			/*log.info("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
+					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");*/
 			
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
 			byte[] currentChunk = new byte[defaultChunkSize];
@@ -453,7 +453,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			int count = 0;
 			progressInfo.setType(ProgressInfo.TYPE_STORING);
-			log.info("Storing...");
+			//log.info("Storing...");
 			for(ChunksDao chunk: newFileChunks.values()) {				
 				cdo.insertRow(chunk);
 				setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
