@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 128000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -418,20 +418,39 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								globalIndex++;
 								localIndex++;
 							} else {
-								newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length); //não utiliza o byteBuffer porque o chunk pode ser menor que defaulChunkSize, daí o cálculo do hash fica errado
-								log.info("Creating new chunk in " + (globalIndex));
+								newchunk = Arrays.copyOfRange(modFile, localIndex - buffer.position(), (localIndex - buffer.position()) + defaultChunkSize); //não utiliza o byteBuffer porque o chunk pode ser menor que defaulChunkSize, daí o cálculo do hash fica errado
+								log.info("Creating new chunk in " + (globalIndex - buffer.position()));
 								
 								c32.check(newchunk, 0, newchunk.length);
 								
-								newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-										DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length)), String.valueOf(c32.getValue()), String.valueOf(globalIndex), 
+								newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+										DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length)), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 										String.valueOf(newchunk.length), Arrays.copyOfRange(newchunk, 0, newchunk.length)));
 								
 								chunk_number++;
+																
+								localIndex += newchunk.length - buffer.position();
+								globalIndex += newchunk.length - buffer.position();	
+								
 								buffer.clear();
 								
-								localIndex += newchunk.length;
-								globalIndex += newchunk.length;	
+								//creating the final chunk, if has rest
+								if(localIndex < modFile.length) {
+									newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
+									log.info("Creating new chunk in " + (globalIndex));
+									
+									c32.check(newchunk, 0, newchunk.length);
+									
+									newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+											DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length)), String.valueOf(c32.getValue()), String.valueOf(globalIndex), 
+											String.valueOf(newchunk.length), Arrays.copyOfRange(newchunk, 0, newchunk.length)));
+									
+									chunk_number++;
+									buffer.clear();
+									
+									localIndex += newchunk.length;
+									globalIndex += newchunk.length;
+								}
 							}
 						}			
 					}			
