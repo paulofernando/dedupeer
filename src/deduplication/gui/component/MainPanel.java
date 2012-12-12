@@ -194,19 +194,14 @@ public class MainPanel extends JPanel {
 	 */
 	private void backupIt(File fileToBackup) {
 		String filename = fileToBackup.getName();
-		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		String newFileName = FileUtils.getValidName(fileToBackup.getName());
 				
 		StoredFile backup;
-		int count = 1;
-		while(ufdo.fileExists(System.getProperty("username"), filename)) {
-			count++;
-			filename = FileUtils.getOnlyName(fileToBackup.getName()) + "(" + count + ")." + FileUtils.getOnlyExtension(fileToBackup.getName());			
-		}
-		
-		if(count == 1) {
+				
+		if(filename.equals(newFileName)) {
 			backup = new StoredFile(fileToBackup, "");
 		} else {
-			backup = new StoredFile(fileToBackup, filename, "");
+			backup = new StoredFile(fileToBackup, newFileName, "");
 		}
 		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
@@ -218,7 +213,16 @@ public class MainPanel extends JPanel {
 	 * already stored to deduplicate this new file
 	 */
 	private void backupIt(File fileToBackup, String deduplicateWith) {
-		StoredFile backup = new StoredFile(fileToBackup, "");
+		String filename = fileToBackup.getName();
+		String newFileName = FileUtils.getValidName(fileToBackup.getName());
+				
+		StoredFile backup;
+				
+		if(filename.equals(newFileName)) {
+			backup = new StoredFile(fileToBackup, "");
+		} else {
+			backup = new StoredFile(fileToBackup, newFileName, "");
+		}
 		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
 		BackupQueue.getInstance().addBackup(backup, deduplicateWith);

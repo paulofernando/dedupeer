@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 
 import deduplication.backup.StoredFile;
+import deduplication.dao.operation.UserFilesDaoOperations;
 
 import android.util.Log;
 
@@ -220,5 +221,16 @@ public class FileUtils {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static String getValidName(String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		
+		int count = 1;
+		while(ufdo.fileExists(System.getProperty("username"), filename)) {
+			count++;
+			filename = FileUtils.getOnlyName(filename) + "(" + count + ")." + FileUtils.getOnlyExtension(filename);			
+		}
+		return filename;
 	}
 }
