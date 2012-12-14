@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
+import javax.swing.SwingUtilities;
+
 import me.prettyprint.hector.api.beans.HColumn;
 
 import org.apache.cassandra.thrift.Cassandra.system_add_column_family_args;
@@ -43,19 +45,12 @@ public class Main {
 		
 		System.setProperty("defaultPartition", defaultPartition);
 		
-		//analysis_1();
-		//analysis_2();
-		//analysis_3();
-		//analysis_4();
-		//analysis_5();
-		//analysis_6();
-		//analysis_7();
-		
-		new MainGUI();
-		
-		/*ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer");
-		System.out.println(cdo.getValuesWithContent("paulo", "lorem.txt").size());*/
-		
+		SwingUtilities.invokeLater(new Runnable(){
+			@Override
+			public void run() {
+				new MainGUI();				
+			}
+		});		
 	}
 	
 	private static void analysisBruteForce() {

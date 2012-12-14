@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 128000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -227,11 +227,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		int index = 0;
 		ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
-		while(index < modFile.length) {			
+		while(index < modFile.length) {
 			if(newFileChunks.containsKey(index)) {
 				if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
 					newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 					c32.check(newchunk, 0, newchunk.length);
+					log.info("Creating new chunk in " + (index - newchunk.length) + " [length = " + newchunk.length + "]");
 					newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
 							String.valueOf(newchunk.length), newchunk));
@@ -242,9 +243,11 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			} else {
 				if(buffer.remaining() == 0) {
 					c32.check(buffer.array(), 0, buffer.capacity());
+					newchunk = buffer.array();
+					log.info("Creating new chunk in " + (index - newchunk.length) + " [length = " + newchunk.length + "]");
 					newFileChunks.put(index - buffer.capacity(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-							DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(index - buffer.capacity()), 
-							String.valueOf(buffer.array().length), buffer.array()));
+							DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.capacity()), 
+							String.valueOf(buffer.array().length), newchunk));
 					chunk_number++;					
 					buffer.clear();
 				} else {
@@ -252,15 +255,18 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					index++;
 				}
 			}
-		}
-		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele			
+		}		
+		if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele
+			newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
+			log.info("Creating new chunk in " + (index - newchunk.length) + " [length = " + newchunk.length + "]");
 			newFileChunks.put(index - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-					DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position())), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
-					String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+					DigestUtils.md5Hex(newchunk), String.valueOf(c32.getValue()), String.valueOf(index - buffer.position()), 
+					String.valueOf(buffer.capacity()), newchunk));
 			
 			buffer.clear();
 		}
 		
+		System.out.println("Created chunks");
 		
 		int count = 0;
 		progressInfo.setType(ProgressInfo.TYPE_STORING);
@@ -271,7 +277,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), newFileChunks.size() - referencesCount);
-		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), referencesCount);
+		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
 		
@@ -551,6 +557,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					chunksReference.clear();
 				}
 				
+				setProgress(0);
 				log.info("Rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
 				
 			}
