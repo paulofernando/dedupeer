@@ -336,7 +336,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		} else {
 			bytesToLoadByTime = (bytesToLoadByTime % defaultChunkSize == 0 ? bytesToLoadByTime : bytesToLoadByTime + (defaultChunkSize - (bytesToLoadByTime % defaultChunkSize)));
 		}
-		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime); 
+		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime);
+		long indexCountCorrect = 0;
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
 			localIndex = 0;
@@ -347,10 +348,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			/*log.info("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
 					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");*/
-			
+									
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
 			byte[] currentChunk = new byte[defaultChunkSize];
-					
+			
+			System.out.println("indexCorrect: " + indexCountCorrect + " -> globalIndex: " + globalIndex);
+			indexCountCorrect += modFile.length;
+			
 			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
 					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
 			c32.check(currentChunk, 0, currentChunk.length);
@@ -363,8 +367,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					}
 					
 					String MD5 = DigestUtils.md5Hex(currentChunk);
-					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {
-						differentChunk = false;
+					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {						
 						if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 							log.info("Creating new chunk in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
@@ -390,6 +393,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
 						c32.check(currentChunk, 0, currentChunk.length);
 						
+						differentChunk = false;
 						referencesCount++;
 					}					
 				} 
