@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	public static final int defaultChunkSize = 128000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -143,22 +143,22 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
 					try {						
 						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("defaultPartition") + ":\\chunks\\"), defaultChunkSize, fileID, StoredFile.this); 
+										
+						progressInfo.setType(ProgressInfo.TYPE_STORING);
+						ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
+						cdo.insertRows(chunks);
+						
+						ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(chunks.size()), "?");
+						fdo.insertRow(System.getProperty("username"), file.getName(), fileID);
+						
+						UserFilesDaoOperations udo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+						udo.setAmountChunksWithContent(System.getProperty("username"), file.getName(), chunks.size());
+						udo.setAmountChunksWithoutContent(System.getProperty("username"), file.getName(), 0l);
+						
+						setId(Long.parseLong(fileID));
 					} catch (IOException e) { 
 						e.printStackTrace(); 
 					}
-					
-					progressInfo.setType(ProgressInfo.TYPE_STORING);
-					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
-					cdo.insertRows(chunks);
-					
-					ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(chunks.size()), "?");
-					fdo.insertRow(System.getProperty("username"), file.getName(), fileID);
-					
-					UserFilesDaoOperations udo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-					udo.setAmountChunksWithContent(System.getProperty("username"), file.getName(), chunks.size());
-					udo.setAmountChunksWithoutContent(System.getProperty("username"), file.getName(), 0l);
-					
-					setId(Long.parseLong(fileID));
 				} else { //Other file version being stored
 					deduplicate(file.getName()); //the same name
 				}
@@ -337,7 +337,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			bytesToLoadByTime = (bytesToLoadByTime % defaultChunkSize == 0 ? bytesToLoadByTime : bytesToLoadByTime + (defaultChunkSize - (bytesToLoadByTime % defaultChunkSize)));
 		}
 		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime);
-		long indexCountCorrect = 0;
+		
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
 			localIndex = 0;
@@ -351,8 +351,6 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 									
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
 			byte[] currentChunk = new byte[defaultChunkSize];
-			
-			System.out.println("indexCorrect: " + indexCountCorrect + " -> globalIndex: " + globalIndex);			
 			
 			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
 					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
@@ -369,18 +367,18 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {						
 						if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
-							log.info("[0] Creating new chunk in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
+							log.info("[0] Creating new chunk " + chunk_number + " in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
 							
 							Checksum32 c32_2 = new Checksum32();
 							c32_2.check(newchunk, 0, newchunk.length);
 							newFileChunks.put(globalIndex - newchunk.length, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-									DigestUtils.md5Hex(newchunk), String.valueOf(c32_2.getValue()), String.valueOf(globalIndex - buffer.position()), 
+									DigestUtils.md5Hex(newchunk), String.valueOf(c32_2.getValue()), String.valueOf(globalIndex - newchunk.length), 
 									String.valueOf(newchunk.length), newchunk));
 							chunk_number++;
 							buffer.clear();
 						}							
 						
-						log.info("Duplicated chunk: " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
+						log.info("Duplicated chunk " + chunk_number + ": " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
 						newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
@@ -401,7 +399,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				if(differentChunk) {
 					currentChunk = null;
 					if(buffer.remaining() == 0) {
-						log.info("[1] Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");						
+						log.info("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");						
 						newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 								String.valueOf(buffer.array().length), buffer.array()));
@@ -417,7 +415,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							newchunk = Arrays.copyOfRange(modFile, localIndex - buffer.position(), (localIndex - buffer.position()) + 
 								(modFile.length - (localIndex - buffer.position()) >= defaultChunkSize ? defaultChunkSize : modFile.length - (localIndex - buffer.position())));
 							
-							log.info("[2] Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");
+							log.info("[2] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");
 							
 							c32.check(newchunk, 0, newchunk.length);
 							
@@ -435,7 +433,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							//creating the final chunk, if has rest
 							if(localIndex < modFile.length) {
 								newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
-								log.info("[3] Creating new chunk in " + (globalIndex) + " [length = " + newchunk.length + "]");
+								log.info("[3] Creating new chunk " + chunk_number + " in " + (globalIndex) + " [length = " + newchunk.length + "]");
 								
 								c32.check(newchunk, 0, newchunk.length);
 								
@@ -455,7 +453,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			}
 						
 			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
-				log.info("[4] Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
+				log.info("[4] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
 				
 				//TODO Otimizar aqui para utilizar o roll da linha 373
 				c32.check(buffer.array(), 0, buffer.capacity());
@@ -465,9 +463,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
 				
 				chunk_number++;
+				globalIndex += newchunk.length;
 				buffer.clear();
 			}
-			
 			
 			progressInfo.setType(ProgressInfo.TYPE_STORING);
 			//log.info("Storing...");
@@ -481,7 +479,6 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			offset += bytesToLoadByTime;
 			
-			indexCountCorrect += modFile.length;
 		}
 		
 		//last time
@@ -521,7 +518,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, amountChunksToLoad);
 					
 					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-												
+						log.info(chunk.get().getName() + "[index = " + chunk.get().getSubColumnByName("index").getValue() + 
+								"] [length = " + BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()).length + "]");
+						
 						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunk.get().getSubColumnByName("index").getValue())
 								, pathToRestore + "\\" + filename);
 						
@@ -546,6 +545,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						QueryResult<HSuperColumn<String, String, String>> chunk = cdo.getValues(chunkReference.get().getSubColumnByName("pfile").getValue(), 
 								chunkReference.get().getSubColumnByName("pchunk").getValue());
 					
+						log.info(chunkReference.get().getName() + " [index = " + chunkReference.get().getSubColumnByName("index").getValue() + 
+								"] [length = " + BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()).length + "]");
 						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunkReference.get().getSubColumnByName("index").getValue())
 								, pathToRestore + "\\" + filename);	
 						

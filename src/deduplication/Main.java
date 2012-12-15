@@ -29,7 +29,7 @@ public class Main {
 	
 	private static final Logger log = Logger.getLogger(Main.class);
 	
-	private static String defaultPartition = "E"; 
+	private static String defaultPartition = "D"; 
 	private static int defaultChunkSize = 4;
 	
 	private static File file;
