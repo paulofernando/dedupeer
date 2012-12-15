@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 128000;
+	public static final int defaultChunkSize = 4;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -352,8 +352,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
 			byte[] currentChunk = new byte[defaultChunkSize];
 			
-			System.out.println("indexCorrect: " + indexCountCorrect + " -> globalIndex: " + globalIndex);
-			indexCountCorrect += modFile.length;
+			System.out.println("indexCorrect: " + indexCountCorrect + " -> globalIndex: " + globalIndex);			
 			
 			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
 					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
@@ -370,7 +369,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {						
 						if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
-							log.info("Creating new chunk in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
+							log.info("[0] Creating new chunk in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
+							
 							Checksum32 c32_2 = new Checksum32();
 							c32_2.check(newchunk, 0, newchunk.length);
 							newFileChunks.put(globalIndex - newchunk.length, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
@@ -380,7 +380,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							buffer.clear();
 						}							
 						
-						log.info("Duplicated chunk: " + MD5 + " [length = " + currentChunk.length + "]");
+						log.info("Duplicated chunk: " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
 						newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));
@@ -401,28 +401,23 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				if(differentChunk) {
 					currentChunk = null;
 					if(buffer.remaining() == 0) {
-						log.info("Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
+						log.info("[1] Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");						
 						newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
 								String.valueOf(buffer.array().length), buffer.array()));
 						chunk_number++;
 						buffer.clear();
 					} else {
-						if(modFile.length - (localIndex + defaultChunkSize) > 0) {
+						if(modFile.length - (localIndex + defaultChunkSize) > 0) { //restam menos bytes que um chunk com tamanho padrão para analisar
 							buffer.put(modFile[localIndex]);
 							c32.roll(modFile[localIndex + defaultChunkSize]);
 							globalIndex++;
 							localIndex++;
 						} else {
+							newchunk = Arrays.copyOfRange(modFile, localIndex - buffer.position(), (localIndex - buffer.position()) + 
+								(modFile.length - (localIndex - buffer.position()) >= defaultChunkSize ? defaultChunkSize : modFile.length - (localIndex - buffer.position())));
 							
-							if(localIndex == 0) {
-								newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
-							} else if(modFile.length - localIndex < defaultChunkSize) {									
-								newchunk = Arrays.copyOfRange(modFile, modFile.length - localIndex, modFile.length); //não utiliza o byteBuffer porque o chunk pode ser menor que defaulChunkSize, daí o cálculo do hash fica errado
-							} else { //TODO analisar se é necessário mesmo isso aqui
-								newchunk = Arrays.copyOfRange(modFile, localIndex - buffer.position(), (localIndex - buffer.position()) + defaultChunkSize);
-							}
-							log.info("Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");
+							log.info("[2] Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");
 							
 							c32.check(newchunk, 0, newchunk.length);
 							
@@ -440,7 +435,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							//creating the final chunk, if has rest
 							if(localIndex < modFile.length) {
 								newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
-								log.info("Creating new chunk in " + (globalIndex) + " [length = " + newchunk.length + "]");
+								log.info("[3] Creating new chunk in " + (globalIndex) + " [length = " + newchunk.length + "]");
 								
 								c32.check(newchunk, 0, newchunk.length);
 								
@@ -460,7 +455,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			}
 						
 			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
-				log.info("Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
+				log.info("[4] Creating new chunk in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
 				
 				//TODO Otimizar aqui para utilizar o roll da linha 373
 				c32.check(buffer.array(), 0, buffer.capacity());
@@ -485,6 +480,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
 			
 			offset += bytesToLoadByTime;
+			
+			indexCountCorrect += modFile.length;
 		}
 		
 		//last time

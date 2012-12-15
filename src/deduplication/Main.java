@@ -12,7 +12,6 @@ import javax.swing.SwingUtilities;
 
 import me.prettyprint.hector.api.beans.HColumn;
 
-import org.apache.cassandra.thrift.Cassandra.system_add_column_family_args;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
@@ -30,7 +29,7 @@ public class Main {
 	
 	private static final Logger log = Logger.getLogger(Main.class);
 	
-	private static String defaultPartition = "D"; 
+	private static String defaultPartition = "E"; 
 	private static int defaultChunkSize = 4;
 	
 	private static File file;
