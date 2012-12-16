@@ -526,9 +526,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				long amountChunksWithContentLoaded = 0;
 				
 				progressInfo.setType(ProgressInfo.TYPE_WRITING);
+				long initialChunkToLoad = 0;
 				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {
 					int amountChunksToLoad = (int)(amountChunksWithContent - amountChunksWithContentLoaded >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithContent - amountChunksWithContentLoaded);
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, amountChunksWithContentLoaded, amountChunksToLoad);
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, initialChunkToLoad, amountChunksToLoad);
 					
 					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
 						log.info(chunk.get().getName() + "[index = " + chunk.get().getSubColumnByName("index").getValue() + 
@@ -540,7 +541,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						count++;					
 						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
 						setProgress(prog);
+						
+						initialChunkToLoad = Long.parseLong(chunk.get().getName());
 					}
+					if(chunksWithContent.size() > 0)
+						initialChunkToLoad++;
+					
 					amountChunksWithContentLoaded += chunksWithContent.size();
 					chunksWithContent.clear();
 				}
@@ -549,9 +555,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				count = 0;
 				long amountChunksWithoutContentLoaded = 0;
+				initialChunkToLoad = 0;
 				while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
 					int amountChunksToLoad = (int)(amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithoutContent - amountChunksWithoutContentLoaded);
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, amountChunksWithoutContentLoaded, amountChunksToLoad);
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, initialChunkToLoad, amountChunksToLoad);
 					
 					for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
 						//retrieves by reference
@@ -566,8 +573,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						count++;
 						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
 						setProgress(prog);
+						
+						initialChunkToLoad = Long.parseLong(chunkReference.get().getName());
 					}
-							
+					
+					if(chunksReference.size() > 0) 
+						initialChunkToLoad++;
+					
 					amountChunksWithoutContentLoaded += chunksReference.size();
 					chunksReference.clear();
 				}
