@@ -33,7 +33,7 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 128000;
+	public static final int defaultChunkSize = 16000;
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -341,6 +341,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
 			localIndex = 0;
+			int moreBytesToLoad = 0;
 			
 			if(i == (divideInTimes - 1)) {
 				bytesToLoadByTime = (int)(file.length() - globalIndex); //globalindex errado				
@@ -356,6 +357,16 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
 			c32.check(currentChunk, 0, currentChunk.length);
 			while(localIndex < modFile.length) {
+				
+				if(modFile.length - localIndex < defaultChunkSize) {
+					if(modFile.length - localIndex + moreBytesToLoad == defaultChunkSize) { //configura o último para ter tamanho default, para não criar chunks novos desnecessariamente, já que com o tamanho default ele tem chance de ser deduplicado.
+						modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime + moreBytesToLoad);
+						currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
+						c32.check(currentChunk, 0, currentChunk.length);
+						offset += moreBytesToLoad;
+					}
+				}
+				
 				boolean differentChunk = true;
 				if(fileInStorageServer.containsKey(c32.getValue())) {						
 					if(currentChunk == null) { //para evitar ter que carregar o currentChunk quando ele já tiver sido carregado
@@ -375,6 +386,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 									DigestUtils.md5Hex(newchunk), String.valueOf(c32_2.getValue()), String.valueOf(globalIndex - newchunk.length), 
 									String.valueOf(newchunk.length), newchunk));
 							chunk_number++;
+							moreBytesToLoad += newchunk.length;
 							buffer.clear();
 						}							
 						
@@ -406,7 +418,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						chunk_number++;
 						buffer.clear();
 					} else {
-						if(modFile.length - (localIndex + defaultChunkSize) > 0) { //restam menos bytes que um chunk com tamanho padrão para analisar
+						if(modFile.length - (localIndex + defaultChunkSize) > 0) {
 							buffer.put(modFile[localIndex]);
 							c32.roll(modFile[localIndex + defaultChunkSize]);
 							globalIndex++;
@@ -450,6 +462,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						}
 					}			
 				}
+								
 			}
 						
 			if(buffer.position() > 0) { //se o buffer ja tem alguns dados, cria um chunk com ele				
