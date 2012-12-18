@@ -10,8 +10,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 
 import javax.swing.ImageIcon;
@@ -34,6 +37,7 @@ import deduplication.backup.RestoreQueue;
 import deduplication.backup.StoredFile;
 import deduplication.dao.operation.FilesDaoOpeartion;
 import deduplication.dao.operation.UserFilesDaoOperations;
+import deduplication.gui.SettingsDialog;
 import deduplication.gui.component.model.StoredFileDataModel;
 import deduplication.gui.component.renderer.IconLabelRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
@@ -118,7 +122,7 @@ public class MainPanel extends JPanel {
 					SwingUtilities.invokeLater(new Runnable(){
 						@Override
 						public void run() {							
-							JOptionPane.showMessageDialog(MainPanel.this, "Feature do not implemented yet");							
+							new SettingsDialog(jframe);							
 						}
 					});
 					

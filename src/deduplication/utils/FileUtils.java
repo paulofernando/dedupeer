@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.swing.ImageIcon;
 
@@ -30,7 +31,8 @@ public class FileUtils {
 	
 	private static Map<String, Integer> extensions;	
 	
-	private static ByteBuffer byteBuffer = ByteBuffer.allocate(StoredFile.defaultChunkSize);
+	private static PropertiesLoader propertiesLoader = new PropertiesLoader();
+	private ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.parseInt(getPropertiesLoader().getProperties().getProperty("default.chunk.size")));
 	
 	static {
 		extensions = new HashMap<String, Integer>();
@@ -118,7 +120,7 @@ public class FileUtils {
 		return result;
 	}
 	
-	public synchronized static byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
+	public synchronized byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
 		byte[] result = null;
 		RandomAccessFile raf = null;
 		try {
@@ -232,5 +234,13 @@ public class FileUtils {
 			filename = FileUtils.getOnlyName(filename) + "(" + count + ")." + FileUtils.getOnlyExtension(filename);			
 		}
 		return filename;
+	}
+
+	public static PropertiesLoader getPropertiesLoader() {
+		return propertiesLoader;
+	}
+
+	public static void setPropertiesLoader(PropertiesLoader propertiesLoader) {
+		FileUtils.propertiesLoader = propertiesLoader;
 	}
 }

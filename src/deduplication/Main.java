@@ -2,10 +2,12 @@ package deduplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Random;
 
 import javax.swing.SwingUtilities;
@@ -49,7 +51,7 @@ public class Main {
 			public void run() {
 				new MainGUI();				
 			}
-		});		
+		});
 	}
 	
 	private static void analysisBruteForce() {

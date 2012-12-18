@@ -4,10 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import deduplication.utils.FileUtils;
+
 public class BackupQueue extends Thread {
 	
 	private int maxParallelBackups = 1;
 	private static BackupQueue instance;
+	private FileUtils fileUtils = new FileUtils();
 	
 	/**
 	 * Map to store the file name to use to deduplicate the other file. 
@@ -46,7 +49,9 @@ public class BackupQueue extends Thread {
 				StoredFile currentBackup = backupQueue.take();
 				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
 					//currentBackup.deduplicate(deduplicateMap.get(currentBackup.getFilename()));
-					currentBackup.deduplicateABigFile(deduplicateMap.get(currentBackup.getFilename()), StoredFile.defaultChunkSize * 4);
+					currentBackup.deduplicateABigFile(deduplicateMap.get(currentBackup.getFilename()), 
+							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size")) * 
+							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load")));
 					deduplicateMap.remove(currentBackup.getFilename());
 				} else {
 					currentBackup.store();

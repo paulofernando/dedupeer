@@ -33,7 +33,8 @@ import deduplication.utils.FileUtils;
 
 public class StoredFile extends Observable implements StoredFileFeedback {
 	
-	public static final int defaultChunkSize = 4;
+	private FileUtils fileUtils = new FileUtils();
+	public int defaultChunkSize = Integer.parseInt(FileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size"));
 	private static final Logger log = Logger.getLogger(StoredFile.class);
 	
 	public static final int FILE_NAME = 0;
@@ -58,7 +59,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	
 	/** Indicates if the hashes of all chunks must be calculated or if only hashes of chunks with default size.
 	 * Drawback if false: do not deduplicate whole identical file because do not compares all chunks */
-	private boolean calculateAllHashes = true;
+	private boolean calculateAllHashes = fileUtils.getPropertiesLoader().getProperties().getProperty("calculate.all.hashes").equalsIgnoreCase("true");
 		
 	public StoredFile(File file, String storageEconomy, long id) {
 		this(file, storageEconomy);
@@ -357,7 +358,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			/*log.info("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
 					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");*/
 									
-			byte[] modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
+			byte[] modFile = fileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
 			byte[] currentChunk = new byte[defaultChunkSize];
 			
 			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
@@ -370,10 +371,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				if(modFile.length - localIndex < defaultChunkSize) {
 					if(modFile.length - localIndex + moreBytesToLoad == defaultChunkSize) { //configura o último para ter tamanho default, para não criar chunks novos desnecessariamente, já que com o tamanho default ele tem chance de ser deduplicado.
 						if(offset + (bytesToLoadByTime + moreBytesToLoad) > file.length()) { //para não ultrapasar o tamanho do arquivo
-							modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (int)(file.length() - offset));
+							modFile = fileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (int)(file.length() - offset));
 							currentChunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
 						} else {
-							modFile = FileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (bytesToLoadByTime + moreBytesToLoad));
+							modFile = fileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (bytesToLoadByTime + moreBytesToLoad));
 							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
 						}
 						
