@@ -1,5 +1,7 @@
 package deduplication.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
@@ -10,9 +12,9 @@ public class PropertiesLoader {
 	
 	public PropertiesLoader() {		
 		properties = new Properties();
-		URL url = ClassLoader.getSystemResource("dedupeer.properties");
 		try {
-			properties.load(url.openStream());			
+			FileInputStream fis = new FileInputStream(new File("resources/dedupeer.properties"));
+			properties.load(fis);			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
