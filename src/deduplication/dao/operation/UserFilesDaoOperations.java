@@ -15,20 +15,19 @@ import me.prettyprint.hector.api.query.SuperColumnQuery;
 
 import org.apache.log4j.Logger;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class UserFilesDaoOperations {
 
-	private static final Logger log = Logger
-			.getLogger(UserFilesDaoOperations.class);
+	private static final Logger log = Logger.getLogger(UserFilesDaoOperations.class);
 
 	private Cluster cluster;
 	private Keyspace keyspaceOperator;
-
 	private static StringSerializer stringSerializer = StringSerializer.get();
 
 	/**
-	 * Creates an object to manipulate the operations on the UserFiles
-	 * SuperColumn Family
-	 * 
+	 * Creates an object to manipulate the operations on the UserFiles SuperColumn Family 
 	 * @param clusterName The cluster name from instance of Cassandra
 	 * @param keyspaceName The Keyspace name where the UserFiles SuperColumn Family was created
 	 */
@@ -37,9 +36,7 @@ public class UserFilesDaoOperations {
 		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
 	}
 
-	/**
-	 * Inserts a new row on the UserFiles SuperColumn Family
-	 */
+	/** Inserts a new row on the UserFiles SuperColumn Family */
 	public void insertRow(String owner_name, String fileName, String fileID, String size, String chunks, String version) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
@@ -80,8 +77,7 @@ public class UserFilesDaoOperations {
 	}
 
 	/**
-	 * Retrieves the Super Column with the key and the column specified
-	 * 
+	 * Retrieves the Super Column with the key and the column specified 
 	 * @param owner_name The line key (the owner name of file)
 	 * @param fileName The filename that is a column name of the SuperColumn
 	 * @return The SuperColumns with the parametres specified
@@ -142,9 +138,7 @@ public class UserFilesDaoOperations {
 		return Long.parseLong(columnAmountChunks.getValue());
 	}
 
-	/**
-	 * Closes the connection with cluster
-	 */
+	/** Closes the connection with cluster */
 	public void close() {
 		cluster.getConnectionManager().shutdown();
 	}

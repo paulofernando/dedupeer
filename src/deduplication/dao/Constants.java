@@ -4,8 +4,7 @@ import org.apache.cassandra.thrift.ConsistencyLevel;
 
 /**
  * Constants to make the code cleaner
- * @author Paulo Fernando
- *
+ * @author Paulo Fernando (pf@paulofernando.net.br)
  */
 public class Constants {
 	public final static ConsistencyLevel consistencyLevel = ConsistencyLevel.ONE;

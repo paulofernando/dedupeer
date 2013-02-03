@@ -12,7 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -25,6 +24,9 @@ import javax.swing.JTextField;
 
 import deduplication.utils.FileUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class SettingsDialog {
 	private JDialog dialog;
 	private JPanel mainPanel;

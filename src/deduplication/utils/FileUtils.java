@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -12,16 +11,20 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.swing.ImageIcon;
 
-import deduplication.backup.StoredFile;
+import org.apache.log4j.Logger;
+
 import deduplication.dao.operation.UserFilesDaoOperations;
+import deduplication.processing.EagleEye;
 
-import android.util.Log;
-
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class FileUtils {
+	
+	private static final Logger log = Logger.getLogger(FileUtils.class);
 	
 	private static final int TYPE_AUDIO = 0;
 	private static final int TYPE_VIDEO = 1;
@@ -90,7 +93,7 @@ public class FileUtils {
 	 * @return Bytes of the file
 	 */
 	public static byte[] getBytesFromFile(String filePath, int offset, int bytesToRead) {
-		//TODO ainda está lendo os bytes usando inteiro, mudar pra long
+		//TODO Change the load bytes to long
 		File file = new File(filePath);
 		byte[] result = new byte[bytesToRead];
 
@@ -107,9 +110,9 @@ public class FileUtils {
 				}
 			}
 		} catch (FileNotFoundException ex) {
-			System.out.println("File not found.");
+			log.info("File not found.");
 		} catch (IOException ex) {
-			System.out.println(ex);
+			log.info(ex);
 		} finally {
 			try {
 				input.close();
@@ -142,7 +145,7 @@ public class FileUtils {
 			byteBuffer.reset();
 		
 		} catch (OutOfMemoryError e) {
-			System.out.println("Bytes to read: " + bytesToRead);
+			log.info("Bytes to read: " + bytesToRead);
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();

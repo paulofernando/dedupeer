@@ -22,10 +22,7 @@ public class RollingAdler32 {
 			checksum.reset();
 		} else {
 			while (offset <= data.length - window) {				
-				//byte[] partial = Arrays.copyOfRange(data, offset, offset + window);
-				//System.out.println((new String(partial)) + " " + Hashing.getAlder32(partial));
-				System.out.println(offset + " of " + data.length);
-				
+				System.out.println(offset + " of " + data.length);				
 				checksum.update(data, offset, window);
 				hashes.add(checksum.getValue());
 				checksum.reset();

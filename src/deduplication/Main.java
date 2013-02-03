@@ -27,6 +27,9 @@ import deduplication.processing.RollingInBruteForce;
 import deduplication.processing.file.Chunking;
 import deduplication.utils.FileUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class Main {
 	
 	private static final Logger log = Logger.getLogger(Main.class);

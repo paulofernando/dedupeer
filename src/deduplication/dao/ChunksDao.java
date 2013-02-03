@@ -2,13 +2,13 @@ package deduplication.dao;
 
 /**
  * Representation of the Cassandra's Column Family "Chunk" 
- * @author Paulo Fernando
- *
+ * @author Paulo Fernando (pf@paulofernando.net.br)
  */
 public class ChunksDao {
 	
 	public String fileID = "", chunkNumber = "", md5 = "", adler32 = "", index = "", length = "", pfile = "", pchunk = "", destination = "";
 	public byte[] content;
+	
 	/**
 	 * @param chunkName Path to the chunk on storage device
 	 */

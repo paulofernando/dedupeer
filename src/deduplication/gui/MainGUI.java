@@ -10,6 +10,9 @@ import org.pushingpixels.substance.api.skin.OfficeSilver2007Skin;
 
 import deduplication.gui.component.MainPanel;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class MainGUI extends JFrame {
 	
 	private static final long serialVersionUID = -1169498996174977654L;
@@ -27,18 +30,14 @@ public class MainGUI extends JFrame {
 	}
 	
 	private void setup() {
-		lookAndFeel();
-		
+		lookAndFeel();		
 		this.setSize(width, height);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);	    
 	    setLocation((Toolkit.getDefaultToolkit().getScreenSize().width - this.getSize().width)>>1, 
-	    		(Toolkit.getDefaultToolkit().getScreenSize().height - this.getSize().height)>>1);
-	    
+	    		(Toolkit.getDefaultToolkit().getScreenSize().height - this.getSize().height)>>1);	    
 	}	
 
-	/**
-	 * Sets up the look and feel to the application
-	 */
+	/** Sets up the look and feel to the application */
 	private void lookAndFeel() {		
 		SwingUtilities.invokeLater(new Runnable() {
 	      public void run() {

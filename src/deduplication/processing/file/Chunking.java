@@ -22,8 +22,7 @@ import deduplication.utils.FileUtils;
 
 /**
  * Utility class for operations with chunks
- * @author Paulo Fernando
- *
+ * @author Paulo Fernando (pf@paulofernando.net.br)
  */
 public class Chunking {
 	
@@ -56,7 +55,6 @@ public class Chunking {
 		byte[] b = new byte[size];
 	    int ch = 0;
 	    long chunkCount = 0l;
-
 	    Checksum32 c32 = new Checksum32();
 	    
 	    long globalIndex = 0;
@@ -74,7 +72,7 @@ public class Chunking {
 		     
 		     c32.check(b, 0, ch);
 		     
-		     if(ch < size) { //if a chunk size is smaller than default
+		     if(ch < size) { //If a chunk size is smaller than default
 		    	 b = Arrays.copyOf(b, ch);
 		     }
 		     		     
@@ -166,13 +164,11 @@ public class Chunking {
 	 * @param Folder path where the data were stored
 	 * @param filename File name of the file that chunks were created
 	 */
-	public static void cleanUpChunks(String destination, String filename) {
-		//log.info("Deleting chunks of the " + filename + " stored on hard disk...");
+	public static void cleanUpChunks(String destination, String filename) {		
 		int chunkCount = 0;
 		String fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + chunkCount;
 		while(new File(fname).delete()) {
 			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);
 		}
-		//log.info("Chunks of the " + filename + " deleted");
 	}
 }

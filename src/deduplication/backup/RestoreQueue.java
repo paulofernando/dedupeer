@@ -2,13 +2,13 @@ package deduplication.backup;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class RestoreQueue extends Thread {
 	
-	private int maxParallelRestores = 1;
 	private static RestoreQueue instance;
-	/**
-	 * Map with a file path as key and the backup as value
-	 */
+	/** Map with a file path as key and the backup as value */
 	private LinkedBlockingQueue<StoredFile> restoreQueue = new LinkedBlockingQueue<StoredFile>();
 	
 	public static RestoreQueue getInstance() {

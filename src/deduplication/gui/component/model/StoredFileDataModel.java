@@ -5,19 +5,19 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 
 import deduplication.backup.StoredFile;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class StoredFileDataModel extends AbstractTableModel implements Observer {
 
 	private List<StoredFile> storedFileList = new ArrayList<StoredFile>();
 	
 	private static final long serialVersionUID = 6620911388379308486L;
-	private String[] columnNames = {"File",
-			"Progress",
-            "Storage economy"};
+	private String[] columnNames = {"File", "Progress", "Storage economy"};
 	
 	@Override
 	public int getColumnCount() {		

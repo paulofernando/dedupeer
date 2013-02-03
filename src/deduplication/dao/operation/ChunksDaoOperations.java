@@ -24,12 +24,13 @@ import me.prettyprint.hector.api.query.SuperSliceQuery;
 
 import org.apache.log4j.Logger;
 
-import com.sun.org.apache.bcel.internal.generic.LADD;
-
 import deduplication.backup.StoredFileFeedback;
 import deduplication.dao.ChunksDao;
 import deduplication.utils.FileUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class ChunksDaoOperations {
 	
 	private static final Logger log = Logger.getLogger(ChunksDaoOperations.class);
@@ -47,8 +48,7 @@ public class ChunksDaoOperations {
 	 */
 	public ChunksDaoOperations (String clusterName, String keyspaceName) {
 		cluster = HFactory.getOrCreateCluster(clusterName, "localhost:9160");
-		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
-		
+		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);		
 	}
 	
 	/**
@@ -106,7 +106,7 @@ public class ChunksDaoOperations {
 	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
 	                    Arrays.asList(HFactory.createColumn("content", chunk.content)), 
 	                    stringSerializer, stringSerializer, BytesArraySerializer.get()));
-			} else { //deduplicated chunk
+			} else { //Deduplicated chunk
 				mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
 	                    Arrays.asList(HFactory.createStringColumn("index", chunk.index)), 
 	                    stringSerializer, stringSerializer, stringSerializer));
@@ -123,9 +123,7 @@ public class ChunksDaoOperations {
         }
 	}
 	
-	/**
-	 * Inserts a collection of chunks on the Chunk Column Family
-	 */
+	/** Inserts a collection of chunks on the Chunk Column Family */
 	public void insertRows(ArrayList<ChunksDao> chunks) {
 		int chunk_number = 0;
 		for(ChunksDao c: chunks) {
@@ -133,8 +131,7 @@ public class ChunksDaoOperations {
 				String chunk_num = String.valueOf(chunk_number);
 				Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 				
-				//log.info("Chunk " + chunk_num + " [adler32 = " + c.adler32 + "] e [MD5 = " + c.md5 + "]");
-				log.info("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [MD5 = " + c.md5 + "]");
+				log.debug("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [MD5 = " + c.md5 + "]");
 				
 				if(c.pfile.equals("")) {
 					mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
@@ -154,7 +151,7 @@ public class ChunksDaoOperations {
 			                    Arrays.asList( HFactory.createColumn("content", FileUtils.getBytesFromFile(c.destination))), 
 			                    stringSerializer, stringSerializer, BytesArraySerializer.get()));
 		            }
-				} else { //deduplicated chunk
+				} else { //Deduplicated chunk
 		            mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
 		                    Arrays.asList(HFactory.createStringColumn("index", c.index)), 
 		                    stringSerializer, stringSerializer, stringSerializer));
@@ -203,15 +200,13 @@ public class ChunksDaoOperations {
 		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
 				stringSerializer, stringSerializer, stringSerializer);
 		query.setColumnFamily("Chunks"); 
-		query.setKey(file_id); 
-		
-		int loadByTime = 10;
-		
-		Map<Integer, Map<String, String>> chunksLoaded = new HashMap<Integer, Map<String, String>>();
-		
+		query.setKey(file_id);		
+		int loadByTime = 10;		
+		Map<Integer, Map<String, String>> chunksLoaded = new HashMap<Integer, Map<String, String>>();		
 		long loaded = 0;
+		
 		while(loaded < amountChunks) {
-			
+			//TODO To refactor with the code easier to modify
 			if(amountChunks - loaded >= loadByTime) {
 				query.setColumnNames(String.valueOf(loaded), String.valueOf(loaded + 1), String.valueOf(loaded + 2), String.valueOf(loaded + 3), String.valueOf(loaded + 4),
 						String.valueOf(loaded + 5), String.valueOf(loaded + 6), String.valueOf(loaded + 7), String.valueOf(loaded + 8), String.valueOf(loaded + 9));
@@ -271,29 +266,24 @@ public class ChunksDaoOperations {
 				}
 				
 				loaded++;
-			}
-			
-			log.info("Last chunk loaded: " + loaded);
-		}
-		
+			}			
+			log.debug("Last chunk loaded: " + loaded);
+		}		
 		return chunksLoaded;
 	}
 	
-	
-	
 	public void getAllChunks(String file_id) {
 		SliceQuery<String, String, String> query = HFactory.createSliceQuery(keyspaceOperator, StringSerializer.get(),
-			    StringSerializer.get(), StringSerializer.get()).
-			    setKey(file_id).setColumnFamily("Chunks");
+		    StringSerializer.get(), StringSerializer.get()).
+		    setKey(file_id).setColumnFamily("Chunks");
 
-			ColumnSliceIterator<String, String, String> iterator = 
-			    new ColumnSliceIterator<String, String, String>(query, null, "\uFFFF", false);
-						
-			while (iterator.hasNext()) {
-			    System.out.println(iterator.next().getValue());
-			}
-	}
-	
+		ColumnSliceIterator<String, String, String> iterator = 
+		    new ColumnSliceIterator<String, String, String>(query, null, "\uFFFF", false);
+					
+		while (iterator.hasNext()) {
+		    log.debug(iterator.next().getValue());
+		}
+	}	
 	
 	public long getSpaceOccupiedByTheFile(String owner, String filename) {
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
@@ -301,11 +291,11 @@ public class ChunksDaoOperations {
 	                    stringSerializer, stringSerializer);
 		long bytesStored = 0;
 		
-		//--- retrieving the id ----
+		//--------------- retrieving the id ---------------
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
 		String fileID = columnFileID.getValue();
-		//-------------------------
+		//------------------------------------------------
 		
 		long count = ufdo.getChunksCount(owner, filename);	
 		for(int i = 0; i < count; i++) {
@@ -330,11 +320,11 @@ public class ChunksDaoOperations {
 			
 		Vector<QueryResult<HSuperColumn<String, String, String>>> result = new Vector<QueryResult<HSuperColumn<String, String, String>>>();
 		
-		//--- retrieving the id ----
+		//--------------- retrieving the id ---------------
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
 		String fileID = columnFileID.getValue();
-		//-------------------------
+		//-------------------------------------------------
 		
 		long count = ufdo.getChunksCount(owner, filename);		
 		for(int i = 0; i < count; i++) {
@@ -343,7 +333,7 @@ public class ChunksDaoOperations {
 	        
 	        if(column.get().getSubColumnByName("content") != null) {
 	        	result.add(column);
-	        }
+	        }	        
 	        if(feedback != null) {
 	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
 	        }
@@ -417,9 +407,7 @@ public class ChunksDaoOperations {
         return result;
 	}
 	
-	/**
-	 * Closes the connection with cluster
-	 */
+	/** Closes the connection with cluster */
 	public void close() {
 		cluster.getConnectionManager().shutdown();
 	}	

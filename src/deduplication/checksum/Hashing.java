@@ -7,6 +7,9 @@ import java.util.zip.Checksum;
 
 import deduplication.utils.GeneralUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class Hashing {
 	
 	/**

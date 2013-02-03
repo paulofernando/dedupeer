@@ -6,9 +6,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import deduplication.utils.FileUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class BackupQueue extends Thread {
 	
-	private int maxParallelBackups = 1;
 	private static BackupQueue instance;
 	private FileUtils fileUtils = new FileUtils();
 	
@@ -48,7 +50,6 @@ public class BackupQueue extends Thread {
 			try {
 				StoredFile currentBackup = backupQueue.take();
 				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
-					//currentBackup.deduplicate(deduplicateMap.get(currentBackup.getFilename()));
 					currentBackup.deduplicateABigFile(deduplicateMap.get(currentBackup.getFilename()), 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size")) * 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load")));

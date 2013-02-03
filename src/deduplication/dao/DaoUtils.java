@@ -7,6 +7,9 @@ import org.apache.cassandra.thrift.Cassandra;
 import org.apache.cassandra.thrift.CfDef;
 import org.apache.cassandra.thrift.KsDef;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class DaoUtils {
 
 	/**

@@ -3,10 +3,18 @@ package deduplication.processing;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import deduplication.checksum.RollingChecksumOlder;
 import deduplication.checksum.rsync.Checksum32;
 
-public class EagleEye {
+/** 
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ * @deprecated
+ */
+public class EagleEye {	
+	
+	private static final Logger log = Logger.getLogger(EagleEye.class);
 	
 	/**
 	 * Try find a data block in {@code file} with same bytes as the {@code chunk}
@@ -17,10 +25,8 @@ public class EagleEye {
 	public static int searchDuplication(byte[] file, byte[] chunk) {
 		Checksum32 chunkC32 = new Checksum32();
 		chunkC32.check(chunk, 0, chunk.length);
-		int chunkHash = chunkC32.getValue();
-		
-		long time = System.currentTimeMillis();	
-		
+		int chunkHash = chunkC32.getValue();		
+		long time = System.currentTimeMillis();		
 		int index = 0;
 		
 		Checksum32 c32 = new Checksum32();
@@ -29,7 +35,7 @@ public class EagleEye {
 		
 		hash = c32.getValue();
 		if(chunkHash == hash) {
-			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");
+			log.debug("Found it! [hash = " + hash + "] and [index = " + index + "]");
 			return index;
 		}			
 		index++;
@@ -38,13 +44,13 @@ public class EagleEye {
 			c32.roll(file[index]);
 			hash = c32.getValue();
 			if(chunkHash == hash) {
-				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
+				log.debug("Found it! [hash = " + hash + "] and [index = " + index + "]");				
 				return index;
 			}			
 			index++;
 		}
 		
-		System.out.println("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.debug("Processed in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return -1;
 	}
 	
@@ -65,7 +71,7 @@ public class EagleEye {
 		
 		hash = c32.getValue();
 		if(chunkHash == hash) {			
-			System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "] *");
+			log.debug("Found it! [hash = " + hash + "] and [index = " + index + "] *");
 			return index;
 		}			
 		index++;
@@ -76,12 +82,12 @@ public class EagleEye {
 			
 			if(chunkHash == hash) {
 				index -= (sizeOfChunk - 1); //the index informed to roll() is the index of the last byte
-				System.out.println("Found it! [hash = " + hash + "] and [index = " + index + "]");				
+				log.debug("Found it! [hash = " + hash + "] and [index = " + index + "]");				
 				return index;
 			}			
 			index++;
 		}
-		System.out.println("-> Pattern not found!");	
+		log.debug("-> Pattern not found!");	
 		return -1;
 	}
 		
@@ -102,14 +108,16 @@ public class EagleEye {
 		while (checksum.next()) {
 			long cs = checksum.weak();
 			if(cs == hash) {				
-				System.out.println("\nAchou! [index = " + i +"]");
+				log.debug("\nFound! [index = " + i +"]");
 				indexes.add(i);
-				System.out.println(cs);
+				log.debug(cs);
 			}
 			i++;
 		}
 		
-		if(indexes.size() == 0) System.out.println("Bloco não duplicado");
+		if(indexes.size() == 0) {
+			log.debug("Duplicated block");
+		}
 		
 		return indexes;
 	}
@@ -161,8 +169,7 @@ public class EagleEye {
 				//FIXME Byte did not jump one by one. 
 				i += sizeOfChunk;
 			}
-		}
-				
+		}				
 		return -1;
 	}
 }

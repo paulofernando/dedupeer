@@ -2,15 +2,19 @@ package deduplication.processing;
 
 import java.util.HashSet;
 
+import org.apache.log4j.Logger;
+
 import deduplication.checksum.Hashing;
 import deduplication.checksum.RollingAdler32;
 
 /**
  * Responsible to identify a specific chunk into the block of data using brute force
  * @author Paulo Fernando
- *
+ * @deprecated
  */
 public class RollingInBruteForce {
+	
+	private static final Logger log = Logger.getLogger(RollingInBruteForce.class);
 	
 	/**
 	 * Identifies if the chunk is duplicated in the file
@@ -20,19 +24,19 @@ public class RollingInBruteForce {
 	public static void duplicationIdentification(byte[] block, byte[] chunk) {
 		
 		if(block.length < chunk.length) {
-			System.out.println("ERROR!");
+			log.debug("ERROR!");
 			return;
 		}
 		
 		HashSet<Long> rollingHashes = RollingAdler32.rollingIn(block, 0, chunk.length);
 		long chunkHash = Hashing.getAlder32(chunk);
 					
-		System.out.println("--------- \nChunk: " + (new String(chunk)) + "\nHash: " + chunkHash);
+		log.debug("--- \nChunk: " + (new String(chunk)) + "\nHash: " + chunkHash);
 		
 		if(rollingHashes.contains(chunkHash)) {
-			System.out.println("achou!");
+			log.debug("Pattern found!");
 		} else {
-			System.out.println("não achou!");
+			log.debug("Pattern not found!");
 		}
 		
 	}

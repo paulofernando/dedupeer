@@ -14,14 +14,16 @@ import me.prettyprint.hector.api.query.ColumnQuery;
 import me.prettyprint.hector.api.query.QueryResult;
 import me.prettyprint.hector.api.query.SliceQuery;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class FilesDaoOpeartion {
 
 	private Cluster cluster;
 	private Keyspace keyspaceOperator;
 	
 	/**
-	 * Creates an object to manipulate the operations on the Files Column Family
-	 * 
+	 * Creates an object to manipulate the operations on the Files Column Family 
 	 * @param clusterName The cluster name from instance of Cassandra
 	 * @param keyspaceName The Keyspace name where the File Column Family was created
 	 */
@@ -30,9 +32,7 @@ public class FilesDaoOpeartion {
 		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);
 	}
 	
-	/**
-	 * Inserts a new row on the Files Column Family
-	 */
+	/** Inserts a new row on the Files Column Family */
 	public void insertRow(String ownerName, String fileName, String fileID) {
 		Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, StringSerializer.get());
         mutator.insert(ownerName, "Files", HFactory.createStringColumn(fileName, fileID));
@@ -56,6 +56,5 @@ public class FilesDaoOpeartion {
         columnQuery.setColumnFamily("Files").setKey(ownerName).setName(filename);
         QueryResult<HColumn<String, String>> result = columnQuery.execute();
         return result.get().getValue();
-	}
-	
+	}	
 }

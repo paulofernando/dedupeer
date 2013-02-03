@@ -9,6 +9,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import deduplication.utils.FileUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class IconLabelRenderer extends DefaultTableCellRenderer {
 
 	private static final long serialVersionUID = 6335367333085684949L;

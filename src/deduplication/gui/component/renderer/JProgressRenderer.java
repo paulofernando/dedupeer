@@ -11,6 +11,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class JProgressRenderer extends JProgressBar implements TableCellRenderer {
 
 	private static final long serialVersionUID = -4116117091520144073L;

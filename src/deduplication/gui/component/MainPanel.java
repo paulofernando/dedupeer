@@ -43,6 +43,9 @@ import deduplication.gui.component.renderer.IconLabelRenderer;
 import deduplication.gui.component.renderer.JProgressRenderer;
 import deduplication.utils.FileUtils;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class MainPanel extends JPanel {
 	
 	private static final long serialVersionUID = -6912344879931889592L;
@@ -188,18 +191,14 @@ public class MainPanel extends JPanel {
 					restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));
 				}
 			}
-		};
-		
+		};		
 		table.addMouseListener(mouseListener);
 	}
 	
-	/**
-	 * Add a file in the queue to backup
-	 */
+	/** Add a file in the queue to backup */
 	private void backupIt(File fileToBackup) {
 		String filename = fileToBackup.getName();
-		String newFileName = FileUtils.getValidName(fileToBackup.getName());
-				
+		String newFileName = FileUtils.getValidName(fileToBackup.getName());				
 		StoredFile backup;
 				
 		if(filename.equals(newFileName)) {
@@ -218,8 +217,7 @@ public class MainPanel extends JPanel {
 	 */
 	private void backupIt(File fileToBackup, String deduplicateWith) {
 		String filename = fileToBackup.getName();
-		String newFileName = FileUtils.getValidName(fileToBackup.getName());
-				
+		String newFileName = FileUtils.getValidName(fileToBackup.getName());				
 		StoredFile backup;
 				
 		if(filename.equals(newFileName)) {
@@ -232,9 +230,7 @@ public class MainPanel extends JPanel {
 		BackupQueue.getInstance().addBackup(backup, deduplicateWith);
 	}
 	
-	/**
-	 * Adds a file in the queue to restore
-	 */
+	/** Adds a file in the queue to restore */
 	private void restoreIt(StoredFile storedFile) {
 		JFileChooser jfc = new JFileChooser();
 		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -251,7 +247,7 @@ public class MainPanel extends JPanel {
 		System.setProperty("username", username);
 		this.jframe.setTitle(jframe.getTitle() + " [@" + username + "]");
 		
-		//unlock components
+		//uUnlock components
 		btAdd.setEnabled(true);
 		btCalculate.setEnabled(true);
 		btSettings.setEnabled(true);
