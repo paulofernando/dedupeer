@@ -9,6 +9,9 @@ import java.io.InputStream;
 import org.apache.log4j.Logger;
 import org.springframework.util.Assert;
 
+/**
+ * @deprecated
+ */
 public class RollingChecksumOlder {
 	
 	private static final Logger log = Logger.getLogger(RollingChecksumOlder.class);	
@@ -26,11 +29,11 @@ public class RollingChecksumOlder {
 	public RollingChecksumOlder(File f, int blockSize) {
 		this.f = f;
 		this.blockSize = Math.min((int) f.length(), blockSize);
-		this.data = new byte[(int) f.length()]; // maximum filesize: 2,147,483,647 (
+		this.data = new byte[(int) f.length()]; //Maximum filesize: 2,147,483,647
 		try {
 			this.stream = new FileInputStream(f);
 		} catch (FileNotFoundException e) {
-			System.out.println(String.format("Failed to access file [%s]", f.getAbsolutePath()));
+			log.info(String.format("Failed to access file [%s]", f.getAbsolutePath()));
 		}
 	}
 	
@@ -52,9 +55,8 @@ public class RollingChecksumOlder {
 	}
 	
 	public boolean next() {
-		if (index < data.length - blockSize) {
-			
-			// if pulling data off a stream, get another chunk of data here
+		if (index < data.length - blockSize) {			
+			//If pulling data off a stream, get another chunk of data here
 			if (stream != null && !eofReached) {
 				if (log.isDebugEnabled())
 					log.debug("Buffering more data...");
@@ -70,13 +72,12 @@ public class RollingChecksumOlder {
 				} catch (IOException e) {
 					System.out.println(String.format("Failed to read or close file [%s]", f.getAbsolutePath()));
 				}
-			}
-			
+			}			
 			index++;
 			return true;
-		}
-		else
+		} else {
 			return false;
+		}
 	}
 	
 	public static final Long sum(byte[] chunk) {
@@ -91,14 +92,6 @@ public class RollingChecksumOlder {
 		b = b % M;
 		
 		long checksum = a + M * b;
-		
-		/*if (log.isTraceEnabled()) {
-			StringBuilder hex = new StringBuilder();
-			for (int i=0; i<chunk.length; i++)
-				hex.append(Long.toHexString((long) chunk[i]));
-			log.trace("sum("+hex.toString()+"): " + Long.toHexString(checksum));
-		}*/
-		
 		return checksum;
 	}
 	
@@ -110,8 +103,7 @@ public class RollingChecksumOlder {
 		if (log.isDebugEnabled())
 			log.debug("sum("+sub+"): " + Long.toHexString(checksum));
 		
-		return checksum;
-		
+		return checksum;		
 	}
 	
 	public long weak() {
@@ -123,9 +115,7 @@ public class RollingChecksumOlder {
 			byte[] firstBlock = new byte[Math.min(blockSize, data.length)];
 			System.arraycopy(data, 0, firstBlock, 0, Math.min(blockSize, data.length));
 			
-			//System.out.println("Bloco: " + new String(Arrays.copyOfRange(data, index, index + blockSize)));		
-			
-			// initialize alpha and beta summations
+			//Initialize alpha and beta summations
 			for (int i=0; i<firstBlock.length; i++) {
 				a += (long) firstBlock[i];
 				b += (blockSize-i) * (long) firstBlock[i];
@@ -141,17 +131,10 @@ public class RollingChecksumOlder {
 				for (int i=0; i<firstBlock.length; i++)
 					hex.append(Long.toHexString((long) firstBlock[i]));
 				log.trace("weak(block:"+hex.toString()+"): " + Long.toHexString(checksum));
-			}
-			
-		}
-		
-		else {
-			
+			}			
+		} else {			
 			int lastByteAt = index - 1;
-			int nextByteAt = index + blockSize - 1;
-			
-			//System.out.println("Bloco: " + new String(Arrays.copyOfRange(data, index, index + blockSize)));
-			
+			int nextByteAt = index + blockSize - 1;			
 			byte lastByte = data[lastByteAt];
 			byte nextByte = data[nextByteAt];
 			
@@ -162,24 +145,8 @@ public class RollingChecksumOlder {
 			
 			if (log.isTraceEnabled()) {
 				log.trace("weak(lastByte:"+Long.toHexString((long) lastByte)+", nextByte:"+Long.toHexString((long) nextByte) + "): " + Long.toHexString(checksum));
-			}
-			
-		}
-		
+			}			
+		}		
 		return checksum;
 	}
-		
-	/*public byte[] strong() {
-		if (data.length-index < 1) { // data was smaller than blockSize
-			return MD5.digest(data);
-		}
-		else {
-			int chunkSize = Math.min(blockSize, data.length-index);
-			byte[] chunk = new byte[chunkSize];
-			System.arraycopy(data, index, chunk, 0, chunkSize);
-			return MD5.digest(chunk);
-		}
-	}*/
-	                              
-	
 }
