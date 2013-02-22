@@ -7,8 +7,9 @@ import me.prettyprint.hector.api.beans.HColumn;
 
 import org.apache.log4j.Logger;
 
-import deduplication.dao.operation.ChunksDaoOperations;
-import deduplication.utils.FileUtils;
+import com.dedupeer.dao.operation.ChunksDaoOperations;
+import com.dedupeer.utils.FileUtils;
+
 
 public class ChunksDaoOperationsTest extends TestCase {
 

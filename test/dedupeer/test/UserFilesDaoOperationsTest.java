@@ -2,9 +2,10 @@ package dedupeer.test;
 
 import org.apache.log4j.Logger;
 
+import com.dedupeer.dao.operation.UserFilesDaoOperations;
+
 import junit.framework.TestCase;
 import me.prettyprint.hector.api.beans.HColumn;
-import deduplication.dao.operation.UserFilesDaoOperations;
 
 public class UserFilesDaoOperationsTest extends TestCase {
 

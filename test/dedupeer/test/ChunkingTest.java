@@ -7,8 +7,9 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import deduplication.processing.file.Chunking;
-import deduplication.utils.FileUtils;
+import com.dedupeer.processing.file.Chunking;
+import com.dedupeer.utils.FileUtils;
+
 
 import junit.framework.TestCase;
 
