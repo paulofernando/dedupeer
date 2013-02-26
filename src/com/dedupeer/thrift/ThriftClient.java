@@ -16,7 +16,6 @@ public class ThriftClient {
 		try {
 			transport = new TSocket("localhost", 7911);
 			TProtocol protocol = new TBinaryProtocol(transport);
-
 			DeduplicationService.Client client = new DeduplicationService.Client(protocol);
 
 			transport.open();

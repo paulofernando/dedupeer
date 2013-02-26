@@ -34,13 +34,13 @@ public class DeduplicationService {
 
   public interface Iface {
 
-    public Map<Long,String> deduplicate(Map<Integer,Map<String,String>> chunks, String pathOfFile) throws org.apache.thrift.TException;
+    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException;
 
   }
 
   public interface AsyncIface {
 
-    public void deduplicate(Map<Integer,Map<String,String>> chunks, String pathOfFile, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deduplicate_call> resultHandler) throws org.apache.thrift.TException;
+    public void deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deduplicate_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -64,21 +64,23 @@ public class DeduplicationService {
       super(iprot, oprot);
     }
 
-    public Map<Long,String> deduplicate(Map<Integer,Map<String,String>> chunks, String pathOfFile) throws org.apache.thrift.TException
+    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
     {
-      send_deduplicate(chunks, pathOfFile);
+      send_deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime);
       return recv_deduplicate();
     }
 
-    public void send_deduplicate(Map<Integer,Map<String,String>> chunks, String pathOfFile) throws org.apache.thrift.TException
+    public void send_deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
     {
       deduplicate_args args = new deduplicate_args();
-      args.setChunks(chunks);
+      args.setChunksInfo(chunksInfo);
       args.setPathOfFile(pathOfFile);
+      args.setChunkSizeInBytes(chunkSizeInBytes);
+      args.setBytesToLoadByTime(bytesToLoadByTime);
       sendBase("deduplicate", args);
     }
 
-    public Map<Long,String> recv_deduplicate() throws org.apache.thrift.TException
+    public Map<Long,Chunk> recv_deduplicate() throws org.apache.thrift.TException
     {
       deduplicate_result result = new deduplicate_result();
       receiveBase(result, "deduplicate");
@@ -106,32 +108,38 @@ public class DeduplicationService {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void deduplicate(Map<Integer,Map<String,String>> chunks, String pathOfFile, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler) throws org.apache.thrift.TException {
+    public void deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      deduplicate_call method_call = new deduplicate_call(chunks, pathOfFile, resultHandler, this, ___protocolFactory, ___transport);
+      deduplicate_call method_call = new deduplicate_call(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class deduplicate_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private Map<Integer,Map<String,String>> chunks;
+      private Map<Integer,Map<String,String>> chunksInfo;
       private String pathOfFile;
-      public deduplicate_call(Map<Integer,Map<String,String>> chunks, String pathOfFile, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private int chunkSizeInBytes;
+      private int bytesToLoadByTime;
+      public deduplicate_call(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
-        this.chunks = chunks;
+        this.chunksInfo = chunksInfo;
         this.pathOfFile = pathOfFile;
+        this.chunkSizeInBytes = chunkSizeInBytes;
+        this.bytesToLoadByTime = bytesToLoadByTime;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("deduplicate", org.apache.thrift.protocol.TMessageType.CALL, 0));
         deduplicate_args args = new deduplicate_args();
-        args.setChunks(chunks);
+        args.setChunksInfo(chunksInfo);
         args.setPathOfFile(pathOfFile);
+        args.setChunkSizeInBytes(chunkSizeInBytes);
+        args.setBytesToLoadByTime(bytesToLoadByTime);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public Map<Long,String> getResult() throws org.apache.thrift.TException {
+      public Map<Long,Chunk> getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -173,7 +181,7 @@ public class DeduplicationService {
 
       public deduplicate_result getResult(I iface, deduplicate_args args) throws org.apache.thrift.TException {
         deduplicate_result result = new deduplicate_result();
-        result.success = iface.deduplicate(args.chunks, args.pathOfFile);
+        result.success = iface.deduplicate(args.chunksInfo, args.pathOfFile, args.chunkSizeInBytes, args.bytesToLoadByTime);
         return result;
       }
     }
@@ -183,8 +191,10 @@ public class DeduplicationService {
   public static class deduplicate_args implements org.apache.thrift.TBase<deduplicate_args, deduplicate_args._Fields>, java.io.Serializable, Cloneable   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("deduplicate_args");
 
-    private static final org.apache.thrift.protocol.TField CHUNKS_FIELD_DESC = new org.apache.thrift.protocol.TField("chunks", org.apache.thrift.protocol.TType.MAP, (short)1);
+    private static final org.apache.thrift.protocol.TField CHUNKS_INFO_FIELD_DESC = new org.apache.thrift.protocol.TField("chunksInfo", org.apache.thrift.protocol.TType.MAP, (short)1);
     private static final org.apache.thrift.protocol.TField PATH_OF_FILE_FIELD_DESC = new org.apache.thrift.protocol.TField("pathOfFile", org.apache.thrift.protocol.TType.STRING, (short)2);
+    private static final org.apache.thrift.protocol.TField CHUNK_SIZE_IN_BYTES_FIELD_DESC = new org.apache.thrift.protocol.TField("chunkSizeInBytes", org.apache.thrift.protocol.TType.I32, (short)3);
+    private static final org.apache.thrift.protocol.TField BYTES_TO_LOAD_BY_TIME_FIELD_DESC = new org.apache.thrift.protocol.TField("bytesToLoadByTime", org.apache.thrift.protocol.TType.I32, (short)4);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -192,13 +202,17 @@ public class DeduplicationService {
       schemes.put(TupleScheme.class, new deduplicate_argsTupleSchemeFactory());
     }
 
-    public Map<Integer,Map<String,String>> chunks; // required
+    public Map<Integer,Map<String,String>> chunksInfo; // required
     public String pathOfFile; // required
+    public int chunkSizeInBytes; // required
+    public int bytesToLoadByTime; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      CHUNKS((short)1, "chunks"),
-      PATH_OF_FILE((short)2, "pathOfFile");
+      CHUNKS_INFO((short)1, "chunksInfo"),
+      PATH_OF_FILE((short)2, "pathOfFile"),
+      CHUNK_SIZE_IN_BYTES((short)3, "chunkSizeInBytes"),
+      BYTES_TO_LOAD_BY_TIME((short)4, "bytesToLoadByTime");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -213,10 +227,14 @@ public class DeduplicationService {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 1: // CHUNKS
-            return CHUNKS;
+          case 1: // CHUNKS_INFO
+            return CHUNKS_INFO;
           case 2: // PATH_OF_FILE
             return PATH_OF_FILE;
+          case 3: // CHUNK_SIZE_IN_BYTES
+            return CHUNK_SIZE_IN_BYTES;
+          case 4: // BYTES_TO_LOAD_BY_TIME
+            return BYTES_TO_LOAD_BY_TIME;
           default:
             return null;
         }
@@ -257,13 +275,20 @@ public class DeduplicationService {
     }
 
     // isset id assignments
+    private static final int __CHUNKSIZEINBYTES_ISSET_ID = 0;
+    private static final int __BYTESTOLOADBYTIME_ISSET_ID = 1;
+    private byte __isset_bitfield = 0;
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.CHUNKS, new org.apache.thrift.meta_data.FieldMetaData("chunks", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.MAP          , "chunksToCompare")));
+      tmpMap.put(_Fields.CHUNKS_INFO, new org.apache.thrift.meta_data.FieldMetaData("chunksInfo", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.MAP          , "hashesToCompare")));
       tmpMap.put(_Fields.PATH_OF_FILE, new org.apache.thrift.meta_data.FieldMetaData("pathOfFile", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.CHUNK_SIZE_IN_BYTES, new org.apache.thrift.meta_data.FieldMetaData("chunkSizeInBytes", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32          , "int")));
+      tmpMap.put(_Fields.BYTES_TO_LOAD_BY_TIME, new org.apache.thrift.meta_data.FieldMetaData("bytesToLoadByTime", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32          , "int")));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deduplicate_args.class, metaDataMap);
     }
@@ -272,24 +297,33 @@ public class DeduplicationService {
     }
 
     public deduplicate_args(
-      Map<Integer,Map<String,String>> chunks,
-      String pathOfFile)
+      Map<Integer,Map<String,String>> chunksInfo,
+      String pathOfFile,
+      int chunkSizeInBytes,
+      int bytesToLoadByTime)
     {
       this();
-      this.chunks = chunks;
+      this.chunksInfo = chunksInfo;
       this.pathOfFile = pathOfFile;
+      this.chunkSizeInBytes = chunkSizeInBytes;
+      setChunkSizeInBytesIsSet(true);
+      this.bytesToLoadByTime = bytesToLoadByTime;
+      setBytesToLoadByTimeIsSet(true);
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public deduplicate_args(deduplicate_args other) {
-      if (other.isSetChunks()) {
-        this.chunks = other.chunks;
+      __isset_bitfield = other.__isset_bitfield;
+      if (other.isSetChunksInfo()) {
+        this.chunksInfo = other.chunksInfo;
       }
       if (other.isSetPathOfFile()) {
         this.pathOfFile = other.pathOfFile;
       }
+      this.chunkSizeInBytes = other.chunkSizeInBytes;
+      this.bytesToLoadByTime = other.bytesToLoadByTime;
     }
 
     public deduplicate_args deepCopy() {
@@ -298,42 +332,46 @@ public class DeduplicationService {
 
     @Override
     public void clear() {
-      this.chunks = null;
+      this.chunksInfo = null;
       this.pathOfFile = null;
+      setChunkSizeInBytesIsSet(false);
+      this.chunkSizeInBytes = 0;
+      setBytesToLoadByTimeIsSet(false);
+      this.bytesToLoadByTime = 0;
     }
 
-    public int getChunksSize() {
-      return (this.chunks == null) ? 0 : this.chunks.size();
+    public int getChunksInfoSize() {
+      return (this.chunksInfo == null) ? 0 : this.chunksInfo.size();
     }
 
-    public void putToChunks(int key, Map<String,String> val) {
-      if (this.chunks == null) {
-        this.chunks = new HashMap<Integer,Map<String,String>>();
+    public void putToChunksInfo(int key, Map<String,String> val) {
+      if (this.chunksInfo == null) {
+        this.chunksInfo = new HashMap<Integer,Map<String,String>>();
       }
-      this.chunks.put(key, val);
+      this.chunksInfo.put(key, val);
     }
 
-    public Map<Integer,Map<String,String>> getChunks() {
-      return this.chunks;
+    public Map<Integer,Map<String,String>> getChunksInfo() {
+      return this.chunksInfo;
     }
 
-    public deduplicate_args setChunks(Map<Integer,Map<String,String>> chunks) {
-      this.chunks = chunks;
+    public deduplicate_args setChunksInfo(Map<Integer,Map<String,String>> chunksInfo) {
+      this.chunksInfo = chunksInfo;
       return this;
     }
 
-    public void unsetChunks() {
-      this.chunks = null;
+    public void unsetChunksInfo() {
+      this.chunksInfo = null;
     }
 
-    /** Returns true if field chunks is set (has been assigned a value) and false otherwise */
-    public boolean isSetChunks() {
-      return this.chunks != null;
+    /** Returns true if field chunksInfo is set (has been assigned a value) and false otherwise */
+    public boolean isSetChunksInfo() {
+      return this.chunksInfo != null;
     }
 
-    public void setChunksIsSet(boolean value) {
+    public void setChunksInfoIsSet(boolean value) {
       if (!value) {
-        this.chunks = null;
+        this.chunksInfo = null;
       }
     }
 
@@ -361,13 +399,59 @@ public class DeduplicationService {
       }
     }
 
+    public int getChunkSizeInBytes() {
+      return this.chunkSizeInBytes;
+    }
+
+    public deduplicate_args setChunkSizeInBytes(int chunkSizeInBytes) {
+      this.chunkSizeInBytes = chunkSizeInBytes;
+      setChunkSizeInBytesIsSet(true);
+      return this;
+    }
+
+    public void unsetChunkSizeInBytes() {
+      __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __CHUNKSIZEINBYTES_ISSET_ID);
+    }
+
+    /** Returns true if field chunkSizeInBytes is set (has been assigned a value) and false otherwise */
+    public boolean isSetChunkSizeInBytes() {
+      return EncodingUtils.testBit(__isset_bitfield, __CHUNKSIZEINBYTES_ISSET_ID);
+    }
+
+    public void setChunkSizeInBytesIsSet(boolean value) {
+      __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __CHUNKSIZEINBYTES_ISSET_ID, value);
+    }
+
+    public int getBytesToLoadByTime() {
+      return this.bytesToLoadByTime;
+    }
+
+    public deduplicate_args setBytesToLoadByTime(int bytesToLoadByTime) {
+      this.bytesToLoadByTime = bytesToLoadByTime;
+      setBytesToLoadByTimeIsSet(true);
+      return this;
+    }
+
+    public void unsetBytesToLoadByTime() {
+      __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __BYTESTOLOADBYTIME_ISSET_ID);
+    }
+
+    /** Returns true if field bytesToLoadByTime is set (has been assigned a value) and false otherwise */
+    public boolean isSetBytesToLoadByTime() {
+      return EncodingUtils.testBit(__isset_bitfield, __BYTESTOLOADBYTIME_ISSET_ID);
+    }
+
+    public void setBytesToLoadByTimeIsSet(boolean value) {
+      __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __BYTESTOLOADBYTIME_ISSET_ID, value);
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
-      case CHUNKS:
+      case CHUNKS_INFO:
         if (value == null) {
-          unsetChunks();
+          unsetChunksInfo();
         } else {
-          setChunks((Map<Integer,Map<String,String>>)value);
+          setChunksInfo((Map<Integer,Map<String,String>>)value);
         }
         break;
 
@@ -379,16 +463,38 @@ public class DeduplicationService {
         }
         break;
 
+      case CHUNK_SIZE_IN_BYTES:
+        if (value == null) {
+          unsetChunkSizeInBytes();
+        } else {
+          setChunkSizeInBytes((Integer)value);
+        }
+        break;
+
+      case BYTES_TO_LOAD_BY_TIME:
+        if (value == null) {
+          unsetBytesToLoadByTime();
+        } else {
+          setBytesToLoadByTime((Integer)value);
+        }
+        break;
+
       }
     }
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
-      case CHUNKS:
-        return getChunks();
+      case CHUNKS_INFO:
+        return getChunksInfo();
 
       case PATH_OF_FILE:
         return getPathOfFile();
+
+      case CHUNK_SIZE_IN_BYTES:
+        return Integer.valueOf(getChunkSizeInBytes());
+
+      case BYTES_TO_LOAD_BY_TIME:
+        return Integer.valueOf(getBytesToLoadByTime());
 
       }
       throw new IllegalStateException();
@@ -401,10 +507,14 @@ public class DeduplicationService {
       }
 
       switch (field) {
-      case CHUNKS:
-        return isSetChunks();
+      case CHUNKS_INFO:
+        return isSetChunksInfo();
       case PATH_OF_FILE:
         return isSetPathOfFile();
+      case CHUNK_SIZE_IN_BYTES:
+        return isSetChunkSizeInBytes();
+      case BYTES_TO_LOAD_BY_TIME:
+        return isSetBytesToLoadByTime();
       }
       throw new IllegalStateException();
     }
@@ -422,12 +532,12 @@ public class DeduplicationService {
       if (that == null)
         return false;
 
-      boolean this_present_chunks = true && this.isSetChunks();
-      boolean that_present_chunks = true && that.isSetChunks();
-      if (this_present_chunks || that_present_chunks) {
-        if (!(this_present_chunks && that_present_chunks))
+      boolean this_present_chunksInfo = true && this.isSetChunksInfo();
+      boolean that_present_chunksInfo = true && that.isSetChunksInfo();
+      if (this_present_chunksInfo || that_present_chunksInfo) {
+        if (!(this_present_chunksInfo && that_present_chunksInfo))
           return false;
-        if (!this.chunks.equals(that.chunks))
+        if (!this.chunksInfo.equals(that.chunksInfo))
           return false;
       }
 
@@ -437,6 +547,24 @@ public class DeduplicationService {
         if (!(this_present_pathOfFile && that_present_pathOfFile))
           return false;
         if (!this.pathOfFile.equals(that.pathOfFile))
+          return false;
+      }
+
+      boolean this_present_chunkSizeInBytes = true;
+      boolean that_present_chunkSizeInBytes = true;
+      if (this_present_chunkSizeInBytes || that_present_chunkSizeInBytes) {
+        if (!(this_present_chunkSizeInBytes && that_present_chunkSizeInBytes))
+          return false;
+        if (this.chunkSizeInBytes != that.chunkSizeInBytes)
+          return false;
+      }
+
+      boolean this_present_bytesToLoadByTime = true;
+      boolean that_present_bytesToLoadByTime = true;
+      if (this_present_bytesToLoadByTime || that_present_bytesToLoadByTime) {
+        if (!(this_present_bytesToLoadByTime && that_present_bytesToLoadByTime))
+          return false;
+        if (this.bytesToLoadByTime != that.bytesToLoadByTime)
           return false;
       }
 
@@ -456,12 +584,12 @@ public class DeduplicationService {
       int lastComparison = 0;
       deduplicate_args typedOther = (deduplicate_args)other;
 
-      lastComparison = Boolean.valueOf(isSetChunks()).compareTo(typedOther.isSetChunks());
+      lastComparison = Boolean.valueOf(isSetChunksInfo()).compareTo(typedOther.isSetChunksInfo());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetChunks()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.chunks, typedOther.chunks);
+      if (isSetChunksInfo()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.chunksInfo, typedOther.chunksInfo);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -472,6 +600,26 @@ public class DeduplicationService {
       }
       if (isSetPathOfFile()) {
         lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.pathOfFile, typedOther.pathOfFile);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetChunkSizeInBytes()).compareTo(typedOther.isSetChunkSizeInBytes());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetChunkSizeInBytes()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.chunkSizeInBytes, typedOther.chunkSizeInBytes);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetBytesToLoadByTime()).compareTo(typedOther.isSetBytesToLoadByTime());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetBytesToLoadByTime()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.bytesToLoadByTime, typedOther.bytesToLoadByTime);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -496,11 +644,11 @@ public class DeduplicationService {
       StringBuilder sb = new StringBuilder("deduplicate_args(");
       boolean first = true;
 
-      sb.append("chunks:");
-      if (this.chunks == null) {
+      sb.append("chunksInfo:");
+      if (this.chunksInfo == null) {
         sb.append("null");
       } else {
-        sb.append(this.chunks);
+        sb.append(this.chunksInfo);
       }
       first = false;
       if (!first) sb.append(", ");
@@ -510,6 +658,14 @@ public class DeduplicationService {
       } else {
         sb.append(this.pathOfFile);
       }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("chunkSizeInBytes:");
+      sb.append(this.chunkSizeInBytes);
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("bytesToLoadByTime:");
+      sb.append(this.bytesToLoadByTime);
       first = false;
       sb.append(")");
       return sb.toString();
@@ -530,6 +686,8 @@ public class DeduplicationService {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
+        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        __isset_bitfield = 0;
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
@@ -554,11 +712,11 @@ public class DeduplicationService {
             break;
           }
           switch (schemeField.id) {
-            case 1: // CHUNKS
+            case 1: // CHUNKS_INFO
               if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                 {
                   org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
-                  struct.chunks = new HashMap<Integer,Map<String,String>>(2*_map0.size);
+                  struct.chunksInfo = new HashMap<Integer,Map<String,String>>(2*_map0.size);
                   for (int _i1 = 0; _i1 < _map0.size; ++_i1)
                   {
                     int _key2; // required
@@ -577,11 +735,11 @@ public class DeduplicationService {
                       }
                       iprot.readMapEnd();
                     }
-                    struct.chunks.put(_key2, _val3);
+                    struct.chunksInfo.put(_key2, _val3);
                   }
                   iprot.readMapEnd();
                 }
-                struct.setChunksIsSet(true);
+                struct.setChunksInfoIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -590,6 +748,22 @@ public class DeduplicationService {
               if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
                 struct.pathOfFile = iprot.readString();
                 struct.setPathOfFileIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 3: // CHUNK_SIZE_IN_BYTES
+              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+                struct.chunkSizeInBytes = iprot.readI32();
+                struct.setChunkSizeInBytesIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 4: // BYTES_TO_LOAD_BY_TIME
+              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+                struct.bytesToLoadByTime = iprot.readI32();
+                struct.setBytesToLoadByTimeIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -609,11 +783,11 @@ public class DeduplicationService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.chunks != null) {
-          oprot.writeFieldBegin(CHUNKS_FIELD_DESC);
+        if (struct.chunksInfo != null) {
+          oprot.writeFieldBegin(CHUNKS_INFO_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.MAP, struct.chunks.size()));
-            for (Map.Entry<Integer, Map<String,String>> _iter8 : struct.chunks.entrySet())
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.MAP, struct.chunksInfo.size()));
+            for (Map.Entry<Integer, Map<String,String>> _iter8 : struct.chunksInfo.entrySet())
             {
               oprot.writeI32(_iter8.getKey());
               {
@@ -635,6 +809,12 @@ public class DeduplicationService {
           oprot.writeString(struct.pathOfFile);
           oprot.writeFieldEnd();
         }
+        oprot.writeFieldBegin(CHUNK_SIZE_IN_BYTES_FIELD_DESC);
+        oprot.writeI32(struct.chunkSizeInBytes);
+        oprot.writeFieldEnd();
+        oprot.writeFieldBegin(BYTES_TO_LOAD_BY_TIME_FIELD_DESC);
+        oprot.writeI32(struct.bytesToLoadByTime);
+        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -653,17 +833,23 @@ public class DeduplicationService {
       public void write(org.apache.thrift.protocol.TProtocol prot, deduplicate_args struct) throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
-        if (struct.isSetChunks()) {
+        if (struct.isSetChunksInfo()) {
           optionals.set(0);
         }
         if (struct.isSetPathOfFile()) {
           optionals.set(1);
         }
-        oprot.writeBitSet(optionals, 2);
-        if (struct.isSetChunks()) {
+        if (struct.isSetChunkSizeInBytes()) {
+          optionals.set(2);
+        }
+        if (struct.isSetBytesToLoadByTime()) {
+          optionals.set(3);
+        }
+        oprot.writeBitSet(optionals, 4);
+        if (struct.isSetChunksInfo()) {
           {
-            oprot.writeI32(struct.chunks.size());
-            for (Map.Entry<Integer, Map<String,String>> _iter10 : struct.chunks.entrySet())
+            oprot.writeI32(struct.chunksInfo.size());
+            for (Map.Entry<Integer, Map<String,String>> _iter10 : struct.chunksInfo.entrySet())
             {
               oprot.writeI32(_iter10.getKey());
               {
@@ -680,16 +866,22 @@ public class DeduplicationService {
         if (struct.isSetPathOfFile()) {
           oprot.writeString(struct.pathOfFile);
         }
+        if (struct.isSetChunkSizeInBytes()) {
+          oprot.writeI32(struct.chunkSizeInBytes);
+        }
+        if (struct.isSetBytesToLoadByTime()) {
+          oprot.writeI32(struct.bytesToLoadByTime);
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, deduplicate_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(2);
+        BitSet incoming = iprot.readBitSet(4);
         if (incoming.get(0)) {
           {
             org.apache.thrift.protocol.TMap _map12 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.MAP, iprot.readI32());
-            struct.chunks = new HashMap<Integer,Map<String,String>>(2*_map12.size);
+            struct.chunksInfo = new HashMap<Integer,Map<String,String>>(2*_map12.size);
             for (int _i13 = 0; _i13 < _map12.size; ++_i13)
             {
               int _key14; // required
@@ -707,14 +899,22 @@ public class DeduplicationService {
                   _val15.put(_key18, _val19);
                 }
               }
-              struct.chunks.put(_key14, _val15);
+              struct.chunksInfo.put(_key14, _val15);
             }
           }
-          struct.setChunksIsSet(true);
+          struct.setChunksInfoIsSet(true);
         }
         if (incoming.get(1)) {
           struct.pathOfFile = iprot.readString();
           struct.setPathOfFileIsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.chunkSizeInBytes = iprot.readI32();
+          struct.setChunkSizeInBytesIsSet(true);
+        }
+        if (incoming.get(3)) {
+          struct.bytesToLoadByTime = iprot.readI32();
+          struct.setBytesToLoadByTimeIsSet(true);
         }
       }
     }
@@ -732,7 +932,7 @@ public class DeduplicationService {
       schemes.put(TupleScheme.class, new deduplicate_resultTupleSchemeFactory());
     }
 
-    public Map<Long,String> success; // required
+    public Map<Long,Chunk> success; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -799,7 +999,7 @@ public class DeduplicationService {
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
               new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64              , "position"), 
-              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING              , "chunkID"))));
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Chunk.class))));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deduplicate_result.class, metaDataMap);
     }
@@ -808,7 +1008,7 @@ public class DeduplicationService {
     }
 
     public deduplicate_result(
-      Map<Long,String> success)
+      Map<Long,Chunk> success)
     {
       this();
       this.success = success;
@@ -819,15 +1019,15 @@ public class DeduplicationService {
      */
     public deduplicate_result(deduplicate_result other) {
       if (other.isSetSuccess()) {
-        Map<Long,String> __this__success = new HashMap<Long,String>();
-        for (Map.Entry<Long, String> other_element : other.success.entrySet()) {
+        Map<Long,Chunk> __this__success = new HashMap<Long,Chunk>();
+        for (Map.Entry<Long, Chunk> other_element : other.success.entrySet()) {
 
           Long other_element_key = other_element.getKey();
-          String other_element_value = other_element.getValue();
+          Chunk other_element_value = other_element.getValue();
 
           Long __this__success_copy_key = other_element_key;
 
-          String __this__success_copy_value = other_element_value;
+          Chunk __this__success_copy_value = new Chunk(other_element_value);
 
           __this__success.put(__this__success_copy_key, __this__success_copy_value);
         }
@@ -848,18 +1048,18 @@ public class DeduplicationService {
       return (this.success == null) ? 0 : this.success.size();
     }
 
-    public void putToSuccess(long key, String val) {
+    public void putToSuccess(long key, Chunk val) {
       if (this.success == null) {
-        this.success = new HashMap<Long,String>();
+        this.success = new HashMap<Long,Chunk>();
       }
       this.success.put(key, val);
     }
 
-    public Map<Long,String> getSuccess() {
+    public Map<Long,Chunk> getSuccess() {
       return this.success;
     }
 
-    public deduplicate_result setSuccess(Map<Long,String> success) {
+    public deduplicate_result setSuccess(Map<Long,Chunk> success) {
       this.success = success;
       return this;
     }
@@ -885,7 +1085,7 @@ public class DeduplicationService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Map<Long,String>)value);
+          setSuccess((Map<Long,Chunk>)value);
         }
         break;
 
@@ -1036,13 +1236,14 @@ public class DeduplicationService {
               if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                 {
                   org.apache.thrift.protocol.TMap _map20 = iprot.readMapBegin();
-                  struct.success = new HashMap<Long,String>(2*_map20.size);
+                  struct.success = new HashMap<Long,Chunk>(2*_map20.size);
                   for (int _i21 = 0; _i21 < _map20.size; ++_i21)
                   {
                     long _key22; // required
-                    String _val23; // required
+                    Chunk _val23; // required
                     _key22 = iprot.readI64();
-                    _val23 = iprot.readString();
+                    _val23 = new Chunk();
+                    _val23.read(iprot);
                     struct.success.put(_key22, _val23);
                   }
                   iprot.readMapEnd();
@@ -1070,11 +1271,11 @@ public class DeduplicationService {
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
-            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, struct.success.size()));
-            for (Map.Entry<Long, String> _iter24 : struct.success.entrySet())
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
+            for (Map.Entry<Long, Chunk> _iter24 : struct.success.entrySet())
             {
               oprot.writeI64(_iter24.getKey());
-              oprot.writeString(_iter24.getValue());
+              _iter24.getValue().write(oprot);
             }
             oprot.writeMapEnd();
           }
@@ -1105,10 +1306,10 @@ public class DeduplicationService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (Map.Entry<Long, String> _iter25 : struct.success.entrySet())
+            for (Map.Entry<Long, Chunk> _iter25 : struct.success.entrySet())
             {
               oprot.writeI64(_iter25.getKey());
-              oprot.writeString(_iter25.getValue());
+              _iter25.getValue().write(oprot);
             }
           }
         }
@@ -1120,14 +1321,15 @@ public class DeduplicationService {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TMap _map26 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.success = new HashMap<Long,String>(2*_map26.size);
+            org.apache.thrift.protocol.TMap _map26 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I64, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new HashMap<Long,Chunk>(2*_map26.size);
             for (int _i27 = 0; _i27 < _map26.size; ++_i27)
             {
               long _key28; // required
-              String _val29; // required
+              Chunk _val29; // required
               _key28 = iprot.readI64();
-              _val29 = iprot.readString();
+              _val29 = new Chunk();
+              _val29.read(iprot);
               struct.success.put(_key28, _val29);
             }
           }
