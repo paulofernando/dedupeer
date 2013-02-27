@@ -11,16 +11,16 @@ typedef string chunkID
 typedef map<weakHash,map<strongHash,chunkID>> hashesToCompare
 
 struct Chunk {
-	1:string fileID,
-	2:string chunkNumber,
-	3:string md5,
-	4:string adler32,
-	5:string index,
-	6:string length,
-	7:string pfile,
-	8:string pchunk, 
-	9:string destination
-	//10:binary content
+	1: required string fileID,
+	2: required string chunkNumber,
+	3: required string md5,
+	4: required string adler32,
+	5: required string index,
+	6: required string length,
+	7: optional string pfile,
+	8: optional string pchunk, 
+	9: optional string destination
+	10: optional binary content
 }
 
 service DeduplicationService {	

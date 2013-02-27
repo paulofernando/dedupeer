@@ -42,6 +42,7 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   private static final org.apache.thrift.protocol.TField PFILE_FIELD_DESC = new org.apache.thrift.protocol.TField("pfile", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField PCHUNK_FIELD_DESC = new org.apache.thrift.protocol.TField("pchunk", org.apache.thrift.protocol.TType.STRING, (short)8);
   private static final org.apache.thrift.protocol.TField DESTINATION_FIELD_DESC = new org.apache.thrift.protocol.TField("destination", org.apache.thrift.protocol.TType.STRING, (short)9);
+  private static final org.apache.thrift.protocol.TField CONTENT_FIELD_DESC = new org.apache.thrift.protocol.TField("content", org.apache.thrift.protocol.TType.STRING, (short)10);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -55,9 +56,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   public String adler32; // required
   public String index; // required
   public String length; // required
-  public String pfile; // required
-  public String pchunk; // required
-  public String destination; // required
+  public String pfile; // optional
+  public String pchunk; // optional
+  public String destination; // optional
+  public ByteBuffer content; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -69,7 +71,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     LENGTH((short)6, "length"),
     PFILE((short)7, "pfile"),
     PCHUNK((short)8, "pchunk"),
-    DESTINATION((short)9, "destination");
+    DESTINATION((short)9, "destination"),
+    CONTENT((short)10, "content");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -102,6 +105,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
           return PCHUNK;
         case 9: // DESTINATION
           return DESTINATION;
+        case 10: // CONTENT
+          return CONTENT;
         default:
           return null;
       }
@@ -142,27 +147,30 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   }
 
   // isset id assignments
+  private _Fields optionals[] = {_Fields.PFILE,_Fields.PCHUNK,_Fields.DESTINATION,_Fields.CONTENT};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.FILE_ID, new org.apache.thrift.meta_data.FieldMetaData("fileID", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.FILE_ID, new org.apache.thrift.meta_data.FieldMetaData("fileID", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.CHUNK_NUMBER, new org.apache.thrift.meta_data.FieldMetaData("chunkNumber", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.CHUNK_NUMBER, new org.apache.thrift.meta_data.FieldMetaData("chunkNumber", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.MD5, new org.apache.thrift.meta_data.FieldMetaData("md5", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.MD5, new org.apache.thrift.meta_data.FieldMetaData("md5", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.ADLER32, new org.apache.thrift.meta_data.FieldMetaData("adler32", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.ADLER32, new org.apache.thrift.meta_data.FieldMetaData("adler32", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.INDEX, new org.apache.thrift.meta_data.FieldMetaData("index", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.INDEX, new org.apache.thrift.meta_data.FieldMetaData("index", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.LENGTH, new org.apache.thrift.meta_data.FieldMetaData("length", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.LENGTH, new org.apache.thrift.meta_data.FieldMetaData("length", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.PFILE, new org.apache.thrift.meta_data.FieldMetaData("pfile", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.PFILE, new org.apache.thrift.meta_data.FieldMetaData("pfile", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.PCHUNK, new org.apache.thrift.meta_data.FieldMetaData("pchunk", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.PCHUNK, new org.apache.thrift.meta_data.FieldMetaData("pchunk", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.DESTINATION, new org.apache.thrift.meta_data.FieldMetaData("destination", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.DESTINATION, new org.apache.thrift.meta_data.FieldMetaData("destination", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.CONTENT, new org.apache.thrift.meta_data.FieldMetaData("content", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING        , true)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Chunk.class, metaDataMap);
   }
@@ -176,10 +184,7 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     String md5,
     String adler32,
     String index,
-    String length,
-    String pfile,
-    String pchunk,
-    String destination)
+    String length)
   {
     this();
     this.fileID = fileID;
@@ -188,9 +193,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     this.adler32 = adler32;
     this.index = index;
     this.length = length;
-    this.pfile = pfile;
-    this.pchunk = pchunk;
-    this.destination = destination;
   }
 
   /**
@@ -224,6 +226,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     if (other.isSetDestination()) {
       this.destination = other.destination;
     }
+    if (other.isSetContent()) {
+      this.content = org.apache.thrift.TBaseHelper.copyBinary(other.content);
+;
+    }
   }
 
   public Chunk deepCopy() {
@@ -241,6 +247,7 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     this.pfile = null;
     this.pchunk = null;
     this.destination = null;
+    this.content = null;
   }
 
   public String getFileID() {
@@ -459,6 +466,40 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     }
   }
 
+  public byte[] getContent() {
+    setContent(org.apache.thrift.TBaseHelper.rightSize(content));
+    return content == null ? null : content.array();
+  }
+
+  public ByteBuffer bufferForContent() {
+    return content;
+  }
+
+  public Chunk setContent(byte[] content) {
+    setContent(content == null ? (ByteBuffer)null : ByteBuffer.wrap(content));
+    return this;
+  }
+
+  public Chunk setContent(ByteBuffer content) {
+    this.content = content;
+    return this;
+  }
+
+  public void unsetContent() {
+    this.content = null;
+  }
+
+  /** Returns true if field content is set (has been assigned a value) and false otherwise */
+  public boolean isSetContent() {
+    return this.content != null;
+  }
+
+  public void setContentIsSet(boolean value) {
+    if (!value) {
+      this.content = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case FILE_ID:
@@ -533,6 +574,14 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       }
       break;
 
+    case CONTENT:
+      if (value == null) {
+        unsetContent();
+      } else {
+        setContent((ByteBuffer)value);
+      }
+      break;
+
     }
   }
 
@@ -565,6 +614,9 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     case DESTINATION:
       return getDestination();
 
+    case CONTENT:
+      return getContent();
+
     }
     throw new IllegalStateException();
   }
@@ -594,6 +646,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       return isSetPchunk();
     case DESTINATION:
       return isSetDestination();
+    case CONTENT:
+      return isSetContent();
     }
     throw new IllegalStateException();
   }
@@ -689,6 +743,15 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       if (!(this_present_destination && that_present_destination))
         return false;
       if (!this.destination.equals(that.destination))
+        return false;
+    }
+
+    boolean this_present_content = true && this.isSetContent();
+    boolean that_present_content = true && that.isSetContent();
+    if (this_present_content || that_present_content) {
+      if (!(this_present_content && that_present_content))
+        return false;
+      if (!this.content.equals(that.content))
         return false;
     }
 
@@ -798,6 +861,16 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetContent()).compareTo(typedOther.isSetContent());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetContent()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.content, typedOther.content);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -865,36 +938,70 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       sb.append(this.length);
     }
     first = false;
-    if (!first) sb.append(", ");
-    sb.append("pfile:");
-    if (this.pfile == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.pfile);
+    if (isSetPfile()) {
+      if (!first) sb.append(", ");
+      sb.append("pfile:");
+      if (this.pfile == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.pfile);
+      }
+      first = false;
     }
-    first = false;
-    if (!first) sb.append(", ");
-    sb.append("pchunk:");
-    if (this.pchunk == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.pchunk);
+    if (isSetPchunk()) {
+      if (!first) sb.append(", ");
+      sb.append("pchunk:");
+      if (this.pchunk == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.pchunk);
+      }
+      first = false;
     }
-    first = false;
-    if (!first) sb.append(", ");
-    sb.append("destination:");
-    if (this.destination == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.destination);
+    if (isSetDestination()) {
+      if (!first) sb.append(", ");
+      sb.append("destination:");
+      if (this.destination == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.destination);
+      }
+      first = false;
     }
-    first = false;
+    if (isSetContent()) {
+      if (!first) sb.append(", ");
+      sb.append("content:");
+      if (this.content == null) {
+        sb.append("null");
+      } else {
+        org.apache.thrift.TBaseHelper.toString(this.content, sb);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
 
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
+    if (fileID == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'fileID' was not present! Struct: " + toString());
+    }
+    if (chunkNumber == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'chunkNumber' was not present! Struct: " + toString());
+    }
+    if (md5 == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'md5' was not present! Struct: " + toString());
+    }
+    if (adler32 == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'adler32' was not present! Struct: " + toString());
+    }
+    if (index == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'index' was not present! Struct: " + toString());
+    }
+    if (length == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'length' was not present! Struct: " + toString());
+    }
     // check for sub-struct validity
   }
 
@@ -1004,6 +1111,14 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 10: // CONTENT
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.content = iprot.readBinary();
+              struct.setContentIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1050,19 +1165,32 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         oprot.writeFieldEnd();
       }
       if (struct.pfile != null) {
-        oprot.writeFieldBegin(PFILE_FIELD_DESC);
-        oprot.writeString(struct.pfile);
-        oprot.writeFieldEnd();
+        if (struct.isSetPfile()) {
+          oprot.writeFieldBegin(PFILE_FIELD_DESC);
+          oprot.writeString(struct.pfile);
+          oprot.writeFieldEnd();
+        }
       }
       if (struct.pchunk != null) {
-        oprot.writeFieldBegin(PCHUNK_FIELD_DESC);
-        oprot.writeString(struct.pchunk);
-        oprot.writeFieldEnd();
+        if (struct.isSetPchunk()) {
+          oprot.writeFieldBegin(PCHUNK_FIELD_DESC);
+          oprot.writeString(struct.pchunk);
+          oprot.writeFieldEnd();
+        }
       }
       if (struct.destination != null) {
-        oprot.writeFieldBegin(DESTINATION_FIELD_DESC);
-        oprot.writeString(struct.destination);
-        oprot.writeFieldEnd();
+        if (struct.isSetDestination()) {
+          oprot.writeFieldBegin(DESTINATION_FIELD_DESC);
+          oprot.writeString(struct.destination);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.content != null) {
+        if (struct.isSetContent()) {
+          oprot.writeFieldBegin(CONTENT_FIELD_DESC);
+          oprot.writeBinary(struct.content);
+          oprot.writeFieldEnd();
+        }
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -1081,53 +1209,26 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     @Override
     public void write(org.apache.thrift.protocol.TProtocol prot, Chunk struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
+      oprot.writeString(struct.fileID);
+      oprot.writeString(struct.chunkNumber);
+      oprot.writeString(struct.md5);
+      oprot.writeString(struct.adler32);
+      oprot.writeString(struct.index);
+      oprot.writeString(struct.length);
       BitSet optionals = new BitSet();
-      if (struct.isSetFileID()) {
+      if (struct.isSetPfile()) {
         optionals.set(0);
       }
-      if (struct.isSetChunkNumber()) {
+      if (struct.isSetPchunk()) {
         optionals.set(1);
       }
-      if (struct.isSetMd5()) {
+      if (struct.isSetDestination()) {
         optionals.set(2);
       }
-      if (struct.isSetAdler32()) {
+      if (struct.isSetContent()) {
         optionals.set(3);
       }
-      if (struct.isSetIndex()) {
-        optionals.set(4);
-      }
-      if (struct.isSetLength()) {
-        optionals.set(5);
-      }
-      if (struct.isSetPfile()) {
-        optionals.set(6);
-      }
-      if (struct.isSetPchunk()) {
-        optionals.set(7);
-      }
-      if (struct.isSetDestination()) {
-        optionals.set(8);
-      }
-      oprot.writeBitSet(optionals, 9);
-      if (struct.isSetFileID()) {
-        oprot.writeString(struct.fileID);
-      }
-      if (struct.isSetChunkNumber()) {
-        oprot.writeString(struct.chunkNumber);
-      }
-      if (struct.isSetMd5()) {
-        oprot.writeString(struct.md5);
-      }
-      if (struct.isSetAdler32()) {
-        oprot.writeString(struct.adler32);
-      }
-      if (struct.isSetIndex()) {
-        oprot.writeString(struct.index);
-      }
-      if (struct.isSetLength()) {
-        oprot.writeString(struct.length);
-      }
+      oprot.writeBitSet(optionals, 4);
       if (struct.isSetPfile()) {
         oprot.writeString(struct.pfile);
       }
@@ -1137,47 +1238,42 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       if (struct.isSetDestination()) {
         oprot.writeString(struct.destination);
       }
+      if (struct.isSetContent()) {
+        oprot.writeBinary(struct.content);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, Chunk struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(9);
+      struct.fileID = iprot.readString();
+      struct.setFileIDIsSet(true);
+      struct.chunkNumber = iprot.readString();
+      struct.setChunkNumberIsSet(true);
+      struct.md5 = iprot.readString();
+      struct.setMd5IsSet(true);
+      struct.adler32 = iprot.readString();
+      struct.setAdler32IsSet(true);
+      struct.index = iprot.readString();
+      struct.setIndexIsSet(true);
+      struct.length = iprot.readString();
+      struct.setLengthIsSet(true);
+      BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
-        struct.fileID = iprot.readString();
-        struct.setFileIDIsSet(true);
-      }
-      if (incoming.get(1)) {
-        struct.chunkNumber = iprot.readString();
-        struct.setChunkNumberIsSet(true);
-      }
-      if (incoming.get(2)) {
-        struct.md5 = iprot.readString();
-        struct.setMd5IsSet(true);
-      }
-      if (incoming.get(3)) {
-        struct.adler32 = iprot.readString();
-        struct.setAdler32IsSet(true);
-      }
-      if (incoming.get(4)) {
-        struct.index = iprot.readString();
-        struct.setIndexIsSet(true);
-      }
-      if (incoming.get(5)) {
-        struct.length = iprot.readString();
-        struct.setLengthIsSet(true);
-      }
-      if (incoming.get(6)) {
         struct.pfile = iprot.readString();
         struct.setPfileIsSet(true);
       }
-      if (incoming.get(7)) {
+      if (incoming.get(1)) {
         struct.pchunk = iprot.readString();
         struct.setPchunkIsSet(true);
       }
-      if (incoming.get(8)) {
+      if (incoming.get(2)) {
         struct.destination = iprot.readString();
         struct.setDestinationIsSet(true);
+      }
+      if (incoming.get(3)) {
+        struct.content = iprot.readBinary();
+        struct.setContentIsSet(true);
       }
     }
   }

@@ -22,13 +22,20 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 
 	private static final Logger log = Logger.getLogger(DeduplicationServiceImpl.class);
 	private FileUtils fileUtils = new FileUtils();
+	private byte[] newchunk;
 	
+	/** Indicates if the hashes of all chunks must be calculated or if only hashes of chunks with default size.
+	 * Drawback if false: do not deduplicate whole identical file because do not compares all chunks */
+	private boolean calculateAllHashes = fileUtils.getPropertiesLoader().getProperties().getProperty("calculate.all.hashes").equalsIgnoreCase("true");
+		
 	@Override
 	public Map<Long, Chunk> deduplicate(
 			Map<Integer, Map<String, String>> chunksInfo, String pathOfFile,
 			int chunkSizeInBytes, int bytesToLoadByTime) throws TException {
 		long time = System.currentTimeMillis();
 		log.info("\n[Deduplicating...]");
+		
+		Map<Long, Chunk> deduplicationInfo = new HashMap<Long, Chunk>();
 		
 		long timeToRetrieve = System.currentTimeMillis();
 				
@@ -39,8 +46,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		
 		long offset = 0;
 		
-		//TODO mudar parâmetro para int
-		ByteBuffer buffer = ByteBuffer.allocate((int)chunkSizeInBytes);
+		ByteBuffer buffer = ByteBuffer.allocate(chunkSizeInBytes);
 		/** Current index in the divided byte array */
 		int localIndex = 0;
 		/** Index in the whole file */
@@ -220,13 +226,10 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				buffer.clear();
 			}
 			
-			progressInfo.setType(ProgressInfo.TYPE_STORING);
-			
 			for(ChunksDao chunk: newFileChunks.values()) {				
 				cdo.insertRow(chunk);			
 			}
-			
-			setProgress((int)(Math.ceil((((double)globalIndex) * 100) / file.length())));			
+					
 			newFileChunks.clear();			
 			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
 			
