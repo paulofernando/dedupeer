@@ -28,6 +28,5 @@ public class ThriftServer {
 	public static void main(String[] args) {
 		ThriftServer srv = new ThriftServer();
 		srv.start();
-
 	}
 }

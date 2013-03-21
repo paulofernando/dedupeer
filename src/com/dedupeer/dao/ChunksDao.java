@@ -36,4 +36,15 @@ public class ChunksDao {
 		this.pchunk = pchunk;
 	}
 	
+	/**
+	 * Used to systems with Thrift interface to the Dedupeer
+	 */
+	public ChunksDao(String fileID, String chunkNumber, String index, String length, String pchunk) {
+		this.fileID = fileID;
+		this.chunkNumber = chunkNumber;		
+		this.index = index;
+		this.length = length;
+		this.pchunk = pchunk;
+	}
+	
 }

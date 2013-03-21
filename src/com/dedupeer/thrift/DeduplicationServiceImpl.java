@@ -11,10 +11,6 @@ import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
 import com.dedupeer.checksum.rsync.Checksum32;
-import com.dedupeer.dao.ChunksDao;
-import com.dedupeer.dao.operation.FilesDaoOpeartion;
-import com.dedupeer.dao.operation.UserFilesDaoOperations;
-import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.processing.file.Chunking;
 import com.dedupeer.utils.FileUtils;
 
@@ -40,7 +36,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		long timeToRetrieve = System.currentTimeMillis();
 				
 		String newFileID = String.valueOf(System.currentTimeMillis());
-		HashMap<Long, ChunksDao> newFileChunks = new HashMap<Long, ChunksDao>();
+		HashMap<Long, Chunk> newFileChunks = new HashMap<Long, Chunk>();
+		HashMap<Long, Chunk> resultChunks = new HashMap<Long, Chunk>();
 		int chunk_number = 0;
 		Checksum32 c32 = new Checksum32();
 		
@@ -122,17 +119,20 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								MD5Temp = DigestUtils.md5Hex(newchunk);
 							}
 							
-							newFileChunks.put(globalIndex - newchunk.length, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									MD5Temp, String.valueOf(hash32Temp), String.valueOf(globalIndex - newchunk.length), 
-									String.valueOf(newchunk.length), newchunk));
+									String.valueOf(newchunk.length));
+							chunk.setContent(newchunk);
+							newFileChunks.put(globalIndex - newchunk.length, chunk);
+							
 							chunk_number++;
 							moreBytesToLoad += newchunk.length;
 							buffer.clear();
 						}						
 						log.debug("Duplicated chunk " + chunk_number + ": " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
-						newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, chunksInfo.get(c32.getValue()).get(MD5)));						
+						newFileChunks.put(globalIndex, new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
+								chunksInfo.get(c32.getValue()).get(MD5), String.valueOf(c32.getValue()), String.valueOf(globalIndex), String.valueOf(currentChunk.length)));						
 						chunk_number++;
 						globalIndex += currentChunk.length;
 						localIndex += currentChunk.length;	
@@ -148,10 +148,13 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				if(differentChunk) {
 					currentChunk = null;
 					if(buffer.remaining() == 0) {
-						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");						
-						newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
+						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
-								String.valueOf(buffer.array().length), buffer.array()));
+								String.valueOf(buffer.array().length));
+						chunk.setContent(buffer.array());
+						
+						newFileChunks.put(globalIndex - buffer.position(), chunk);
 						chunk_number++;
 						buffer.clear();
 					} else {
@@ -171,9 +174,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							}
 							
-							newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									MD5Temp, hash32Temp, String.valueOf(globalIndex - buffer.position()), 
-									String.valueOf(newchunk.length), Arrays.copyOfRange(newchunk, 0, newchunk.length)));							
+									String.valueOf(newchunk.length));
+							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+							
+							newFileChunks.put(globalIndex - buffer.position(), chunk);							
 							chunk_number++;
 															
 							localIndex += newchunk.length - buffer.position();
@@ -192,9 +198,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 									MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								}
 								
-								newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										MD5Temp, hash32Temp, String.valueOf(globalIndex), 
-										String.valueOf(newchunk.length), Arrays.copyOfRange(newchunk, 0, newchunk.length)));
+										String.valueOf(newchunk.length));
+								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+								
+								newFileChunks.put(globalIndex, chunk);
 								
 								chunk_number++;
 								buffer.clear();
@@ -217,33 +226,29 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 					MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				}
 				
-				newFileChunks.put(globalIndex - buffer.position(), new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
+				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 						MD5Temp, hash32Temp, String.valueOf(globalIndex - buffer.position()), 
-						String.valueOf(buffer.capacity()), Arrays.copyOfRange(buffer.array(), 0, buffer.position())));
+						String.valueOf(buffer.capacity()));
+				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
+				newFileChunks.put(globalIndex - buffer.position(), chunk);
 				
 				chunk_number++;
 				globalIndex += newchunk.length;
 				buffer.clear();
 			}
 			
-			for(ChunksDao chunk: newFileChunks.values()) {				
-				cdo.insertRow(chunk);			
+			for(Map.Entry<Long, Chunk> entry: newFileChunks.entrySet()) {				
+				resultChunks.put(entry.getKey(), entry.getValue());			
 			}
 					
-			newFileChunks.clear();			
-			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
+			newFileChunks.clear();
+			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), file.getName());			
 			
-			offset += bytesToLoadByTime;
-			
+			offset += bytesToLoadByTime;			
 		}
-		
-		//Last time		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
-		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), chunk_number - referencesCount);
-		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);		
-		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
+						
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");
-	
+		return resultChunks;
 	}
 
 }
