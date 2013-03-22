@@ -31,8 +31,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		long time = System.currentTimeMillis();
 		log.info("\n[Deduplicating...]");
 		
-		Map<Long, Chunk> deduplicationInfo = new HashMap<Long, Chunk>();
-		
 		long timeToRetrieve = System.currentTimeMillis();
 				
 		String newFileID = String.valueOf(System.currentTimeMillis());

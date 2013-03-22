@@ -31,6 +31,8 @@ import com.dedupeer.processing.EagleEye;
 import com.dedupeer.processing.file.Chunking;
 import com.dedupeer.utils.FileUtils;
 
+import com.dedupeer.thrift.*;
+
 
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
@@ -283,6 +285,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	 * Uses a new way of to deduplicate a file, comparing a current adler32 with a special HashMap that contains
 	 * the adler32 in the key and other HashMap with <md5, chunkkNumber> how value
 	 * divideInTimes divide the processing in <code> divideInTimes </code> times
+	 * With this method, the deduplication is executed without Thrift.
 	 * @param filenameStored
 	 */
 	public void deduplicateABigFile(String filenameStored, int bytesToLoadByTime) {		
@@ -292,22 +295,22 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
-		
+
 		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
 		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
 		int amountChunks = Integer.parseInt(columnAmountChunks.getValue());
-				
+
 		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
-		
+
 		long timeToRetrieve = System.currentTimeMillis();
-		
+
 		//----------  Retrieving the information about the stored file -----------------		
 		/** Map<adler32, Map<md5, chunkNumber>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
-		Map<Integer, Map<String, String>> fileInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
+		Map<Integer, Map<String, String>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
-		
+						
 		log.info("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
 		String newFileID = String.valueOf(System.currentTimeMillis());
 		HashMap<Long, ChunksDao> newFileChunks = new HashMap<Long, ChunksDao>();
@@ -370,14 +373,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				}
 				
 				boolean differentChunk = true;
-				if(fileInStorageServer.containsKey(c32.getValue())) {						
+				if(chunksInStorageServer.containsKey(c32.getValue())) {						
 					if(currentChunk == null) { //To avoid reload the chunk
 						currentChunk = Arrays.copyOfRange(modFile, localIndex, 
 								(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
 					}
 					
 					String MD5 = DigestUtils.md5Hex(currentChunk);
-					if(fileInStorageServer.get(c32.getValue()).containsKey(MD5)) {						
+					if(chunksInStorageServer.get(c32.getValue()).containsKey(MD5)) {						
 						if(buffer.position() > 0) { //If the buffer has some data, creates a chunk with this data								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 							log.debug("[0] Creating new chunk " + chunk_number + " in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
@@ -399,7 +402,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						log.debug("Duplicated chunk " + chunk_number + ": " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
 						newFileChunks.put(globalIndex, new ChunksDao(String.valueOf(newFileID), String.valueOf(chunk_number), 
-							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, fileInStorageServer.get(c32.getValue()).get(MD5)));						
+							String.valueOf(globalIndex), String.valueOf(currentChunk.length), fileIDStored, chunksInStorageServer.get(c32.getValue()).get(MD5)));						
 						chunk_number++;
 						globalIndex += currentChunk.length;
 						localIndex += currentChunk.length;	
@@ -510,9 +513,35 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		//Last time		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), chunk_number - referencesCount);
-		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);		
+		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
+		
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");		
+	}
+	
+	/**
+	 * Deduplicate a file using ThriftClient
+	 * @param filenameStored Name of file stored in the system
+	 * @param bytesToLoadByTime Amount of bytes to load in memory by time
+	 * @param pathOfFile Path of file to analyze
+	 */
+	public void deduplicateABigFileByThrift(String filenameStored, int bytesToLoadByTime, String pathOfFile) {
+		
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
+		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
+		int amountChunks = Integer.parseInt(columnAmountChunks.getValue());
+
+		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
+
+		//----------  Retrieving the information about the stored file -----------------		
+		/** Map<adler32, Map<md5, chunkNumber>> */		
+		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
+		log.info("Retrieving chunks information...");
+		Map<Integer, Map<String, String>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
+		//--------------------------------------------------------------------------------
+		
+		ThriftClient.getInstance().deduplicate(chunksInStorageServer, pathOfFile, defaultChunkSize, bytesToLoadByTime);
 	}
 	
 	/** Retrieves the file, even though it is deduplicated */

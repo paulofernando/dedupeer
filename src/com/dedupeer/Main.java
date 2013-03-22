@@ -2,8 +2,6 @@ package com.dedupeer;
 
 import javax.swing.SwingUtilities;
 
-import org.apache.log4j.Logger;
-
 import com.dedupeer.gui.MainGUI;
 
 
@@ -12,9 +10,7 @@ import com.dedupeer.gui.MainGUI;
  */
 public class Main {
 	
-	private static final Logger log = Logger.getLogger(Main.class);
-	
-	private static String defaultPartition = "E"; 
+	private static String defaultPartition = "D"; 
 	
 	public static void main (String[] args) {
 		System.setProperty("defaultPartition", defaultPartition);
