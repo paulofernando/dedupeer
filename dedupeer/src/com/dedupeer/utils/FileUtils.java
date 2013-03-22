@@ -16,9 +16,6 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
-import com.dedupeer.dao.operation.UserFilesDaoOperations;
-import com.dedupeer.processing.EagleEye;
-
 
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
@@ -229,22 +226,24 @@ public class FileUtils {
 		}
 	}
 	
-	public static String getValidName(String filename) {
-		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		
-		int count = 1;
-		while(ufdo.fileExists(System.getProperty("username"), filename)) {
-			count++;
-			filename = FileUtils.getOnlyName(filename) + "(" + count + ")." + FileUtils.getOnlyExtension(filename);			
-		}
-		return filename;
-	}
-
 	public static PropertiesLoader getPropertiesLoader() {
 		return propertiesLoader;
 	}
 
 	public static void setPropertiesLoader(PropertiesLoader propertiesLoader) {
 		FileUtils.propertiesLoader = propertiesLoader;
+	}
+	
+	/**
+	 * Delete the chunks created in the hard disk to store in Cassandra
+	 * @param Folder path where the data were stored
+	 * @param filename File name of the file that chunks were created
+	 */
+	public static void cleanUpChunks(String destination, String filename) {		
+		int chunkCount = 0;
+		String fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + chunkCount;
+		while(new File(fname).delete()) {
+			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);
+		}
 	}
 }

@@ -20,7 +20,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
-import com.dedupeer.checksum.rsync.Checksum32;
+import com.dedupeer.chunking.Chunking;
 import com.dedupeer.dao.ChunksDao;
 import com.dedupeer.dao.operation.ChunksDaoOperations;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
@@ -28,10 +28,9 @@ import com.dedupeer.dao.operation.UserFilesDaoOperations;
 import com.dedupeer.exception.FieldNotFoundException;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.processing.EagleEye;
-import com.dedupeer.processing.file.Chunking;
+import com.dedupeer.thrift.ThriftClient;
 import com.dedupeer.utils.FileUtils;
-
-import com.dedupeer.thrift.*;
+import com.deudpeer.checksum.Checksum32;
 
 
 /**
@@ -166,7 +165,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				}
 								
 				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");				
-				Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());				
+				FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());				
 			}
 		});		
 		storageProcess.start();		
@@ -278,7 +277,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " milisecods");		
-		Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
+		FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
 	}
 	
 	/**
@@ -504,7 +503,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			setProgress((int)(Math.ceil((((double)globalIndex) * 100) / file.length())));			
 			newFileChunks.clear();			
-			Chunking.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
+			FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
 			
 			offset += bytesToLoadByTime;
 			

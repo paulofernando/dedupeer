@@ -1,4 +1,4 @@
-package com.dedupeer.processing.file;
+package com.dedupeer.chunking;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -15,10 +15,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
-import com.dedupeer.checksum.rsync.Checksum32;
 import com.dedupeer.dao.ChunksDao;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.utils.FileUtils;
+import com.deudpeer.checksum.Checksum32;
 
 
 /**
@@ -160,16 +160,5 @@ public class Chunking {
 	    }
 	  }
 	
-	/**
-	 * Delete the chunks created in the hard disk to store in Cassandra
-	 * @param Folder path where the data were stored
-	 * @param filename File name of the file that chunks were created
-	 */
-	public static void cleanUpChunks(String destination, String filename) {		
-		int chunkCount = 0;
-		String fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + chunkCount;
-		while(new File(fname).delete()) {
-			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);
-		}
-	}
+	
 }

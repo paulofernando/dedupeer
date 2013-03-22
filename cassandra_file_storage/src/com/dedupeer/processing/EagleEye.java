@@ -6,7 +6,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.checksum.RollingChecksumOlder;
-import com.dedupeer.checksum.rsync.Checksum32;
+import com.deudpeer.checksum.Checksum32;
 
 
 /** 

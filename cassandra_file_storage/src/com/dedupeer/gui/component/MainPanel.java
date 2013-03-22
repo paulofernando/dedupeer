@@ -10,11 +10,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
 
 import javax.swing.ImageIcon;
@@ -25,7 +22,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -36,12 +32,12 @@ import com.dedupeer.backup.BackupQueue;
 import com.dedupeer.backup.RestoreQueue;
 import com.dedupeer.backup.StoredFile;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
-import com.dedupeer.dao.operation.UserFilesDaoOperations;
 import com.dedupeer.gui.SettingsDialog;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.gui.component.renderer.IconLabelRenderer;
 import com.dedupeer.gui.component.renderer.JProgressRenderer;
 import com.dedupeer.utils.FileUtils;
+import com.dedupeer.utils.Utils;
 
 
 /**
@@ -199,7 +195,7 @@ public class MainPanel extends JPanel {
 	/** Add a file in the queue to backup */
 	private void backupIt(File fileToBackup) {
 		String filename = fileToBackup.getName();
-		String newFileName = FileUtils.getValidName(fileToBackup.getName());				
+		String newFileName = Utils.getValidName(fileToBackup.getName());				
 		StoredFile backup;
 				
 		if(filename.equals(newFileName)) {
@@ -218,7 +214,7 @@ public class MainPanel extends JPanel {
 	 */
 	private void backupIt(File fileToBackup, String deduplicateWith) {
 		String filename = fileToBackup.getName();
-		String newFileName = FileUtils.getValidName(fileToBackup.getName());				
+		String newFileName = Utils.getValidName(fileToBackup.getName());				
 		StoredFile backup;
 				
 		if(filename.equals(newFileName)) {

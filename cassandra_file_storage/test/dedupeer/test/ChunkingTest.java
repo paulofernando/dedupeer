@@ -4,14 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import junit.framework.TestCase;
+
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import com.dedupeer.processing.file.Chunking;
+import com.dedupeer.chunking.Chunking;
 import com.dedupeer.utils.FileUtils;
-
-
-import junit.framework.TestCase;
 
 public class ChunkingTest extends TestCase {
 	
