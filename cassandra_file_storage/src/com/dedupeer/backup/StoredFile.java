@@ -21,7 +21,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.chunking.Chunking;
-import com.dedupeer.dao.ChunksDao;
 import com.dedupeer.dao.operation.ChunksDaoOperations;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
 import com.dedupeer.dao.operation.UserFilesDaoOperations;
@@ -142,7 +141,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				if(!ufdo.fileExists(System.getProperty("username"), file.getName())) { //File is not in the system yet
 					String fileID = String.valueOf(System.currentTimeMillis());
-					ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
+					ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 					try {						
 						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("defaultPartition") + ":\\chunks\\"), defaultChunkSize, fileID, StoredFile.this); 
 										
@@ -543,7 +542,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			progressInfo.setType(ProgressInfo.TYPE_STORING);
 			
 			for(Chunk chunk: newFileChunks.values()) {				
-				cdo.insertRow(chunk);			
+				cdo.insertRow(chunk);
 			}
 			
 			setProgress((int)(Math.ceil((((double)globalIndex) * 100) / file.length())));			
@@ -598,7 +597,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			totalChunks++;
 			if(chunk.getPchunk() != null) {
 				referencesCount++;
-			}			
+			}
 		}
 		
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?");

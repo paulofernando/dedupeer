@@ -51,7 +51,7 @@ public class BackupQueue extends Thread {
 			try {
 				StoredFile currentBackup = backupQueue.take();
 				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
-					currentBackup.deduplicateABigFileByThrift(deduplicateMap.get(currentBackup.getFilename()), 
+					currentBackup.deduplicateABigFile(deduplicateMap.get(currentBackup.getFilename()), 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size")) * 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load")));
 					deduplicateMap.remove(currentBackup.getFilename());

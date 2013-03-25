@@ -15,8 +15,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
-import com.dedupeer.dao.ChunksDao;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
+import com.dedupeer.thrift.Chunk;
 import com.dedupeer.utils.FileUtils;
 import com.deudpeer.checksum.Checksum32;
 
@@ -38,11 +38,11 @@ public class Chunking {
 	 * @param feedback sends a feedback to the user about the progress                 
 	 * @return chunks information and path to each chunk in hard disk 
 	 */
-	public static ArrayList<ChunksDao> slicingAndDicing(File file, String destination, int size, String fileID, StoredFileFeedback feedback) throws IOException {
+	public static ArrayList<Chunk> slicingAndDicing(File file, String destination, int size, String fileID, StoredFileFeedback feedback) throws IOException {
 		if(feedback != null)
 			feedback.setProgressType(ProgressInfo.TYPE_CHUNKING);
 		
-		ArrayList<ChunksDao> chunks = new ArrayList<ChunksDao>();
+		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 		
 		new File(destination).mkdir();
 		long filesize = file.length();
@@ -76,8 +76,13 @@ public class Chunking {
 		     if(ch < size) { //If a chunk size is smaller than default
 		    	 b = Arrays.copyOf(b, ch);
 		     }
-		     		     
-		     chunks.add(new ChunksDao(fileID, String.valueOf(chunkCount), DigestUtils.md5Hex(b), String.valueOf(c32.getValue()), String.valueOf(globalIndex), String.valueOf(ch), fname));
+		     
+		     Chunk chunk = new Chunk(fileID, String.valueOf(chunkCount), String.valueOf(globalIndex), String.valueOf(ch));
+		     chunk.setAdler32(String.valueOf(c32.getValue()));
+		     chunk.setMd5(DigestUtils.md5Hex(b));
+		     chunk.setContent(FileUtils.getBytesFromFile(fname));
+		     
+		     chunks.add(chunk);
 		     
 		     if(feedback != null) {
 	        	feedback.updateProgress((int)Math.ceil(((double)(file.length() - filesize) * 100) / file.length()));
