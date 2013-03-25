@@ -20,26 +20,25 @@ public class ThriftClient {
 		return thriftClient;
 	}
 	
-	public void deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) {
+	public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) {
 
 		TTransport transport;
-
+		Map<Long,Chunk> chunks = null;
 		try {
 			transport = new TSocket("localhost", 7911);
 			TProtocol protocol = new TBinaryProtocol(transport);
 			DeduplicationService.Client client = new DeduplicationService.Client(protocol);
 
 			transport.open();
-			Map<Long,Chunk> chunks = client.deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime);
-			System.out.println("Chunks size: " + chunks.size());
 			
-			//long multiplyResult = client.multiply(20, 40);
-			//System.out.println("Multiply result: " + multiplyResult);
+			chunks = client.deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime);
+									
 			transport.close();
 		} catch (TTransportException e) {
 			e.printStackTrace();
 		} catch (TException e) {
 			e.printStackTrace();
 		}
+		return chunks;
 	}
 }

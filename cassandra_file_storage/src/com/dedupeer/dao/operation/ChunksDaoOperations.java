@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
 import com.dedupeer.dao.ChunksDao;
+import com.dedupeer.thrift.Chunk;
 import com.dedupeer.utils.FileUtils;
 
 
@@ -87,7 +88,7 @@ public class ChunksDaoOperations {
         }
 	}
 	
-	public void insertRow(ChunksDao chunk) {
+	public void insertRow(Chunk chunk) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 			
@@ -105,7 +106,7 @@ public class ChunksDaoOperations {
 	                    Arrays.asList(HFactory.createStringColumn("length", chunk.length)), 
 	                    stringSerializer, stringSerializer, stringSerializer));
 	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
-	                    Arrays.asList(HFactory.createColumn("content", chunk.content)), 
+	                    Arrays.asList(HFactory.createColumn("content", chunk.content.array())), 
 	                    stringSerializer, stringSerializer, BytesArraySerializer.get()));
 			} else { //Deduplicated chunk
 				mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 

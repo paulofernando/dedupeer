@@ -117,8 +117,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-									MD5Temp, String.valueOf(hash32Temp), String.valueOf(globalIndex - newchunk.length), 
-									String.valueOf(newchunk.length));
+									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
+							chunk.setMd5(MD5Temp);
+							chunk.setAdler32(String.valueOf(hash32Temp));
 							chunk.setContent(newchunk);
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
 							
@@ -128,8 +129,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						}						
 						log.debug("Duplicated chunk " + chunk_number + ": " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
-						newFileChunks.put(globalIndex, new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-								chunksInfo.get(c32.getValue()).get(MD5), String.valueOf(c32.getValue()), String.valueOf(globalIndex), String.valueOf(currentChunk.length)));						
+						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
+								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
+						chunk.setAdler32(String.valueOf(c32.getValue()));
+						chunk.setMd5(chunksInfo.get(c32.getValue()).get(MD5));
+						newFileChunks.put(globalIndex, chunk);
+						 
 						chunk_number++;
 						globalIndex += currentChunk.length;
 						localIndex += currentChunk.length;	
@@ -147,8 +152,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 					if(buffer.remaining() == 0) {
 						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-								DigestUtils.md5Hex(buffer.array()), String.valueOf(c32.getValue()), String.valueOf(globalIndex - buffer.position()), 
-								String.valueOf(buffer.array().length));
+								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
+						chunk.setMd5(DigestUtils.md5Hex(buffer.array()));
+						chunk.setAdler32(String.valueOf(c32.getValue()));
 						chunk.setContent(buffer.array());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
@@ -172,8 +178,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-									MD5Temp, hash32Temp, String.valueOf(globalIndex - buffer.position()), 
-									String.valueOf(newchunk.length));
+									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
+							chunk.setMd5(MD5Temp);
+							chunk.setAdler32(hash32Temp);
 							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							
 							newFileChunks.put(globalIndex - buffer.position(), chunk);							
@@ -196,8 +203,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								}
 								
 								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-										MD5Temp, hash32Temp, String.valueOf(globalIndex), 
-										String.valueOf(newchunk.length));
+										String.valueOf(globalIndex), String.valueOf(newchunk.length));
+								chunk.setAdler32(hash32Temp);
+								chunk.setMd5(MD5Temp);
 								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
@@ -224,8 +232,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				}
 				
 				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-						MD5Temp, hash32Temp, String.valueOf(globalIndex - buffer.position()), 
-						String.valueOf(buffer.capacity()));
+						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
+				chunk.setAdler32(hash32Temp);
+				chunk.setMd5(MD5Temp);
 				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				newFileChunks.put(globalIndex - buffer.position(), chunk);
 				

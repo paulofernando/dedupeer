@@ -3,6 +3,7 @@ package com.dedupeer.dao;
 /**
  * Representation of the Cassandra's Column Family "Chunk" 
  * @author Paulo Fernando (pf@paulofernando.net.br)
+ * @deprecated
  */
 public class ChunksDao {
 	

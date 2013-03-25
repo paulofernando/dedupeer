@@ -5,11 +5,11 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportException;
 
-public class ThriftServer {
+public class ThriftServer implements Runnable {
 	
 	private int port = 7911;
-	
-	private void start() {
+		
+	public void run() {
 		try {
 			TServerSocket serverTransport = new TServerSocket(port);
 
@@ -18,15 +18,11 @@ public class ThriftServer {
 			TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).
 
 			processor(processor));
-			System.out.println("Starting server on port " + port + " ...");
+			System.out.println("Starting Thrift server on port " + port + " ...");
 			server.serve();
+			
 		} catch (TTransportException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public static void main(String[] args) {
-		ThriftServer srv = new ThriftServer();
-		srv.start();
 	}
 }
