@@ -8,7 +8,12 @@ typedef i64 position
 typedef string strongHash
 typedef string chunkID
 
-typedef map<weakHash,map<strongHash,chunkID>> hashesToCompare
+struct ChunkIDs {
+	1: optional string fileID,
+	2: required string chunkID,
+}
+
+typedef map<weakHash,map<strongHash,ChunkIDs>> hashesToCompare
 
 struct Chunk {
 	1: required string fileID,

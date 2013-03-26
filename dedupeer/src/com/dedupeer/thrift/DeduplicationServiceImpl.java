@@ -120,7 +120,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
 							chunk.setMd5(MD5Temp);
 							chunk.setAdler32(String.valueOf(hash32Temp));
-							chunk.setContent(newchunk);
+							chunk.setContent(newchunk.clone());
+							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
 							
 							chunk_number++;
@@ -131,8 +132,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setAdler32(String.valueOf(c32.getValue()));
-						chunk.setMd5(chunksInfo.get(c32.getValue()).get(MD5));
+						chunk.setPfile(fileIDStored);
+						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(MD5));
+						
 						newFileChunks.put(globalIndex, chunk);
 						 
 						chunk_number++;
@@ -155,7 +157,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
 						chunk.setMd5(DigestUtils.md5Hex(buffer.array()));
 						chunk.setAdler32(String.valueOf(c32.getValue()));
-						chunk.setContent(buffer.array());
+						chunk.setContent(buffer.array().clone());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
 						chunk_number++;

@@ -31,13 +31,13 @@ public class DeduplicationService {
 
   public interface Iface {
 
-    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException;
+    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException;
 
   }
 
   public interface AsyncIface {
 
-    public void deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deduplicate_call> resultHandler) throws org.apache.thrift.TException;
+    public void deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deduplicate_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -61,13 +61,13 @@ public class DeduplicationService {
       super(iprot, oprot);
     }
 
-    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
+    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
     {
       send_deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime);
       return recv_deduplicate();
     }
 
-    public void send_deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
+    public void send_deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
     {
       deduplicate_args args = new deduplicate_args();
       args.setChunksInfo(chunksInfo);
@@ -105,7 +105,7 @@ public class DeduplicationService {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler) throws org.apache.thrift.TException {
+    public void deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       deduplicate_call method_call = new deduplicate_call(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -113,11 +113,11 @@ public class DeduplicationService {
     }
 
     public static class deduplicate_call extends org.apache.thrift.async.TAsyncMethodCall {
-      private Map<Integer,Map<String,String>> chunksInfo;
+      private Map<Integer,Map<String,ChunkIDs>> chunksInfo;
       private String pathOfFile;
       private int chunkSizeInBytes;
       private int bytesToLoadByTime;
-      public deduplicate_call(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public deduplicate_call(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.chunksInfo = chunksInfo;
         this.pathOfFile = pathOfFile;
@@ -201,7 +201,7 @@ public class DeduplicationService {
       schemes.put(TupleScheme.class, new deduplicate_argsTupleSchemeFactory());
     }
 
-    public Map<Integer,Map<String,String>> chunksInfo; // required
+    public Map<Integer,Map<String,ChunkIDs>> chunksInfo; // required
     public String pathOfFile; // required
     public int chunkSizeInBytes; // required
     public int bytesToLoadByTime; // required
@@ -296,7 +296,7 @@ public class DeduplicationService {
     }
 
     public deduplicate_args(
-      Map<Integer,Map<String,String>> chunksInfo,
+      Map<Integer,Map<String,ChunkIDs>> chunksInfo,
       String pathOfFile,
       int chunkSizeInBytes,
       int bytesToLoadByTime)
@@ -344,18 +344,18 @@ public class DeduplicationService {
       return (this.chunksInfo == null) ? 0 : this.chunksInfo.size();
     }
 
-    public void putToChunksInfo(int key, Map<String,String> val) {
+    public void putToChunksInfo(int key, Map<String,ChunkIDs> val) {
       if (this.chunksInfo == null) {
-        this.chunksInfo = new HashMap<Integer,Map<String,String>>();
+        this.chunksInfo = new HashMap<Integer,Map<String,ChunkIDs>>();
       }
       this.chunksInfo.put(key, val);
     }
 
-    public Map<Integer,Map<String,String>> getChunksInfo() {
+    public Map<Integer,Map<String,ChunkIDs>> getChunksInfo() {
       return this.chunksInfo;
     }
 
-    public deduplicate_args setChunksInfo(Map<Integer,Map<String,String>> chunksInfo) {
+    public deduplicate_args setChunksInfo(Map<Integer,Map<String,ChunkIDs>> chunksInfo) {
       this.chunksInfo = chunksInfo;
       return this;
     }
@@ -451,7 +451,7 @@ public class DeduplicationService {
         if (value == null) {
           unsetChunksInfo();
         } else {
-          setChunksInfo((Map<Integer,Map<String,String>>)value);
+          setChunksInfo((Map<Integer,Map<String,ChunkIDs>>)value);
         }
         break;
 
@@ -715,21 +715,22 @@ public class DeduplicationService {
               if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
                 {
                   org.apache.thrift.protocol.TMap _map0 = iprot.readMapBegin();
-                  struct.chunksInfo = new HashMap<Integer,Map<String,String>>(2*_map0.size);
+                  struct.chunksInfo = new HashMap<Integer,Map<String,ChunkIDs>>(2*_map0.size);
                   for (int _i1 = 0; _i1 < _map0.size; ++_i1)
                   {
                     int _key2; // required
-                    Map<String,String> _val3; // required
+                    Map<String,ChunkIDs> _val3; // required
                     _key2 = iprot.readI32();
                     {
                       org.apache.thrift.protocol.TMap _map4 = iprot.readMapBegin();
-                      _val3 = new HashMap<String,String>(2*_map4.size);
+                      _val3 = new HashMap<String,ChunkIDs>(2*_map4.size);
                       for (int _i5 = 0; _i5 < _map4.size; ++_i5)
                       {
                         String _key6; // required
-                        String _val7; // required
+                        ChunkIDs _val7; // required
                         _key6 = iprot.readString();
-                        _val7 = iprot.readString();
+                        _val7 = new ChunkIDs();
+                        _val7.read(iprot);
                         _val3.put(_key6, _val7);
                       }
                       iprot.readMapEnd();
@@ -786,15 +787,15 @@ public class DeduplicationService {
           oprot.writeFieldBegin(CHUNKS_INFO_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.MAP, struct.chunksInfo.size()));
-            for (Map.Entry<Integer, Map<String,String>> _iter8 : struct.chunksInfo.entrySet())
+            for (Map.Entry<Integer, Map<String,ChunkIDs>> _iter8 : struct.chunksInfo.entrySet())
             {
               oprot.writeI32(_iter8.getKey());
               {
-                oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, _iter8.getValue().size()));
-                for (Map.Entry<String, String> _iter9 : _iter8.getValue().entrySet())
+                oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, _iter8.getValue().size()));
+                for (Map.Entry<String, ChunkIDs> _iter9 : _iter8.getValue().entrySet())
                 {
                   oprot.writeString(_iter9.getKey());
-                  oprot.writeString(_iter9.getValue());
+                  _iter9.getValue().write(oprot);
                 }
                 oprot.writeMapEnd();
               }
@@ -848,15 +849,15 @@ public class DeduplicationService {
         if (struct.isSetChunksInfo()) {
           {
             oprot.writeI32(struct.chunksInfo.size());
-            for (Map.Entry<Integer, Map<String,String>> _iter10 : struct.chunksInfo.entrySet())
+            for (Map.Entry<Integer, Map<String,ChunkIDs>> _iter10 : struct.chunksInfo.entrySet())
             {
               oprot.writeI32(_iter10.getKey());
               {
                 oprot.writeI32(_iter10.getValue().size());
-                for (Map.Entry<String, String> _iter11 : _iter10.getValue().entrySet())
+                for (Map.Entry<String, ChunkIDs> _iter11 : _iter10.getValue().entrySet())
                 {
                   oprot.writeString(_iter11.getKey());
-                  oprot.writeString(_iter11.getValue());
+                  _iter11.getValue().write(oprot);
                 }
               }
             }
@@ -880,21 +881,22 @@ public class DeduplicationService {
         if (incoming.get(0)) {
           {
             org.apache.thrift.protocol.TMap _map12 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.MAP, iprot.readI32());
-            struct.chunksInfo = new HashMap<Integer,Map<String,String>>(2*_map12.size);
+            struct.chunksInfo = new HashMap<Integer,Map<String,ChunkIDs>>(2*_map12.size);
             for (int _i13 = 0; _i13 < _map12.size; ++_i13)
             {
               int _key14; // required
-              Map<String,String> _val15; // required
+              Map<String,ChunkIDs> _val15; // required
               _key14 = iprot.readI32();
               {
-                org.apache.thrift.protocol.TMap _map16 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-                _val15 = new HashMap<String,String>(2*_map16.size);
+                org.apache.thrift.protocol.TMap _map16 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+                _val15 = new HashMap<String,ChunkIDs>(2*_map16.size);
                 for (int _i17 = 0; _i17 < _map16.size; ++_i17)
                 {
                   String _key18; // required
-                  String _val19; // required
+                  ChunkIDs _val19; // required
                   _key18 = iprot.readString();
-                  _val19 = iprot.readString();
+                  _val19 = new ChunkIDs();
+                  _val19.read(iprot);
                   _val15.put(_key18, _val19);
                 }
               }

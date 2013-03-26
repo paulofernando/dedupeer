@@ -32,10 +32,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
 
   private static final org.apache.thrift.protocol.TField FILE_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("fileID", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField CHUNK_NUMBER_FIELD_DESC = new org.apache.thrift.protocol.TField("chunkNumber", org.apache.thrift.protocol.TType.STRING, (short)2);
-  private static final org.apache.thrift.protocol.TField INDEX_FIELD_DESC = new org.apache.thrift.protocol.TField("index", org.apache.thrift.protocol.TType.STRING, (short)3);
-  private static final org.apache.thrift.protocol.TField LENGTH_FIELD_DESC = new org.apache.thrift.protocol.TField("length", org.apache.thrift.protocol.TType.STRING, (short)4);
-  private static final org.apache.thrift.protocol.TField MD5_FIELD_DESC = new org.apache.thrift.protocol.TField("md5", org.apache.thrift.protocol.TType.STRING, (short)5);
-  private static final org.apache.thrift.protocol.TField ADLER32_FIELD_DESC = new org.apache.thrift.protocol.TField("adler32", org.apache.thrift.protocol.TType.STRING, (short)6);
+  private static final org.apache.thrift.protocol.TField MD5_FIELD_DESC = new org.apache.thrift.protocol.TField("md5", org.apache.thrift.protocol.TType.STRING, (short)3);
+  private static final org.apache.thrift.protocol.TField ADLER32_FIELD_DESC = new org.apache.thrift.protocol.TField("adler32", org.apache.thrift.protocol.TType.STRING, (short)4);
+  private static final org.apache.thrift.protocol.TField INDEX_FIELD_DESC = new org.apache.thrift.protocol.TField("index", org.apache.thrift.protocol.TType.STRING, (short)5);
+  private static final org.apache.thrift.protocol.TField LENGTH_FIELD_DESC = new org.apache.thrift.protocol.TField("length", org.apache.thrift.protocol.TType.STRING, (short)6);
   private static final org.apache.thrift.protocol.TField PFILE_FIELD_DESC = new org.apache.thrift.protocol.TField("pfile", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField PCHUNK_FIELD_DESC = new org.apache.thrift.protocol.TField("pchunk", org.apache.thrift.protocol.TType.STRING, (short)8);
   private static final org.apache.thrift.protocol.TField DESTINATION_FIELD_DESC = new org.apache.thrift.protocol.TField("destination", org.apache.thrift.protocol.TType.STRING, (short)9);
@@ -49,10 +49,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
 
   public String fileID; // required
   public String chunkNumber; // required
+  public String md5; // required
+  public String adler32; // required
   public String index; // required
   public String length; // required
-  public String md5; // optional
-  public String adler32; // optional
   public String pfile; // optional
   public String pchunk; // optional
   public String destination; // optional
@@ -62,10 +62,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     FILE_ID((short)1, "fileID"),
     CHUNK_NUMBER((short)2, "chunkNumber"),
-    INDEX((short)3, "index"),
-    LENGTH((short)4, "length"),
-    MD5((short)5, "md5"),
-    ADLER32((short)6, "adler32"),
+    MD5((short)3, "md5"),
+    ADLER32((short)4, "adler32"),
+    INDEX((short)5, "index"),
+    LENGTH((short)6, "length"),
     PFILE((short)7, "pfile"),
     PCHUNK((short)8, "pchunk"),
     DESTINATION((short)9, "destination"),
@@ -88,14 +88,14 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
           return FILE_ID;
         case 2: // CHUNK_NUMBER
           return CHUNK_NUMBER;
-        case 3: // INDEX
-          return INDEX;
-        case 4: // LENGTH
-          return LENGTH;
-        case 5: // MD5
+        case 3: // MD5
           return MD5;
-        case 6: // ADLER32
+        case 4: // ADLER32
           return ADLER32;
+        case 5: // INDEX
+          return INDEX;
+        case 6: // LENGTH
+          return LENGTH;
         case 7: // PFILE
           return PFILE;
         case 8: // PCHUNK
@@ -144,7 +144,7 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   }
 
   // isset id assignments
-  private _Fields optionals[] = {_Fields.MD5,_Fields.ADLER32,_Fields.PFILE,_Fields.PCHUNK,_Fields.DESTINATION,_Fields.CONTENT};
+  private _Fields optionals[] = {_Fields.PFILE,_Fields.PCHUNK,_Fields.DESTINATION,_Fields.CONTENT};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -152,13 +152,13 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.CHUNK_NUMBER, new org.apache.thrift.meta_data.FieldMetaData("chunkNumber", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.MD5, new org.apache.thrift.meta_data.FieldMetaData("md5", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.ADLER32, new org.apache.thrift.meta_data.FieldMetaData("adler32", org.apache.thrift.TFieldRequirementType.REQUIRED, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.INDEX, new org.apache.thrift.meta_data.FieldMetaData("index", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.LENGTH, new org.apache.thrift.meta_data.FieldMetaData("length", org.apache.thrift.TFieldRequirementType.REQUIRED, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.MD5, new org.apache.thrift.meta_data.FieldMetaData("md5", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.ADLER32, new org.apache.thrift.meta_data.FieldMetaData("adler32", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.PFILE, new org.apache.thrift.meta_data.FieldMetaData("pfile", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
@@ -178,12 +178,16 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   public Chunk(
     String fileID,
     String chunkNumber,
+    String md5,
+    String adler32,
     String index,
     String length)
   {
     this();
     this.fileID = fileID;
     this.chunkNumber = chunkNumber;
+    this.md5 = md5;
+    this.adler32 = adler32;
     this.index = index;
     this.length = length;
   }
@@ -198,17 +202,17 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     if (other.isSetChunkNumber()) {
       this.chunkNumber = other.chunkNumber;
     }
-    if (other.isSetIndex()) {
-      this.index = other.index;
-    }
-    if (other.isSetLength()) {
-      this.length = other.length;
-    }
     if (other.isSetMd5()) {
       this.md5 = other.md5;
     }
     if (other.isSetAdler32()) {
       this.adler32 = other.adler32;
+    }
+    if (other.isSetIndex()) {
+      this.index = other.index;
+    }
+    if (other.isSetLength()) {
+      this.length = other.length;
     }
     if (other.isSetPfile()) {
       this.pfile = other.pfile;
@@ -233,10 +237,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   public void clear() {
     this.fileID = null;
     this.chunkNumber = null;
-    this.index = null;
-    this.length = null;
     this.md5 = null;
     this.adler32 = null;
+    this.index = null;
+    this.length = null;
     this.pfile = null;
     this.pchunk = null;
     this.destination = null;
@@ -291,54 +295,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     }
   }
 
-  public String getIndex() {
-    return this.index;
-  }
-
-  public Chunk setIndex(String index) {
-    this.index = index;
-    return this;
-  }
-
-  public void unsetIndex() {
-    this.index = null;
-  }
-
-  /** Returns true if field index is set (has been assigned a value) and false otherwise */
-  public boolean isSetIndex() {
-    return this.index != null;
-  }
-
-  public void setIndexIsSet(boolean value) {
-    if (!value) {
-      this.index = null;
-    }
-  }
-
-  public String getLength() {
-    return this.length;
-  }
-
-  public Chunk setLength(String length) {
-    this.length = length;
-    return this;
-  }
-
-  public void unsetLength() {
-    this.length = null;
-  }
-
-  /** Returns true if field length is set (has been assigned a value) and false otherwise */
-  public boolean isSetLength() {
-    return this.length != null;
-  }
-
-  public void setLengthIsSet(boolean value) {
-    if (!value) {
-      this.length = null;
-    }
-  }
-
   public String getMd5() {
     return this.md5;
   }
@@ -384,6 +340,54 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   public void setAdler32IsSet(boolean value) {
     if (!value) {
       this.adler32 = null;
+    }
+  }
+
+  public String getIndex() {
+    return this.index;
+  }
+
+  public Chunk setIndex(String index) {
+    this.index = index;
+    return this;
+  }
+
+  public void unsetIndex() {
+    this.index = null;
+  }
+
+  /** Returns true if field index is set (has been assigned a value) and false otherwise */
+  public boolean isSetIndex() {
+    return this.index != null;
+  }
+
+  public void setIndexIsSet(boolean value) {
+    if (!value) {
+      this.index = null;
+    }
+  }
+
+  public String getLength() {
+    return this.length;
+  }
+
+  public Chunk setLength(String length) {
+    this.length = length;
+    return this;
+  }
+
+  public void unsetLength() {
+    this.length = null;
+  }
+
+  /** Returns true if field length is set (has been assigned a value) and false otherwise */
+  public boolean isSetLength() {
+    return this.length != null;
+  }
+
+  public void setLengthIsSet(boolean value) {
+    if (!value) {
+      this.length = null;
     }
   }
 
@@ -511,22 +515,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       }
       break;
 
-    case INDEX:
-      if (value == null) {
-        unsetIndex();
-      } else {
-        setIndex((String)value);
-      }
-      break;
-
-    case LENGTH:
-      if (value == null) {
-        unsetLength();
-      } else {
-        setLength((String)value);
-      }
-      break;
-
     case MD5:
       if (value == null) {
         unsetMd5();
@@ -540,6 +528,22 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         unsetAdler32();
       } else {
         setAdler32((String)value);
+      }
+      break;
+
+    case INDEX:
+      if (value == null) {
+        unsetIndex();
+      } else {
+        setIndex((String)value);
+      }
+      break;
+
+    case LENGTH:
+      if (value == null) {
+        unsetLength();
+      } else {
+        setLength((String)value);
       }
       break;
 
@@ -586,17 +590,17 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     case CHUNK_NUMBER:
       return getChunkNumber();
 
-    case INDEX:
-      return getIndex();
-
-    case LENGTH:
-      return getLength();
-
     case MD5:
       return getMd5();
 
     case ADLER32:
       return getAdler32();
+
+    case INDEX:
+      return getIndex();
+
+    case LENGTH:
+      return getLength();
 
     case PFILE:
       return getPfile();
@@ -625,14 +629,14 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       return isSetFileID();
     case CHUNK_NUMBER:
       return isSetChunkNumber();
-    case INDEX:
-      return isSetIndex();
-    case LENGTH:
-      return isSetLength();
     case MD5:
       return isSetMd5();
     case ADLER32:
       return isSetAdler32();
+    case INDEX:
+      return isSetIndex();
+    case LENGTH:
+      return isSetLength();
     case PFILE:
       return isSetPfile();
     case PCHUNK:
@@ -676,24 +680,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         return false;
     }
 
-    boolean this_present_index = true && this.isSetIndex();
-    boolean that_present_index = true && that.isSetIndex();
-    if (this_present_index || that_present_index) {
-      if (!(this_present_index && that_present_index))
-        return false;
-      if (!this.index.equals(that.index))
-        return false;
-    }
-
-    boolean this_present_length = true && this.isSetLength();
-    boolean that_present_length = true && that.isSetLength();
-    if (this_present_length || that_present_length) {
-      if (!(this_present_length && that_present_length))
-        return false;
-      if (!this.length.equals(that.length))
-        return false;
-    }
-
     boolean this_present_md5 = true && this.isSetMd5();
     boolean that_present_md5 = true && that.isSetMd5();
     if (this_present_md5 || that_present_md5) {
@@ -709,6 +695,24 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       if (!(this_present_adler32 && that_present_adler32))
         return false;
       if (!this.adler32.equals(that.adler32))
+        return false;
+    }
+
+    boolean this_present_index = true && this.isSetIndex();
+    boolean that_present_index = true && that.isSetIndex();
+    if (this_present_index || that_present_index) {
+      if (!(this_present_index && that_present_index))
+        return false;
+      if (!this.index.equals(that.index))
+        return false;
+    }
+
+    boolean this_present_length = true && this.isSetLength();
+    boolean that_present_length = true && that.isSetLength();
+    if (this_present_length || that_present_length) {
+      if (!(this_present_length && that_present_length))
+        return false;
+      if (!this.length.equals(that.length))
         return false;
     }
 
@@ -784,26 +788,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetIndex()).compareTo(typedOther.isSetIndex());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetIndex()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.index, typedOther.index);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
-    lastComparison = Boolean.valueOf(isSetLength()).compareTo(typedOther.isSetLength());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetLength()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.length, typedOther.length);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     lastComparison = Boolean.valueOf(isSetMd5()).compareTo(typedOther.isSetMd5());
     if (lastComparison != 0) {
       return lastComparison;
@@ -820,6 +804,26 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     }
     if (isSetAdler32()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.adler32, typedOther.adler32);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetIndex()).compareTo(typedOther.isSetIndex());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetIndex()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.index, typedOther.index);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetLength()).compareTo(typedOther.isSetLength());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetLength()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.length, typedOther.length);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -900,6 +904,22 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     }
     first = false;
     if (!first) sb.append(", ");
+    sb.append("md5:");
+    if (this.md5 == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.md5);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("adler32:");
+    if (this.adler32 == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.adler32);
+    }
+    first = false;
+    if (!first) sb.append(", ");
     sb.append("index:");
     if (this.index == null) {
       sb.append("null");
@@ -915,26 +935,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       sb.append(this.length);
     }
     first = false;
-    if (isSetMd5()) {
-      if (!first) sb.append(", ");
-      sb.append("md5:");
-      if (this.md5 == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.md5);
-      }
-      first = false;
-    }
-    if (isSetAdler32()) {
-      if (!first) sb.append(", ");
-      sb.append("adler32:");
-      if (this.adler32 == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.adler32);
-      }
-      first = false;
-    }
     if (isSetPfile()) {
       if (!first) sb.append(", ");
       sb.append("pfile:");
@@ -986,6 +986,12 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     }
     if (chunkNumber == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'chunkNumber' was not present! Struct: " + toString());
+    }
+    if (md5 == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'md5' was not present! Struct: " + toString());
+    }
+    if (adler32 == null) {
+      throw new org.apache.thrift.protocol.TProtocolException("Required field 'adler32' was not present! Struct: " + toString());
     }
     if (index == null) {
       throw new org.apache.thrift.protocol.TProtocolException("Required field 'index' was not present! Struct: " + toString());
@@ -1045,23 +1051,7 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // INDEX
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.index = iprot.readString();
-              struct.setIndexIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 4: // LENGTH
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.length = iprot.readString();
-              struct.setLengthIsSet(true);
-            } else { 
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          case 5: // MD5
+          case 3: // MD5
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.md5 = iprot.readString();
               struct.setMd5IsSet(true);
@@ -1069,10 +1059,26 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 6: // ADLER32
+          case 4: // ADLER32
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.adler32 = iprot.readString();
               struct.setAdler32IsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 5: // INDEX
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.index = iprot.readString();
+              struct.setIndexIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 6: // LENGTH
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.length = iprot.readString();
+              struct.setLengthIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1134,6 +1140,16 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         oprot.writeString(struct.chunkNumber);
         oprot.writeFieldEnd();
       }
+      if (struct.md5 != null) {
+        oprot.writeFieldBegin(MD5_FIELD_DESC);
+        oprot.writeString(struct.md5);
+        oprot.writeFieldEnd();
+      }
+      if (struct.adler32 != null) {
+        oprot.writeFieldBegin(ADLER32_FIELD_DESC);
+        oprot.writeString(struct.adler32);
+        oprot.writeFieldEnd();
+      }
       if (struct.index != null) {
         oprot.writeFieldBegin(INDEX_FIELD_DESC);
         oprot.writeString(struct.index);
@@ -1143,20 +1159,6 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         oprot.writeFieldBegin(LENGTH_FIELD_DESC);
         oprot.writeString(struct.length);
         oprot.writeFieldEnd();
-      }
-      if (struct.md5 != null) {
-        if (struct.isSetMd5()) {
-          oprot.writeFieldBegin(MD5_FIELD_DESC);
-          oprot.writeString(struct.md5);
-          oprot.writeFieldEnd();
-        }
-      }
-      if (struct.adler32 != null) {
-        if (struct.isSetAdler32()) {
-          oprot.writeFieldBegin(ADLER32_FIELD_DESC);
-          oprot.writeString(struct.adler32);
-          oprot.writeFieldEnd();
-        }
       }
       if (struct.pfile != null) {
         if (struct.isSetPfile()) {
@@ -1205,34 +1207,24 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       TTupleProtocol oprot = (TTupleProtocol) prot;
       oprot.writeString(struct.fileID);
       oprot.writeString(struct.chunkNumber);
+      oprot.writeString(struct.md5);
+      oprot.writeString(struct.adler32);
       oprot.writeString(struct.index);
       oprot.writeString(struct.length);
       BitSet optionals = new BitSet();
-      if (struct.isSetMd5()) {
+      if (struct.isSetPfile()) {
         optionals.set(0);
       }
-      if (struct.isSetAdler32()) {
+      if (struct.isSetPchunk()) {
         optionals.set(1);
       }
-      if (struct.isSetPfile()) {
+      if (struct.isSetDestination()) {
         optionals.set(2);
       }
-      if (struct.isSetPchunk()) {
+      if (struct.isSetContent()) {
         optionals.set(3);
       }
-      if (struct.isSetDestination()) {
-        optionals.set(4);
-      }
-      if (struct.isSetContent()) {
-        optionals.set(5);
-      }
-      oprot.writeBitSet(optionals, 6);
-      if (struct.isSetMd5()) {
-        oprot.writeString(struct.md5);
-      }
-      if (struct.isSetAdler32()) {
-        oprot.writeString(struct.adler32);
-      }
+      oprot.writeBitSet(optionals, 4);
       if (struct.isSetPfile()) {
         oprot.writeString(struct.pfile);
       }
@@ -1254,32 +1246,28 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       struct.setFileIDIsSet(true);
       struct.chunkNumber = iprot.readString();
       struct.setChunkNumberIsSet(true);
+      struct.md5 = iprot.readString();
+      struct.setMd5IsSet(true);
+      struct.adler32 = iprot.readString();
+      struct.setAdler32IsSet(true);
       struct.index = iprot.readString();
       struct.setIndexIsSet(true);
       struct.length = iprot.readString();
       struct.setLengthIsSet(true);
-      BitSet incoming = iprot.readBitSet(6);
+      BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
-        struct.md5 = iprot.readString();
-        struct.setMd5IsSet(true);
-      }
-      if (incoming.get(1)) {
-        struct.adler32 = iprot.readString();
-        struct.setAdler32IsSet(true);
-      }
-      if (incoming.get(2)) {
         struct.pfile = iprot.readString();
         struct.setPfileIsSet(true);
       }
-      if (incoming.get(3)) {
+      if (incoming.get(1)) {
         struct.pchunk = iprot.readString();
         struct.setPchunkIsSet(true);
       }
-      if (incoming.get(4)) {
+      if (incoming.get(2)) {
         struct.destination = iprot.readString();
         struct.setDestinationIsSet(true);
       }
-      if (incoming.get(5)) {
+      if (incoming.get(3)) {
         struct.content = iprot.readBinary();
         struct.setContentIsSet(true);
       }
