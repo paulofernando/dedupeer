@@ -414,7 +414,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
 							chunk.setAdler32(String.valueOf(hash32Temp));
 							chunk.setMd5(MD5Temp);
-							chunk.setContent(newchunk);
+							chunk.setContent(newchunk.clone());
 							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
 							chunk_number++;
@@ -450,7 +450,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
 						chunk.setAdler32(String.valueOf(c32.getValue()));
 						chunk.setMd5(DigestUtils.md5Hex(buffer.array()));
-						chunk.setContent(buffer.array());
+						chunk.setContent(buffer.array().clone());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
 						chunk_number++;
@@ -504,7 +504,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
-								
+																
 								chunk_number++;
 								buffer.clear();
 								
