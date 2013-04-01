@@ -17,11 +17,11 @@ typedef map<weakHash,map<strongHash,ChunkIDs>> hashesToCompare
 
 struct Chunk {
 	1: required string fileID,
-	2: required string chunkNumber,
-	3: required string md5,
-	4: required string adler32,
-	5: required string index,
-	6: required string length,
+	2: required string chunkNumber,	
+	3: required string index,
+	4: required string length,
+	5: optional string md5,
+	6: optional string adler32,
 	7: optional string pfile,
 	8: optional string pchunk, 
 	9: optional string destination

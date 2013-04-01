@@ -20,6 +20,7 @@ import me.prettyprint.hector.api.query.QueryResult;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
+import com.dedupeer.checksum.Checksum32;
 import com.dedupeer.chunking.Chunking;
 import com.dedupeer.dao.operation.ChunksDaoOperations;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
@@ -28,9 +29,9 @@ import com.dedupeer.exception.FieldNotFoundException;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.processing.EagleEye;
 import com.dedupeer.thrift.Chunk;
+import com.dedupeer.thrift.ChunkIDs;
 import com.dedupeer.thrift.ThriftClient;
 import com.dedupeer.utils.FileUtils;
-import com.deudpeer.checksum.Checksum32;
 
 
 /**
@@ -326,7 +327,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		/** Map<adler32, Map<md5, chunkNumber>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
-		Map<Integer, Map<String, String>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
+		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
 						
 		log.info("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
@@ -425,8 +426,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setPfile(fileIDStored);
-						chunk.setPchunk(chunksInStorageServer.get(c32.getValue()).get(MD5));
+						chunk.setPfile(chunksInStorageServer.get(c32.getValue()).get(MD5).getFileID());
+						chunk.setPchunk(chunksInStorageServer.get(c32.getValue()).get(MD5).getChunkID());
 						
 						newFileChunks.put(globalIndex, chunk);						
 						chunk_number++;
@@ -584,7 +585,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		/** Map<adler32, Map<md5, chunkNumber>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
-		Map<Integer, Map<String, String>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
+		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
 		
 		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime);

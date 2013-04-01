@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import com.dedupeer.checksum.Checksum32;
 import com.dedupeer.checksum.RollingChecksumOlder;
-import com.deudpeer.checksum.Checksum32;
 
 
 /** 

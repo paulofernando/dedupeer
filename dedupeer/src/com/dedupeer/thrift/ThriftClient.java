@@ -20,7 +20,7 @@ public class ThriftClient {
 		return thriftClient;
 	}
 	
-	public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,String>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) {
+	public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) {
 
 		TTransport transport;
 		Map<Long,Chunk> chunks = null;

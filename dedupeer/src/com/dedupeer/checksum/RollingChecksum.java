@@ -41,7 +41,7 @@
    If you do not wish to do so, delete this exception statement from
    your version.  */
 
-package com.deudpeer.checksum;
+package com.dedupeer.checksum;
 
 /**
  * A general interface for 32-bit checksums that have the "rolling"

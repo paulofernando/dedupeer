@@ -10,8 +10,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
+import com.dedupeer.checksum.Checksum32;
 import com.dedupeer.utils.FileUtils;
-import com.deudpeer.checksum.Checksum32;
 
 public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 
@@ -25,7 +25,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		
 	@Override
 	public Map<Long, Chunk> deduplicate(
-			Map<Integer, Map<String, String>> chunksInfo, String pathOfFile,
+			Map<Integer, Map<String, ChunkIDs>> chunksInfo, String pathOfFile,
 			int chunkSizeInBytes, int bytesToLoadByTime) throws TException {
 		long time = System.currentTimeMillis();
 		log.info("\n[Deduplicating...]");
@@ -132,8 +132,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setPfile(fileIDStored);
-						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(MD5));
+						chunk.setPfile(chunksInfo.get(c32.getValue()).get(MD5).fileID);
+						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(MD5).chunkID);
 						
 						newFileChunks.put(globalIndex, chunk);
 						 
@@ -258,5 +258,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return resultChunks;
 	}
+
 
 }

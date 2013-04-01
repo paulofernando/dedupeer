@@ -15,10 +15,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
+import com.dedupeer.checksum.Checksum32;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.thrift.Chunk;
 import com.dedupeer.utils.FileUtils;
-import com.deudpeer.checksum.Checksum32;
 
 
 /**

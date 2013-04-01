@@ -39,7 +39,7 @@ exception to your version of it, but you are not obligated to do so.
 If you do not wish to do so, delete this exception statement from your
 version.  */
 
-package com.deudpeer.checksum;
+package com.dedupeer.checksum;
 
 /**
  * A simple 32-bit "rolling" checksum. This checksum algorithm is based upon the

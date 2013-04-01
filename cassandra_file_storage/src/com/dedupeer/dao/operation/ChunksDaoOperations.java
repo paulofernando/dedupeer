@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
 import com.dedupeer.thrift.Chunk;
+import com.dedupeer.thrift.ChunkIDs;
 
 
 /**
@@ -194,13 +195,13 @@ public class ChunksDaoOperations {
 	 * @param amountChunks Amount of chunks to retrieve the information
 	 * @return HashMap with <adler32, <MD5, chunkNum>>
 	 */
-	public Map<Integer, Map<String, String>> getHashesOfAFile(String file_id, int amountChunks) {
+	public Map<Integer, Map<String, ChunkIDs>> getHashesOfAFile(String file_id, int amountChunks) {
 		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
 				stringSerializer, stringSerializer, stringSerializer);
 		query.setColumnFamily("Chunks"); 
 		query.setKey(file_id);		
 		int loadByTime = 10;		
-		Map<Integer, Map<String, String>> chunksLoaded = new HashMap<Integer, Map<String, String>>();		
+		Map<Integer, Map<String, ChunkIDs>> chunksLoaded = new HashMap<Integer, Map<String, ChunkIDs>>();		
 		long loaded = 0;
 		
 		while(loaded < amountChunks) {
@@ -253,14 +254,19 @@ public class ChunksDaoOperations {
 				String adler32 = column.getSubColumnByName("adler32").getValue();
 				
 				if(!chunksLoaded.containsKey(adler32)) {
-					Map<String, String> chunkInfo = new HashMap<String, String>();
-					chunkInfo.put(column.getSubColumnByName("md5").getValue(),
-							String.valueOf(loaded));
+					Map<String, ChunkIDs> chunkInfo = new HashMap<String, ChunkIDs>();
+					ChunkIDs ids = new ChunkIDs();
+					ids.setChunkID(String.valueOf(loaded));
+					ids.setFileID(file_id);
+					chunkInfo.put(column.getSubColumnByName("md5").getValue(), ids);
+					
 					chunksLoaded.put(Integer.parseInt(adler32), chunkInfo);
 				} else {
-					Map<String, String> md5Set = chunksLoaded.get(adler32);
-					md5Set.put(column.getSubColumnByName("md5").getValue(),
-							String.valueOf(loaded));
+					Map<String, ChunkIDs> md5Set = chunksLoaded.get(adler32);
+					ChunkIDs ids = new ChunkIDs();
+					ids.setChunkID(String.valueOf(loaded));
+					ids.setFileID(file_id);
+					md5Set.put(column.getSubColumnByName("md5").getValue(), ids);
 				}
 				
 				loaded++;
