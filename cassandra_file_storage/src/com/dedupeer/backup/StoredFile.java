@@ -579,7 +579,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		int amountChunks = Integer.parseInt(columnAmountChunks.getValue());
 
 		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
-		String newFileID = String.valueOf(System.currentTimeMillis());
+		String newFileID;
 		
 		//----------  Retrieving the information about the stored file -----------------		
 		/** Map<adler32, Map<md5, chunkNumber>> */		
@@ -600,7 +600,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				referencesCount++;
 			}
 		}
-		
+		newFileID = newFileChunks.get(new Long(0l)).fileID;
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?");
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), totalChunks - referencesCount);
 		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
