@@ -20,8 +20,8 @@ struct Chunk {
 	2: required string chunkNumber,	
 	3: required string index,
 	4: required string length,
-	5: optional string md5,
-	6: optional string adler32,
+	5: optional string strongHash,
+	6: optional string weakHash,
 	7: optional string pfile,
 	8: optional string pchunk, 
 	9: optional string destination

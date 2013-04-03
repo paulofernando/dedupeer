@@ -78,8 +78,8 @@ public class Chunking {
 		     }
 		     
 		     Chunk chunk = new Chunk(fileID, String.valueOf(chunkCount), String.valueOf(globalIndex), String.valueOf(ch));
-		     chunk.setAdler32(String.valueOf(c32.getValue()));
-		     chunk.setMd5(DigestUtils.md5Hex(b));
+		     chunk.setWeakHash(String.valueOf(c32.getValue()));
+		     chunk.setStrongHash(DigestUtils.md5Hex(b));
 		     chunk.setContent(FileUtils.getBytesFromFile(fname));
 		     
 		     chunks.add(chunk);

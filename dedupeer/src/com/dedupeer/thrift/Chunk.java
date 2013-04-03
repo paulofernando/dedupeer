@@ -34,8 +34,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   private static final org.apache.thrift.protocol.TField CHUNK_NUMBER_FIELD_DESC = new org.apache.thrift.protocol.TField("chunkNumber", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField INDEX_FIELD_DESC = new org.apache.thrift.protocol.TField("index", org.apache.thrift.protocol.TType.STRING, (short)3);
   private static final org.apache.thrift.protocol.TField LENGTH_FIELD_DESC = new org.apache.thrift.protocol.TField("length", org.apache.thrift.protocol.TType.STRING, (short)4);
-  private static final org.apache.thrift.protocol.TField MD5_FIELD_DESC = new org.apache.thrift.protocol.TField("md5", org.apache.thrift.protocol.TType.STRING, (short)5);
-  private static final org.apache.thrift.protocol.TField ADLER32_FIELD_DESC = new org.apache.thrift.protocol.TField("adler32", org.apache.thrift.protocol.TType.STRING, (short)6);
+  private static final org.apache.thrift.protocol.TField STRONG_HASH_FIELD_DESC = new org.apache.thrift.protocol.TField("strongHash", org.apache.thrift.protocol.TType.STRING, (short)5);
+  private static final org.apache.thrift.protocol.TField WEAK_HASH_FIELD_DESC = new org.apache.thrift.protocol.TField("weakHash", org.apache.thrift.protocol.TType.STRING, (short)6);
   private static final org.apache.thrift.protocol.TField PFILE_FIELD_DESC = new org.apache.thrift.protocol.TField("pfile", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField PCHUNK_FIELD_DESC = new org.apache.thrift.protocol.TField("pchunk", org.apache.thrift.protocol.TType.STRING, (short)8);
   private static final org.apache.thrift.protocol.TField DESTINATION_FIELD_DESC = new org.apache.thrift.protocol.TField("destination", org.apache.thrift.protocol.TType.STRING, (short)9);
@@ -51,8 +51,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   public String chunkNumber; // required
   public String index; // required
   public String length; // required
-  public String md5; // optional
-  public String adler32; // optional
+  public String strongHash; // optional
+  public String weakHash; // optional
   public String pfile; // optional
   public String pchunk; // optional
   public String destination; // optional
@@ -64,8 +64,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     CHUNK_NUMBER((short)2, "chunkNumber"),
     INDEX((short)3, "index"),
     LENGTH((short)4, "length"),
-    MD5((short)5, "md5"),
-    ADLER32((short)6, "adler32"),
+    STRONG_HASH((short)5, "strongHash"),
+    WEAK_HASH((short)6, "weakHash"),
     PFILE((short)7, "pfile"),
     PCHUNK((short)8, "pchunk"),
     DESTINATION((short)9, "destination"),
@@ -92,10 +92,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
           return INDEX;
         case 4: // LENGTH
           return LENGTH;
-        case 5: // MD5
-          return MD5;
-        case 6: // ADLER32
-          return ADLER32;
+        case 5: // STRONG_HASH
+          return STRONG_HASH;
+        case 6: // WEAK_HASH
+          return WEAK_HASH;
         case 7: // PFILE
           return PFILE;
         case 8: // PCHUNK
@@ -144,7 +144,7 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
   }
 
   // isset id assignments
-  private _Fields optionals[] = {_Fields.MD5,_Fields.ADLER32,_Fields.PFILE,_Fields.PCHUNK,_Fields.DESTINATION,_Fields.CONTENT};
+  private _Fields optionals[] = {_Fields.STRONG_HASH,_Fields.WEAK_HASH,_Fields.PFILE,_Fields.PCHUNK,_Fields.DESTINATION,_Fields.CONTENT};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -156,9 +156,9 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.LENGTH, new org.apache.thrift.meta_data.FieldMetaData("length", org.apache.thrift.TFieldRequirementType.REQUIRED, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.MD5, new org.apache.thrift.meta_data.FieldMetaData("md5", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.STRONG_HASH, new org.apache.thrift.meta_data.FieldMetaData("strongHash", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.ADLER32, new org.apache.thrift.meta_data.FieldMetaData("adler32", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.WEAK_HASH, new org.apache.thrift.meta_data.FieldMetaData("weakHash", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.PFILE, new org.apache.thrift.meta_data.FieldMetaData("pfile", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
@@ -204,11 +204,11 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     if (other.isSetLength()) {
       this.length = other.length;
     }
-    if (other.isSetMd5()) {
-      this.md5 = other.md5;
+    if (other.isSetStrongHash()) {
+      this.strongHash = other.strongHash;
     }
-    if (other.isSetAdler32()) {
-      this.adler32 = other.adler32;
+    if (other.isSetWeakHash()) {
+      this.weakHash = other.weakHash;
     }
     if (other.isSetPfile()) {
       this.pfile = other.pfile;
@@ -235,8 +235,8 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     this.chunkNumber = null;
     this.index = null;
     this.length = null;
-    this.md5 = null;
-    this.adler32 = null;
+    this.strongHash = null;
+    this.weakHash = null;
     this.pfile = null;
     this.pchunk = null;
     this.destination = null;
@@ -339,51 +339,51 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     }
   }
 
-  public String getMd5() {
-    return this.md5;
+  public String getStrongHash() {
+    return this.strongHash;
   }
 
-  public Chunk setMd5(String md5) {
-    this.md5 = md5;
+  public Chunk setStrongHash(String strongHash) {
+    this.strongHash = strongHash;
     return this;
   }
 
-  public void unsetMd5() {
-    this.md5 = null;
+  public void unsetStrongHash() {
+    this.strongHash = null;
   }
 
-  /** Returns true if field md5 is set (has been assigned a value) and false otherwise */
-  public boolean isSetMd5() {
-    return this.md5 != null;
+  /** Returns true if field strongHash is set (has been assigned a value) and false otherwise */
+  public boolean isSetStrongHash() {
+    return this.strongHash != null;
   }
 
-  public void setMd5IsSet(boolean value) {
+  public void setStrongHashIsSet(boolean value) {
     if (!value) {
-      this.md5 = null;
+      this.strongHash = null;
     }
   }
 
-  public String getAdler32() {
-    return this.adler32;
+  public String getWeakHash() {
+    return this.weakHash;
   }
 
-  public Chunk setAdler32(String adler32) {
-    this.adler32 = adler32;
+  public Chunk setWeakHash(String weakHash) {
+    this.weakHash = weakHash;
     return this;
   }
 
-  public void unsetAdler32() {
-    this.adler32 = null;
+  public void unsetWeakHash() {
+    this.weakHash = null;
   }
 
-  /** Returns true if field adler32 is set (has been assigned a value) and false otherwise */
-  public boolean isSetAdler32() {
-    return this.adler32 != null;
+  /** Returns true if field weakHash is set (has been assigned a value) and false otherwise */
+  public boolean isSetWeakHash() {
+    return this.weakHash != null;
   }
 
-  public void setAdler32IsSet(boolean value) {
+  public void setWeakHashIsSet(boolean value) {
     if (!value) {
-      this.adler32 = null;
+      this.weakHash = null;
     }
   }
 
@@ -527,19 +527,19 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       }
       break;
 
-    case MD5:
+    case STRONG_HASH:
       if (value == null) {
-        unsetMd5();
+        unsetStrongHash();
       } else {
-        setMd5((String)value);
+        setStrongHash((String)value);
       }
       break;
 
-    case ADLER32:
+    case WEAK_HASH:
       if (value == null) {
-        unsetAdler32();
+        unsetWeakHash();
       } else {
-        setAdler32((String)value);
+        setWeakHash((String)value);
       }
       break;
 
@@ -592,11 +592,11 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
     case LENGTH:
       return getLength();
 
-    case MD5:
-      return getMd5();
+    case STRONG_HASH:
+      return getStrongHash();
 
-    case ADLER32:
-      return getAdler32();
+    case WEAK_HASH:
+      return getWeakHash();
 
     case PFILE:
       return getPfile();
@@ -629,10 +629,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       return isSetIndex();
     case LENGTH:
       return isSetLength();
-    case MD5:
-      return isSetMd5();
-    case ADLER32:
-      return isSetAdler32();
+    case STRONG_HASH:
+      return isSetStrongHash();
+    case WEAK_HASH:
+      return isSetWeakHash();
     case PFILE:
       return isSetPfile();
     case PCHUNK:
@@ -694,21 +694,21 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         return false;
     }
 
-    boolean this_present_md5 = true && this.isSetMd5();
-    boolean that_present_md5 = true && that.isSetMd5();
-    if (this_present_md5 || that_present_md5) {
-      if (!(this_present_md5 && that_present_md5))
+    boolean this_present_strongHash = true && this.isSetStrongHash();
+    boolean that_present_strongHash = true && that.isSetStrongHash();
+    if (this_present_strongHash || that_present_strongHash) {
+      if (!(this_present_strongHash && that_present_strongHash))
         return false;
-      if (!this.md5.equals(that.md5))
+      if (!this.strongHash.equals(that.strongHash))
         return false;
     }
 
-    boolean this_present_adler32 = true && this.isSetAdler32();
-    boolean that_present_adler32 = true && that.isSetAdler32();
-    if (this_present_adler32 || that_present_adler32) {
-      if (!(this_present_adler32 && that_present_adler32))
+    boolean this_present_weakHash = true && this.isSetWeakHash();
+    boolean that_present_weakHash = true && that.isSetWeakHash();
+    if (this_present_weakHash || that_present_weakHash) {
+      if (!(this_present_weakHash && that_present_weakHash))
         return false;
-      if (!this.adler32.equals(that.adler32))
+      if (!this.weakHash.equals(that.weakHash))
         return false;
     }
 
@@ -804,22 +804,22 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetMd5()).compareTo(typedOther.isSetMd5());
+    lastComparison = Boolean.valueOf(isSetStrongHash()).compareTo(typedOther.isSetStrongHash());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetMd5()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.md5, typedOther.md5);
+    if (isSetStrongHash()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.strongHash, typedOther.strongHash);
       if (lastComparison != 0) {
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetAdler32()).compareTo(typedOther.isSetAdler32());
+    lastComparison = Boolean.valueOf(isSetWeakHash()).compareTo(typedOther.isSetWeakHash());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetAdler32()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.adler32, typedOther.adler32);
+    if (isSetWeakHash()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.weakHash, typedOther.weakHash);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -915,23 +915,23 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       sb.append(this.length);
     }
     first = false;
-    if (isSetMd5()) {
+    if (isSetStrongHash()) {
       if (!first) sb.append(", ");
-      sb.append("md5:");
-      if (this.md5 == null) {
+      sb.append("strongHash:");
+      if (this.strongHash == null) {
         sb.append("null");
       } else {
-        sb.append(this.md5);
+        sb.append(this.strongHash);
       }
       first = false;
     }
-    if (isSetAdler32()) {
+    if (isSetWeakHash()) {
       if (!first) sb.append(", ");
-      sb.append("adler32:");
-      if (this.adler32 == null) {
+      sb.append("weakHash:");
+      if (this.weakHash == null) {
         sb.append("null");
       } else {
-        sb.append(this.adler32);
+        sb.append(this.weakHash);
       }
       first = false;
     }
@@ -1061,18 +1061,18 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 5: // MD5
+          case 5: // STRONG_HASH
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.md5 = iprot.readString();
-              struct.setMd5IsSet(true);
+              struct.strongHash = iprot.readString();
+              struct.setStrongHashIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 6: // ADLER32
+          case 6: // WEAK_HASH
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.adler32 = iprot.readString();
-              struct.setAdler32IsSet(true);
+              struct.weakHash = iprot.readString();
+              struct.setWeakHashIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1144,17 +1144,17 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         oprot.writeString(struct.length);
         oprot.writeFieldEnd();
       }
-      if (struct.md5 != null) {
-        if (struct.isSetMd5()) {
-          oprot.writeFieldBegin(MD5_FIELD_DESC);
-          oprot.writeString(struct.md5);
+      if (struct.strongHash != null) {
+        if (struct.isSetStrongHash()) {
+          oprot.writeFieldBegin(STRONG_HASH_FIELD_DESC);
+          oprot.writeString(struct.strongHash);
           oprot.writeFieldEnd();
         }
       }
-      if (struct.adler32 != null) {
-        if (struct.isSetAdler32()) {
-          oprot.writeFieldBegin(ADLER32_FIELD_DESC);
-          oprot.writeString(struct.adler32);
+      if (struct.weakHash != null) {
+        if (struct.isSetWeakHash()) {
+          oprot.writeFieldBegin(WEAK_HASH_FIELD_DESC);
+          oprot.writeString(struct.weakHash);
           oprot.writeFieldEnd();
         }
       }
@@ -1208,10 +1208,10 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       oprot.writeString(struct.index);
       oprot.writeString(struct.length);
       BitSet optionals = new BitSet();
-      if (struct.isSetMd5()) {
+      if (struct.isSetStrongHash()) {
         optionals.set(0);
       }
-      if (struct.isSetAdler32()) {
+      if (struct.isSetWeakHash()) {
         optionals.set(1);
       }
       if (struct.isSetPfile()) {
@@ -1227,11 +1227,11 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
         optionals.set(5);
       }
       oprot.writeBitSet(optionals, 6);
-      if (struct.isSetMd5()) {
-        oprot.writeString(struct.md5);
+      if (struct.isSetStrongHash()) {
+        oprot.writeString(struct.strongHash);
       }
-      if (struct.isSetAdler32()) {
-        oprot.writeString(struct.adler32);
+      if (struct.isSetWeakHash()) {
+        oprot.writeString(struct.weakHash);
       }
       if (struct.isSetPfile()) {
         oprot.writeString(struct.pfile);
@@ -1260,12 +1260,12 @@ public class Chunk implements org.apache.thrift.TBase<Chunk, Chunk._Fields>, jav
       struct.setLengthIsSet(true);
       BitSet incoming = iprot.readBitSet(6);
       if (incoming.get(0)) {
-        struct.md5 = iprot.readString();
-        struct.setMd5IsSet(true);
+        struct.strongHash = iprot.readString();
+        struct.setStrongHashIsSet(true);
       }
       if (incoming.get(1)) {
-        struct.adler32 = iprot.readString();
-        struct.setAdler32IsSet(true);
+        struct.weakHash = iprot.readString();
+        struct.setWeakHashIsSet(true);
       }
       if (incoming.get(2)) {
         struct.pfile = iprot.readString();

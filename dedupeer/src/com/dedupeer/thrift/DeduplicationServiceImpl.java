@@ -56,7 +56,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		}
 		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime);
 		
-		String MD5Temp = "-1";
+		String SHA256Temp = "-1";
 		String hash32Temp = "-1";
 		
 		for(int i = 0; i < divideInTimes; i++) {
@@ -103,8 +103,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								(localIndex + chunkSizeInBytes < modFile.length ? localIndex + chunkSizeInBytes : modFile.length));
 					}
 					
-					String MD5 = DigestUtils.md5Hex(currentChunk);
-					if(chunksInfo.get(c32.getValue()).containsKey(MD5)) {						
+					String SHA256 = DigestUtils.sha256Hex(currentChunk);
+					if(chunksInfo.get(c32.getValue()).containsKey(SHA256)) {						
 						if(buffer.position() > 0) { //If the buffer has some data, creates a chunk with this data								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 							log.debug("[0] Creating new chunk " + chunk_number + " in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
@@ -113,13 +113,13 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
 								hash32Temp = String.valueOf(c32_2.getValue());
-								MD5Temp = DigestUtils.md5Hex(newchunk);
+								SHA256Temp = DigestUtils.sha256Hex(newchunk);
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
-							chunk.setMd5(MD5Temp);
-							chunk.setAdler32(String.valueOf(hash32Temp));
+							chunk.setStrongHash(SHA256Temp);
+							chunk.setWeakHash(String.valueOf(hash32Temp));
 							chunk.setContent(newchunk.clone());
 							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
@@ -128,12 +128,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							moreBytesToLoad += newchunk.length;
 							buffer.clear();
 						}						
-						log.debug("Duplicated chunk " + chunk_number + ": " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
+						log.debug("Duplicated chunk " + chunk_number + ": " + SHA256 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setPfile(chunksInfo.get(c32.getValue()).get(MD5).fileID);
-						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(MD5).chunkID);
+						chunk.setPfile(chunksInfo.get(c32.getValue()).get(SHA256).fileID);
+						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(SHA256).chunkID);
 						
 						newFileChunks.put(globalIndex, chunk);
 						 
@@ -155,8 +155,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
-						chunk.setMd5(DigestUtils.md5Hex(buffer.array()));
-						chunk.setAdler32(String.valueOf(c32.getValue()));
+						chunk.setStrongHash(DigestUtils.md5Hex(buffer.array()));
+						chunk.setWeakHash(String.valueOf(c32.getValue()));
 						chunk.setContent(buffer.array().clone());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
@@ -176,13 +176,13 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							if(calculateAllHashes) {
 								c32.check(newchunk, 0, newchunk.length);
 								hash32Temp = String.valueOf(c32.getValue());
-								MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+								SHA256Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
-							chunk.setMd5(MD5Temp);
-							chunk.setAdler32(hash32Temp);
+							chunk.setStrongHash(SHA256Temp);
+							chunk.setWeakHash(hash32Temp);
 							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							
 							newFileChunks.put(globalIndex - buffer.position(), chunk);							
@@ -201,13 +201,13 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								if(calculateAllHashes) {
 									c32.check(newchunk, 0, newchunk.length);
 									hash32Temp = String.valueOf(c32.getValue());
-									MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+									SHA256Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								}
 								
 								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										String.valueOf(globalIndex), String.valueOf(newchunk.length));
-								chunk.setAdler32(hash32Temp);
-								chunk.setMd5(MD5Temp);
+								chunk.setStrongHash(SHA256Temp);
+								chunk.setWeakHash(hash32Temp);
 								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
@@ -230,13 +230,13 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				if(calculateAllHashes) {
 					c32.check(buffer.array(), 0, buffer.capacity());
 					hash32Temp = String.valueOf(c32.getValue());
-					MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
+					SHA256Temp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				}
 				
 				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
-				chunk.setAdler32(hash32Temp);
-				chunk.setMd5(MD5Temp);
+				chunk.setStrongHash(SHA256Temp);
+				chunk.setWeakHash(hash32Temp);
 				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				newFileChunks.put(globalIndex - buffer.position(), chunk);
 				

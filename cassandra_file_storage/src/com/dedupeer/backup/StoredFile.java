@@ -204,10 +204,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		long referencesCount = 0;
 		//Find the duplicated chunk in the system
 		for(int i = 0; i < amountChunk; i++) {
-			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("adler32");
+			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("weakHash");
 			HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("length");
 			
-			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("md5");				
+			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("strongHash");				
 			
 			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex + lastLength, Integer.parseInt(columnLength.getValue()));
 			if(index != -1) {
@@ -238,8 +238,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					
 					Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							String.valueOf(index - buffer.position()), String.valueOf(newchunk.length));
-					chunk.setMd5(DigestUtils.md5Hex(newchunk));
-					chunk.setAdler32(String.valueOf(c32.getValue()));
+					chunk.setStrongHash(DigestUtils.md5Hex(newchunk));
+					chunk.setWeakHash(String.valueOf(c32.getValue()));
 					chunk.setContent(newchunk);
 					
 					newFileChunks.put(index - buffer.position(), chunk);
@@ -255,8 +255,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					
 					Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							String.valueOf(index - buffer.capacity()), String.valueOf(buffer.array().length));
-					chunk.setAdler32(String.valueOf(c32.getValue()));
-					chunk.setMd5(DigestUtils.md5Hex(newchunk));
+					chunk.setWeakHash(String.valueOf(c32.getValue()));
+					chunk.setStrongHash(DigestUtils.md5Hex(newchunk));
 					chunk.setContent(newchunk);
 					
 					newFileChunks.put(index - buffer.capacity(), chunk);
@@ -275,8 +275,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 					String.valueOf(index - buffer.position()), String.valueOf(buffer.capacity()));
-			chunk.setAdler32(String.valueOf(c32.getValue()));
-			chunk.setMd5(DigestUtils.md5Hex(newchunk));
+			chunk.setWeakHash(String.valueOf(c32.getValue()));
+			chunk.setStrongHash(DigestUtils.md5Hex(newchunk));
 			chunk.setContent(newchunk);
 			
 			newFileChunks.put(index - buffer.position(), chunk);			
@@ -413,8 +413,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
-							chunk.setAdler32(String.valueOf(hash32Temp));
-							chunk.setMd5(MD5Temp);
+							chunk.setWeakHash(String.valueOf(hash32Temp));
+							chunk.setStrongHash(MD5Temp);
 							chunk.setContent(newchunk.clone());
 							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
@@ -449,8 +449,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
-						chunk.setAdler32(String.valueOf(c32.getValue()));
-						chunk.setMd5(DigestUtils.md5Hex(buffer.array()));
+						chunk.setWeakHash(String.valueOf(c32.getValue()));
+						chunk.setStrongHash(DigestUtils.md5Hex(buffer.array()));
 						chunk.setContent(buffer.array().clone());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
@@ -475,8 +475,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
-							chunk.setAdler32(hash32Temp);
-							chunk.setMd5(MD5Temp);
+							chunk.setWeakHash(hash32Temp);
+							chunk.setStrongHash(MD5Temp);
 							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							
 							newFileChunks.put(globalIndex - buffer.position(), chunk);							
@@ -500,8 +500,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								
 								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										String.valueOf(globalIndex), String.valueOf(newchunk.length));
-								chunk.setAdler32(hash32Temp);
-								chunk.setMd5(MD5Temp);
+								chunk.setWeakHash(hash32Temp);
+								chunk.setStrongHash(MD5Temp);
 								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
@@ -529,8 +529,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
-				chunk.setAdler32(hash32Temp);
-				chunk.setMd5(MD5Temp);
+				chunk.setWeakHash(hash32Temp);
+				chunk.setStrongHash(MD5Temp);
 				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				
 				newFileChunks.put(globalIndex - buffer.position(), chunk);
@@ -582,7 +582,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		String newFileID;
 		
 		//----------  Retrieving the information about the stored file -----------------		
-		/** Map<adler32, Map<md5, chunkNumber>> */		
+		/** Map<adler32, Map<md5, [FileID, chunkNumber]>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
 		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		

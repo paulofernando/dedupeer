@@ -63,14 +63,14 @@ public class ChunksDaoOperations {
 		this.feedback = feedback;
 	}
 		
-	public void insertRow(String fileID, String chunk_num, String md5, String adler32, String index, String length, byte[] content) {
+	public void insertRow(String fileID, String chunk_num, String strongHash, String weakHash, String index, String length, byte[] content) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
             mutator.insert(fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-                    Arrays.asList(HFactory.createStringColumn("md5", md5)), 
+                    Arrays.asList(HFactory.createStringColumn("strongHash", strongHash)), 
                     stringSerializer, stringSerializer, stringSerializer));
             mutator.insert(fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-                    Arrays.asList(HFactory.createStringColumn("adler32", adler32)), 
+                    Arrays.asList(HFactory.createStringColumn("weakHash", weakHash)), 
                     stringSerializer, stringSerializer, stringSerializer));
             mutator.insert(fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
                     Arrays.asList(HFactory.createStringColumn("index", index)), 
@@ -93,10 +93,10 @@ public class ChunksDaoOperations {
 			
 			if(chunk.pfile == null) {
 	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
-	                    Arrays.asList(HFactory.createStringColumn("md5", chunk.md5)), 
+	                    Arrays.asList(HFactory.createStringColumn("strongHash", chunk.strongHash)), 
 	                    stringSerializer, stringSerializer, stringSerializer));
 	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
-	                    Arrays.asList(HFactory.createStringColumn("adler32", chunk.adler32)), 
+	                    Arrays.asList(HFactory.createStringColumn("weakHash", chunk.weakHash)), 
 	                    stringSerializer, stringSerializer, stringSerializer));
 	            mutator.insert(chunk.fileID, "Chunks", HFactory.createSuperColumn(chunk.chunkNumber, 
 	                    Arrays.asList(HFactory.createStringColumn("index", chunk.index)), 
@@ -132,14 +132,14 @@ public class ChunksDaoOperations {
 				String chunk_num = String.valueOf(chunk_number);
 				Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 				
-				log.debug("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [MD5 = " + c.md5 + "]");
+				log.debug("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [MD5 = " + c.strongHash + "]");
 				
 				if(c.pfile == null) {
 					mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-		                    Arrays.asList(HFactory.createStringColumn("md5", c.md5)), 
+		                    Arrays.asList(HFactory.createStringColumn("strongHash", c.strongHash)), 
 		                    stringSerializer, stringSerializer, stringSerializer));
 		            mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
-		                    Arrays.asList(HFactory.createStringColumn("adler32", c.adler32)), 
+		                    Arrays.asList(HFactory.createStringColumn("weakHash", c.weakHash)), 
 		                    stringSerializer, stringSerializer, stringSerializer));
 		            mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
 		                    Arrays.asList(HFactory.createStringColumn("index", c.index)), 
@@ -251,14 +251,14 @@ public class ChunksDaoOperations {
 			QueryResult<SuperSlice<String, String, String>> result = query.execute(); 
 						
 			for(HSuperColumn<String, String, String> column: result.get().getSuperColumns()) {
-				String adler32 = column.getSubColumnByName("adler32").getValue();
+				String adler32 = column.getSubColumnByName("weakHash").getValue();
 				
 				if(!chunksLoaded.containsKey(adler32)) {
 					Map<String, ChunkIDs> chunkInfo = new HashMap<String, ChunkIDs>();
 					ChunkIDs ids = new ChunkIDs();
 					ids.setChunkID(String.valueOf(loaded));
 					ids.setFileID(file_id);
-					chunkInfo.put(column.getSubColumnByName("md5").getValue(), ids);
+					chunkInfo.put(column.getSubColumnByName("strongHash").getValue(), ids);
 					
 					chunksLoaded.put(Integer.parseInt(adler32), chunkInfo);
 				} else {
@@ -266,7 +266,7 @@ public class ChunksDaoOperations {
 					ChunkIDs ids = new ChunkIDs();
 					ids.setChunkID(String.valueOf(loaded));
 					ids.setFileID(file_id);
-					md5Set.put(column.getSubColumnByName("md5").getValue(), ids);
+					md5Set.put(column.getSubColumnByName("strongHash").getValue(), ids);
 				}
 				
 				loaded++;
