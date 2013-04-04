@@ -20,7 +20,7 @@ public class ThriftClient {
 		return thriftClient;
 	}
 	
-	public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) {
+	public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm) {
 
 		TTransport transport;
 		Map<Long,Chunk> chunks = null;
@@ -31,7 +31,7 @@ public class ThriftClient {
 
 			transport.open();
 			
-			chunks = client.deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime);
+			chunks = client.deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime, hashingAlgorithm);
 									
 			transport.close();
 		} catch (TTransportException e) {

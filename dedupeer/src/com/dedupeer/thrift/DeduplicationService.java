@@ -31,13 +31,13 @@ public class DeduplicationService {
 
   public interface Iface {
 
-    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException;
+    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm) throws org.apache.thrift.TException;
 
   }
 
   public interface AsyncIface {
 
-    public void deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deduplicate_call> resultHandler) throws org.apache.thrift.TException;
+    public void deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm, org.apache.thrift.async.AsyncMethodCallback<AsyncClient.deduplicate_call> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -61,19 +61,20 @@ public class DeduplicationService {
       super(iprot, oprot);
     }
 
-    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
+    public Map<Long,Chunk> deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm) throws org.apache.thrift.TException
     {
-      send_deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime);
+      send_deduplicate(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime, hashingAlgorithm);
       return recv_deduplicate();
     }
 
-    public void send_deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime) throws org.apache.thrift.TException
+    public void send_deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm) throws org.apache.thrift.TException
     {
       deduplicate_args args = new deduplicate_args();
       args.setChunksInfo(chunksInfo);
       args.setPathOfFile(pathOfFile);
       args.setChunkSizeInBytes(chunkSizeInBytes);
       args.setBytesToLoadByTime(bytesToLoadByTime);
+      args.setHashingAlgorithm(hashingAlgorithm);
       sendBase("deduplicate", args);
     }
 
@@ -105,9 +106,9 @@ public class DeduplicationService {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler) throws org.apache.thrift.TException {
+    public void deduplicate(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      deduplicate_call method_call = new deduplicate_call(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime, resultHandler, this, ___protocolFactory, ___transport);
+      deduplicate_call method_call = new deduplicate_call(chunksInfo, pathOfFile, chunkSizeInBytes, bytesToLoadByTime, hashingAlgorithm, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
@@ -117,12 +118,14 @@ public class DeduplicationService {
       private String pathOfFile;
       private int chunkSizeInBytes;
       private int bytesToLoadByTime;
-      public deduplicate_call(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private HashingAlgorithm hashingAlgorithm;
+      public deduplicate_call(Map<Integer,Map<String,ChunkIDs>> chunksInfo, String pathOfFile, int chunkSizeInBytes, int bytesToLoadByTime, HashingAlgorithm hashingAlgorithm, org.apache.thrift.async.AsyncMethodCallback<deduplicate_call> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.chunksInfo = chunksInfo;
         this.pathOfFile = pathOfFile;
         this.chunkSizeInBytes = chunkSizeInBytes;
         this.bytesToLoadByTime = bytesToLoadByTime;
+        this.hashingAlgorithm = hashingAlgorithm;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
@@ -132,6 +135,7 @@ public class DeduplicationService {
         args.setPathOfFile(pathOfFile);
         args.setChunkSizeInBytes(chunkSizeInBytes);
         args.setBytesToLoadByTime(bytesToLoadByTime);
+        args.setHashingAlgorithm(hashingAlgorithm);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -174,7 +178,7 @@ public class DeduplicationService {
 
       public deduplicate_result getResult(I iface, deduplicate_args args) throws org.apache.thrift.TException {
         deduplicate_result result = new deduplicate_result();
-        result.success = iface.deduplicate(args.chunksInfo, args.pathOfFile, args.chunkSizeInBytes, args.bytesToLoadByTime);
+        result.success = iface.deduplicate(args.chunksInfo, args.pathOfFile, args.chunkSizeInBytes, args.bytesToLoadByTime, args.hashingAlgorithm);
         return result;
       }
 
@@ -194,6 +198,7 @@ public class DeduplicationService {
     private static final org.apache.thrift.protocol.TField PATH_OF_FILE_FIELD_DESC = new org.apache.thrift.protocol.TField("pathOfFile", org.apache.thrift.protocol.TType.STRING, (short)2);
     private static final org.apache.thrift.protocol.TField CHUNK_SIZE_IN_BYTES_FIELD_DESC = new org.apache.thrift.protocol.TField("chunkSizeInBytes", org.apache.thrift.protocol.TType.I32, (short)3);
     private static final org.apache.thrift.protocol.TField BYTES_TO_LOAD_BY_TIME_FIELD_DESC = new org.apache.thrift.protocol.TField("bytesToLoadByTime", org.apache.thrift.protocol.TType.I32, (short)4);
+    private static final org.apache.thrift.protocol.TField HASHING_ALGORITHM_FIELD_DESC = new org.apache.thrift.protocol.TField("hashingAlgorithm", org.apache.thrift.protocol.TType.I32, (short)5);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
     static {
@@ -205,13 +210,23 @@ public class DeduplicationService {
     public String pathOfFile; // required
     public int chunkSizeInBytes; // required
     public int bytesToLoadByTime; // required
+    /**
+     * 
+     * @see HashingAlgorithm
+     */
+    public HashingAlgorithm hashingAlgorithm; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       CHUNKS_INFO((short)1, "chunksInfo"),
       PATH_OF_FILE((short)2, "pathOfFile"),
       CHUNK_SIZE_IN_BYTES((short)3, "chunkSizeInBytes"),
-      BYTES_TO_LOAD_BY_TIME((short)4, "bytesToLoadByTime");
+      BYTES_TO_LOAD_BY_TIME((short)4, "bytesToLoadByTime"),
+      /**
+       * 
+       * @see HashingAlgorithm
+       */
+      HASHING_ALGORITHM((short)5, "hashingAlgorithm");
 
       private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -234,6 +249,8 @@ public class DeduplicationService {
             return CHUNK_SIZE_IN_BYTES;
           case 4: // BYTES_TO_LOAD_BY_TIME
             return BYTES_TO_LOAD_BY_TIME;
+          case 5: // HASHING_ALGORITHM
+            return HASHING_ALGORITHM;
           default:
             return null;
         }
@@ -288,6 +305,8 @@ public class DeduplicationService {
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32          , "int")));
       tmpMap.put(_Fields.BYTES_TO_LOAD_BY_TIME, new org.apache.thrift.meta_data.FieldMetaData("bytesToLoadByTime", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32          , "int")));
+      tmpMap.put(_Fields.HASHING_ALGORITHM, new org.apache.thrift.meta_data.FieldMetaData("hashingAlgorithm", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, HashingAlgorithm.class)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(deduplicate_args.class, metaDataMap);
     }
@@ -299,7 +318,8 @@ public class DeduplicationService {
       Map<Integer,Map<String,ChunkIDs>> chunksInfo,
       String pathOfFile,
       int chunkSizeInBytes,
-      int bytesToLoadByTime)
+      int bytesToLoadByTime,
+      HashingAlgorithm hashingAlgorithm)
     {
       this();
       this.chunksInfo = chunksInfo;
@@ -308,6 +328,7 @@ public class DeduplicationService {
       setChunkSizeInBytesIsSet(true);
       this.bytesToLoadByTime = bytesToLoadByTime;
       setBytesToLoadByTimeIsSet(true);
+      this.hashingAlgorithm = hashingAlgorithm;
     }
 
     /**
@@ -324,6 +345,9 @@ public class DeduplicationService {
       }
       this.chunkSizeInBytes = other.chunkSizeInBytes;
       this.bytesToLoadByTime = other.bytesToLoadByTime;
+      if (other.isSetHashingAlgorithm()) {
+        this.hashingAlgorithm = other.hashingAlgorithm;
+      }
     }
 
     public deduplicate_args deepCopy() {
@@ -338,6 +362,7 @@ public class DeduplicationService {
       this.chunkSizeInBytes = 0;
       setBytesToLoadByTimeIsSet(false);
       this.bytesToLoadByTime = 0;
+      this.hashingAlgorithm = null;
     }
 
     public int getChunksInfoSize() {
@@ -445,6 +470,38 @@ public class DeduplicationService {
       __isset_bit_vector.set(__BYTESTOLOADBYTIME_ISSET_ID, value);
     }
 
+    /**
+     * 
+     * @see HashingAlgorithm
+     */
+    public HashingAlgorithm getHashingAlgorithm() {
+      return this.hashingAlgorithm;
+    }
+
+    /**
+     * 
+     * @see HashingAlgorithm
+     */
+    public deduplicate_args setHashingAlgorithm(HashingAlgorithm hashingAlgorithm) {
+      this.hashingAlgorithm = hashingAlgorithm;
+      return this;
+    }
+
+    public void unsetHashingAlgorithm() {
+      this.hashingAlgorithm = null;
+    }
+
+    /** Returns true if field hashingAlgorithm is set (has been assigned a value) and false otherwise */
+    public boolean isSetHashingAlgorithm() {
+      return this.hashingAlgorithm != null;
+    }
+
+    public void setHashingAlgorithmIsSet(boolean value) {
+      if (!value) {
+        this.hashingAlgorithm = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       case CHUNKS_INFO:
@@ -479,6 +536,14 @@ public class DeduplicationService {
         }
         break;
 
+      case HASHING_ALGORITHM:
+        if (value == null) {
+          unsetHashingAlgorithm();
+        } else {
+          setHashingAlgorithm((HashingAlgorithm)value);
+        }
+        break;
+
       }
     }
 
@@ -495,6 +560,9 @@ public class DeduplicationService {
 
       case BYTES_TO_LOAD_BY_TIME:
         return Integer.valueOf(getBytesToLoadByTime());
+
+      case HASHING_ALGORITHM:
+        return getHashingAlgorithm();
 
       }
       throw new IllegalStateException();
@@ -515,6 +583,8 @@ public class DeduplicationService {
         return isSetChunkSizeInBytes();
       case BYTES_TO_LOAD_BY_TIME:
         return isSetBytesToLoadByTime();
+      case HASHING_ALGORITHM:
+        return isSetHashingAlgorithm();
       }
       throw new IllegalStateException();
     }
@@ -565,6 +635,15 @@ public class DeduplicationService {
         if (!(this_present_bytesToLoadByTime && that_present_bytesToLoadByTime))
           return false;
         if (this.bytesToLoadByTime != that.bytesToLoadByTime)
+          return false;
+      }
+
+      boolean this_present_hashingAlgorithm = true && this.isSetHashingAlgorithm();
+      boolean that_present_hashingAlgorithm = true && that.isSetHashingAlgorithm();
+      if (this_present_hashingAlgorithm || that_present_hashingAlgorithm) {
+        if (!(this_present_hashingAlgorithm && that_present_hashingAlgorithm))
+          return false;
+        if (!this.hashingAlgorithm.equals(that.hashingAlgorithm))
           return false;
       }
 
@@ -624,6 +703,16 @@ public class DeduplicationService {
           return lastComparison;
         }
       }
+      lastComparison = Boolean.valueOf(isSetHashingAlgorithm()).compareTo(typedOther.isSetHashingAlgorithm());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetHashingAlgorithm()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.hashingAlgorithm, typedOther.hashingAlgorithm);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       return 0;
     }
 
@@ -666,6 +755,14 @@ public class DeduplicationService {
       if (!first) sb.append(", ");
       sb.append("bytesToLoadByTime:");
       sb.append(this.bytesToLoadByTime);
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("hashingAlgorithm:");
+      if (this.hashingAlgorithm == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.hashingAlgorithm);
+      }
       first = false;
       sb.append(")");
       return sb.toString();
@@ -768,6 +865,14 @@ public class DeduplicationService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 5: // HASHING_ALGORITHM
+              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+                struct.hashingAlgorithm = HashingAlgorithm.findByValue(iprot.readI32());
+                struct.setHashingAlgorithmIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -815,6 +920,11 @@ public class DeduplicationService {
         oprot.writeFieldBegin(BYTES_TO_LOAD_BY_TIME_FIELD_DESC);
         oprot.writeI32(struct.bytesToLoadByTime);
         oprot.writeFieldEnd();
+        if (struct.hashingAlgorithm != null) {
+          oprot.writeFieldBegin(HASHING_ALGORITHM_FIELD_DESC);
+          oprot.writeI32(struct.hashingAlgorithm.getValue());
+          oprot.writeFieldEnd();
+        }
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -845,7 +955,10 @@ public class DeduplicationService {
         if (struct.isSetBytesToLoadByTime()) {
           optionals.set(3);
         }
-        oprot.writeBitSet(optionals, 4);
+        if (struct.isSetHashingAlgorithm()) {
+          optionals.set(4);
+        }
+        oprot.writeBitSet(optionals, 5);
         if (struct.isSetChunksInfo()) {
           {
             oprot.writeI32(struct.chunksInfo.size());
@@ -872,12 +985,15 @@ public class DeduplicationService {
         if (struct.isSetBytesToLoadByTime()) {
           oprot.writeI32(struct.bytesToLoadByTime);
         }
+        if (struct.isSetHashingAlgorithm()) {
+          oprot.writeI32(struct.hashingAlgorithm.getValue());
+        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, deduplicate_args struct) throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
-        BitSet incoming = iprot.readBitSet(4);
+        BitSet incoming = iprot.readBitSet(5);
         if (incoming.get(0)) {
           {
             org.apache.thrift.protocol.TMap _map12 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.MAP, iprot.readI32());
@@ -916,6 +1032,10 @@ public class DeduplicationService {
         if (incoming.get(3)) {
           struct.bytesToLoadByTime = iprot.readI32();
           struct.setBytesToLoadByTimeIsSet(true);
+        }
+        if (incoming.get(4)) {
+          struct.hashingAlgorithm = HashingAlgorithm.findByValue(iprot.readI32());
+          struct.setHashingAlgorithmIsSet(true);
         }
       }
     }

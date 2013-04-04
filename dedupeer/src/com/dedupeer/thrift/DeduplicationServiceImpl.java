@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
 import com.dedupeer.checksum.Checksum32;
+import com.dedupeer.exception.HashingAlgorithmNotFound;
 import com.dedupeer.utils.FileUtils;
 
 public class DeduplicationServiceImpl implements DeduplicationService.Iface {
@@ -26,7 +27,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 	@Override
 	public Map<Long, Chunk> deduplicate(
 			Map<Integer, Map<String, ChunkIDs>> chunksInfo, String pathOfFile,
-			int chunkSizeInBytes, int bytesToLoadByTime) throws TException {
+			int chunkSizeInBytes, int bytesToLoadByTime,
+			HashingAlgorithm hashingAlgorithm) throws TException {
 		long time = System.currentTimeMillis();
 		log.info("\n[Deduplicating...]");
 		
@@ -56,8 +58,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		}
 		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime);
 		
-		String SHA256Temp = "-1";
-		String hash32Temp = "-1";
+		String strongAlgorithmTemp = "-1";
+		String weakAlgorithmTemp = "-1";
 		
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
@@ -103,8 +105,14 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								(localIndex + chunkSizeInBytes < modFile.length ? localIndex + chunkSizeInBytes : modFile.length));
 					}
 					
-					String SHA256 = DigestUtils.sha256Hex(currentChunk);
-					if(chunksInfo.get(c32.getValue()).containsKey(SHA256)) {						
+					String strongHash;
+					try {
+						strongHash = getStrongHash(hashingAlgorithm, currentChunk);
+					} catch (HashingAlgorithmNotFound e) {						
+						e.printStackTrace();
+						return null;
+					}
+					if(chunksInfo.get(c32.getValue()).containsKey(strongHash)) {						
 						if(buffer.position() > 0) { //If the buffer has some data, creates a chunk with this data								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 							log.debug("[0] Creating new chunk " + chunk_number + " in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
@@ -112,14 +120,19 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							if(calculateAllHashes) {
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
-								hash32Temp = String.valueOf(c32_2.getValue());
-								SHA256Temp = DigestUtils.sha256Hex(newchunk);
+								weakAlgorithmTemp = String.valueOf(c32_2.getValue());
+								try {
+									strongAlgorithmTemp = getStrongHash(hashingAlgorithm, newchunk);
+								} catch (HashingAlgorithmNotFound e) {
+									e.printStackTrace();
+									return null;
+								}
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
-							chunk.setStrongHash(SHA256Temp);
-							chunk.setWeakHash(String.valueOf(hash32Temp));
+							chunk.setStrongHash(strongAlgorithmTemp);
+							chunk.setWeakHash(String.valueOf(weakAlgorithmTemp));
 							chunk.setContent(newchunk.clone());
 							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
@@ -128,12 +141,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							moreBytesToLoad += newchunk.length;
 							buffer.clear();
 						}						
-						log.debug("Duplicated chunk " + chunk_number + ": " + SHA256 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
+						log.debug("Duplicated chunk " + chunk_number + ": " + strongHash + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setPfile(chunksInfo.get(c32.getValue()).get(SHA256).fileID);
-						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(SHA256).chunkID);
+						chunk.setPfile(chunksInfo.get(c32.getValue()).get(strongHash).fileID);
+						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(strongHash).chunkID);
 						
 						newFileChunks.put(globalIndex, chunk);
 						 
@@ -175,14 +188,14 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							log.debug("[2] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");							
 							if(calculateAllHashes) {
 								c32.check(newchunk, 0, newchunk.length);
-								hash32Temp = String.valueOf(c32.getValue());
-								SHA256Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+								weakAlgorithmTemp = String.valueOf(c32.getValue());
+								strongAlgorithmTemp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
-							chunk.setStrongHash(SHA256Temp);
-							chunk.setWeakHash(hash32Temp);
+							chunk.setStrongHash(strongAlgorithmTemp);
+							chunk.setWeakHash(weakAlgorithmTemp);
 							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							
 							newFileChunks.put(globalIndex - buffer.position(), chunk);							
@@ -200,14 +213,14 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								
 								if(calculateAllHashes) {
 									c32.check(newchunk, 0, newchunk.length);
-									hash32Temp = String.valueOf(c32.getValue());
-									SHA256Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+									weakAlgorithmTemp = String.valueOf(c32.getValue());
+									strongAlgorithmTemp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								}
 								
 								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										String.valueOf(globalIndex), String.valueOf(newchunk.length));
-								chunk.setStrongHash(SHA256Temp);
-								chunk.setWeakHash(hash32Temp);
+								chunk.setStrongHash(strongAlgorithmTemp);
+								chunk.setWeakHash(weakAlgorithmTemp);
 								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
@@ -229,14 +242,14 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				
 				if(calculateAllHashes) {
 					c32.check(buffer.array(), 0, buffer.capacity());
-					hash32Temp = String.valueOf(c32.getValue());
-					SHA256Temp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
+					weakAlgorithmTemp = String.valueOf(c32.getValue());
+					strongAlgorithmTemp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				}
 				
 				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
-				chunk.setStrongHash(SHA256Temp);
-				chunk.setWeakHash(hash32Temp);
+				chunk.setStrongHash(strongAlgorithmTemp);
+				chunk.setWeakHash(weakAlgorithmTemp);
 				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				newFileChunks.put(globalIndex - buffer.position(), chunk);
 				
@@ -258,6 +271,28 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return resultChunks;
 	}
-
+	
+	/**
+	 * Calculates the hashing function
+	 * @param hashAlgorithm The hashing algorithm to use
+	 * @param content Set of bytes to apply the hashing function
+	 * @return hash value of the bytes set
+	 * @throws HashingAlgorithmNotFound The algorithm specified was not found
+	 */
+	public static String getStrongHash(HashingAlgorithm hashAlgorithm, byte[] content) throws HashingAlgorithmNotFound {
+		switch(hashAlgorithm) {
+			case MD5:
+				return DigestUtils.md5Hex(content);
+			case SHA1:
+				return DigestUtils.sha1Hex(content);
+			case SHA256:
+				return DigestUtils.sha256Hex(content);
+			case SHA384:
+				return DigestUtils.sha384Hex(content);
+			case SHA512:
+				return DigestUtils.sha512Hex(content);
+		}
+		throw new HashingAlgorithmNotFound();
+	}
 
 }
