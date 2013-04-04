@@ -93,7 +93,7 @@ public class SettingsDialog {
 								
 		        OutputStream out;
 				try {
-					out = new FileOutputStream(new File("resources/dedupeer.properties"));
+					out = new FileOutputStream(new File("dedupeer.properties"));
 					FileUtils.getPropertiesLoader().getProperties().store(out, "");
 				} catch (FileNotFoundException e1) {
 					JOptionPane.showMessageDialog(parentFrame, "File not found", "Error", JOptionPane.ERROR_MESSAGE);

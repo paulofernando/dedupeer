@@ -15,7 +15,7 @@ public class PropertiesLoader {
 	public PropertiesLoader() {		
 		properties = new Properties();
 		try {
-			FileInputStream fis = new FileInputStream(new File("resources/dedupeer.properties"));
+			FileInputStream fis = new FileInputStream(new File("dedupeer.properties"));
 			properties.load(fis);			
 		} catch (IOException e) {
 			e.printStackTrace();
