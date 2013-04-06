@@ -31,27 +31,7 @@ public class Hashing {
 		}		
 		return null;		
 	}
-	
-	
-	/**
-	 * Computes the MD5 of a dataset
-	 * @param data Dataset to compute the hash
-	 * @return The MD5 represented how Hexadecimal
-	 */
-	public static String getMD5(byte[] data) {		
-		byte[] sha1hash;
-		try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			sha1hash = new byte[40];
-			md.update(data);
-			sha1hash = md.digest();
-			return GeneralUtils.toHex(sha1hash);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}		
-		return null;		
-	}
-	
+		
 	/**
 	 * Computes the Alder32 of a dataset
 	 * @param data Dataset to compute the hash

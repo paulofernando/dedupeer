@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import com.dedupeer.chunking.Chunking;
+import com.dedupeer.thrift.HashingAlgorithm;
 import com.dedupeer.utils.FileUtils;
 
 public class ChunkingTest extends TestCase {
@@ -28,7 +29,7 @@ public class ChunkingTest extends TestCase {
 	public void testChunking() {
 		File txtFile = new File(defaultPartition + ":/teste/lorem.txt");
 		
-		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
+		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultPartition + ":\\teste\\chunks\\";
@@ -68,7 +69,7 @@ public class ChunkingTest extends TestCase {
 	public void testChunkingBasic() {
 		file = new File(defaultPartition + ":\\teste\\" + fileName);
 		try { 
-			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), null); 
+			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}

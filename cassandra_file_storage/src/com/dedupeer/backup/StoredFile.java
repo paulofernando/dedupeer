@@ -17,7 +17,6 @@ import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.query.QueryResult;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.checksum.Checksum32;
@@ -30,6 +29,8 @@ import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.processing.EagleEye;
 import com.dedupeer.thrift.Chunk;
 import com.dedupeer.thrift.ChunkIDs;
+import com.dedupeer.thrift.DeduplicationServiceImpl;
+import com.dedupeer.thrift.HashingAlgorithm;
 import com.dedupeer.thrift.ThriftClient;
 import com.dedupeer.utils.FileUtils;
 
@@ -57,6 +58,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	private String pathToRestore;
 	private int smallestChunk = -1;
 	private long id = -1;
+	
+	private HashingAlgorithm hashingAlgorithm = HashingAlgorithm.SHA1;
 	
 	/** Indicates if the hashes of all chunks must be calculated or if only hashes of chunks with default size.
 	 * Drawback if false: do not deduplicate whole identical file because do not compares all chunks */
@@ -144,7 +147,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					String fileID = String.valueOf(System.currentTimeMillis());
 					ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 					try {						
-						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("defaultPartition") + ":\\chunks\\"), defaultChunkSize, fileID, StoredFile.this); 
+						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("defaultPartition") + ":\\chunks\\"), defaultChunkSize, fileID, hashingAlgorithm, StoredFile.this); 
 										
 						progressInfo.setType(ProgressInfo.TYPE_STORING);
 						ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
@@ -162,7 +165,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						e.printStackTrace(); 
 					}
 				} else { //Other file version being stored
-					deduplicate(file.getName()); //the same name
+					deduplicate(file.getName());					
 				}
 								
 				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");				
@@ -175,8 +178,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	/**
 	 * Deduplicates this file with a file passed as parameter
 	 * @param filenameStored File name stored in the system to use to deduplicate this file
+	 * @throws HashingAlgorithmNotFound 
+	 * @throws NumberFormatException 
 	 */
-	public void deduplicate(String filenameStored) {		
+	public void deduplicate(String filenameStored) throws NumberFormatException {		
 		log.info("\n[Deduplicating...]");
 		long time = System.currentTimeMillis();
 		progressInfo.setType(ProgressInfo.TYPE_DEDUPLICATION);
@@ -207,12 +212,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			HColumn<String, String> columnAdler32 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("weakHash");
 			HColumn<String, String> columnLength = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("length");
 			
-			HColumn<String, String> columnMd5 = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("strongHash");				
+			HColumn<String, String> columnStrongHash = cdo.getValues(fileIDStored, String.valueOf(i)).get().getSubColumnByName("strongHash");				
 			
 			int index = EagleEye.searchDuplication(modFile, Integer.parseInt(columnAdler32.getValue()), lastIndex + lastLength, Integer.parseInt(columnLength.getValue()));
 			if(index != -1) {
-				if(DigestUtils.md5Hex(Arrays.copyOfRange(modFile, index, index + Integer.parseInt(columnLength.getValue())))
-						.equals(columnMd5.getValue())) {
+				if(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(modFile, index, index + Integer.parseInt(columnLength.getValue())))
+						.equals(columnStrongHash.getValue())) {
 					
 					Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number++), String.valueOf(index), columnLength.getValue());
 					chunk.setPfile(fileIDStored);
@@ -238,7 +243,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					
 					Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							String.valueOf(index - buffer.position()), String.valueOf(newchunk.length));
-					chunk.setStrongHash(DigestUtils.md5Hex(newchunk));
+					chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, newchunk));
 					chunk.setWeakHash(String.valueOf(c32.getValue()));
 					chunk.setContent(newchunk);
 					
@@ -256,7 +261,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 							String.valueOf(index - buffer.capacity()), String.valueOf(buffer.array().length));
 					chunk.setWeakHash(String.valueOf(c32.getValue()));
-					chunk.setStrongHash(DigestUtils.md5Hex(newchunk));
+					chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, newchunk));
 					chunk.setContent(newchunk);
 					
 					newFileChunks.put(index - buffer.capacity(), chunk);
@@ -276,7 +281,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 					String.valueOf(index - buffer.position()), String.valueOf(buffer.capacity()));
 			chunk.setWeakHash(String.valueOf(c32.getValue()));
-			chunk.setStrongHash(DigestUtils.md5Hex(newchunk));
+			chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, newchunk));
 			chunk.setContent(newchunk);
 			
 			newFileChunks.put(index - buffer.position(), chunk);			
@@ -302,10 +307,11 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	
 	/**
 	 * Uses a new way of to deduplicate a file, comparing a current adler32 with a special HashMap that contains
-	 * the adler32 in the key and other HashMap with <md5, chunkkNumber> how value
+	 * the adler32 in the key and other HashMap with <strongHash, chunkkNumber> how value
 	 * divideInTimes divide the processing in <code> divideInTimes </code> times
 	 * With this method, the deduplication is executed without Thrift.
 	 * @param filenameStored
+	 * @throws HashingAlgorithmNotFound 
 	 */
 	public void deduplicateABigFile(String filenameStored, int bytesToLoadByTime) {		
 		long time = System.currentTimeMillis();
@@ -324,7 +330,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		long timeToRetrieve = System.currentTimeMillis();
 
 		//----------  Retrieving the information about the stored file -----------------		
-		/** Map<adler32, Map<md5, chunkNumber>> */		
+		/** Map<adler32, Map<strongHash, chunkNumber>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
 		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
@@ -351,8 +357,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		}
 		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime);
 		
-		String MD5Temp = "-1";
-		String hash32Temp = "-1";
+		String strongHashTemp = "-1";
+		String weakHashTemp = "-1";
 		
 		for(int i = 0; i < divideInTimes; i++) {
 			log.info("Searching in part " + i + "...");
@@ -398,8 +404,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
 					}
 					
-					String MD5 = DigestUtils.md5Hex(currentChunk);
-					if(chunksInStorageServer.get(c32.getValue()).containsKey(MD5)) {						
+					String strongHash = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, currentChunk);
+					if(chunksInStorageServer.get(c32.getValue()).containsKey(strongHash)) {						
 						if(buffer.position() > 0) { //If the buffer has some data, creates a chunk with this data								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
 							log.debug("[0] Creating new chunk " + chunk_number + " in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
@@ -407,14 +413,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							if(calculateAllHashes) {
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
-								hash32Temp = String.valueOf(c32_2.getValue());
-								MD5Temp = DigestUtils.md5Hex(newchunk);
+								weakHashTemp = String.valueOf(c32_2.getValue());
+								strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, newchunk);
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
-							chunk.setWeakHash(String.valueOf(hash32Temp));
-							chunk.setStrongHash(MD5Temp);
+							chunk.setWeakHash(String.valueOf(weakHashTemp));
+							chunk.setStrongHash(strongHashTemp);
 							chunk.setContent(newchunk.clone());
 							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
@@ -422,12 +428,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							moreBytesToLoad += newchunk.length;
 							buffer.clear();
 						}						
-						log.debug("Duplicated chunk " + chunk_number + ": " + MD5 + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
+						log.debug("Duplicated chunk " + chunk_number + ": " + strongHash + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setPfile(chunksInStorageServer.get(c32.getValue()).get(MD5).getFileID());
-						chunk.setPchunk(chunksInStorageServer.get(c32.getValue()).get(MD5).getChunkID());
+						chunk.setPfile(chunksInStorageServer.get(c32.getValue()).get(strongHash).getFileID());
+						chunk.setPchunk(chunksInStorageServer.get(c32.getValue()).get(strongHash).getChunkID());
 						
 						newFileChunks.put(globalIndex, chunk);						
 						chunk_number++;
@@ -450,7 +456,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
 						chunk.setWeakHash(String.valueOf(c32.getValue()));
-						chunk.setStrongHash(DigestUtils.md5Hex(buffer.array()));
+						chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, buffer.array()));
 						chunk.setContent(buffer.array().clone());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
@@ -469,14 +475,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							log.debug("[2] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");							
 							if(calculateAllHashes) {
 								c32.check(newchunk, 0, newchunk.length);
-								hash32Temp = String.valueOf(c32.getValue());
-								MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+								weakHashTemp = String.valueOf(c32.getValue());
+								strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
-							chunk.setWeakHash(hash32Temp);
-							chunk.setStrongHash(MD5Temp);
+							chunk.setWeakHash(weakHashTemp);
+							chunk.setStrongHash(strongHashTemp);
 							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							
 							newFileChunks.put(globalIndex - buffer.position(), chunk);							
@@ -494,14 +500,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								
 								if(calculateAllHashes) {
 									c32.check(newchunk, 0, newchunk.length);
-									hash32Temp = String.valueOf(c32.getValue());
-									MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+									weakHashTemp = String.valueOf(c32.getValue());
+									strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								}
 								
 								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 										String.valueOf(globalIndex), String.valueOf(newchunk.length));
-								chunk.setWeakHash(hash32Temp);
-								chunk.setStrongHash(MD5Temp);
+								chunk.setWeakHash(weakHashTemp);
+								chunk.setStrongHash(strongHashTemp);
 								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
@@ -523,14 +529,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				if(calculateAllHashes) {
 					c32.check(buffer.array(), 0, buffer.capacity());
-					hash32Temp = String.valueOf(c32.getValue());
-					MD5Temp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
+					weakHashTemp = String.valueOf(c32.getValue());
+					strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				}
 				
 				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
-				chunk.setWeakHash(hash32Temp);
-				chunk.setStrongHash(MD5Temp);
+				chunk.setWeakHash(weakHashTemp);
+				chunk.setStrongHash(strongHashTemp);
 				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				
 				newFileChunks.put(globalIndex - buffer.position(), chunk);
@@ -582,13 +588,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		String newFileID;
 		
 		//----------  Retrieving the information about the stored file -----------------		
-		/** Map<adler32, Map<md5, [FileID, chunkNumber]>> */		
+		/** Map<adler32, Map<strongHash, [FileID, chunkNumber]>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
 		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
 		
-		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime);
+		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime, HashingAlgorithm.SHA1);
 		
 		int totalChunks = 0;
 		int referencesCount = 0;

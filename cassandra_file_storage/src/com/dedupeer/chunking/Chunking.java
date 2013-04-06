@@ -18,6 +18,8 @@ import com.dedupeer.backup.StoredFileFeedback;
 import com.dedupeer.checksum.Checksum32;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.thrift.Chunk;
+import com.dedupeer.thrift.DeduplicationServiceImpl;
+import com.dedupeer.thrift.HashingAlgorithm;
 import com.dedupeer.utils.FileUtils;
 
 
@@ -38,7 +40,7 @@ public class Chunking {
 	 * @param feedback sends a feedback to the user about the progress                 
 	 * @return chunks information and path to each chunk in hard disk 
 	 */
-	public static ArrayList<Chunk> slicingAndDicing(File file, String destination, int size, String fileID, StoredFileFeedback feedback) throws IOException {
+	public static ArrayList<Chunk> slicingAndDicing(File file, String destination, int size, String fileID, HashingAlgorithm hashingAlgorithm, StoredFileFeedback feedback) throws IOException {
 		if(feedback != null)
 			feedback.setProgressType(ProgressInfo.TYPE_CHUNKING);
 		
@@ -79,7 +81,7 @@ public class Chunking {
 		     
 		     Chunk chunk = new Chunk(fileID, String.valueOf(chunkCount), String.valueOf(globalIndex), String.valueOf(ch));
 		     chunk.setWeakHash(String.valueOf(c32.getValue()));
-		     chunk.setStrongHash(DigestUtils.md5Hex(b));
+		     chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, b));
 		     chunk.setContent(FileUtils.getBytesFromFile(fname));
 		     
 		     chunks.add(chunk);
