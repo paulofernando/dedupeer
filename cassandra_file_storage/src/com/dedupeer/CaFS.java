@@ -12,7 +12,7 @@ import com.dedupeer.thrift.ThriftServer;
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
  */
-public class Main {
+public class CaFS {
 	
 	private static String defaultPartition = "D"; 
 	

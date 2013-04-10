@@ -10,6 +10,7 @@ import com.dedupeer.utils.GeneralUtils;
 
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
+ *  @deprecated
  */
 public class Hashing {
 	

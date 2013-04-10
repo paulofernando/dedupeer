@@ -4,6 +4,11 @@ import java.util.HashSet;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
 
+/**
+ * 
+ * @author paulo
+ * @deprecated
+ */
 public class RollingAdler32 {
 	
 	/**

@@ -30,6 +30,7 @@ import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.processing.EagleEye;
 import com.dedupeer.thrift.Chunk;
 import com.dedupeer.thrift.ChunkIDs;
+import com.dedupeer.thrift.HashingAlgorithm;
 import com.dedupeer.thrift.ThriftClient;
 import com.dedupeer.utils.FileUtils;
 
@@ -588,7 +589,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
 		
-		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime);
+		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime, HashingAlgorithm.SHA1);
 		
 		int totalChunks = 0;
 		int referencesCount = 0;
