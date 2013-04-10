@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
 
 import com.dedupeer.checksum.Checksum32;
-import com.dedupeer.exception.HashingAlgorithmNotFound;
 import com.dedupeer.utils.FileUtils;
 
 public class DeduplicationServiceImpl implements DeduplicationService.Iface {
@@ -105,13 +104,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								(localIndex + chunkSizeInBytes < modFile.length ? localIndex + chunkSizeInBytes : modFile.length));
 					}
 					
-					String strongHash;
-					try {
-						strongHash = getStrongHash(hashingAlgorithm, currentChunk);
-					} catch (HashingAlgorithmNotFound e) {						
-						e.printStackTrace();
-						return null;
-					}
+					String strongHash = getStrongHash(hashingAlgorithm, currentChunk);
 					if(chunksInfo.get(c32.getValue()).containsKey(strongHash)) {						
 						if(buffer.position() > 0) { //If the buffer has some data, creates a chunk with this data								
 							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
@@ -121,12 +114,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								Checksum32 c32_2 = new Checksum32();
 								c32_2.check(newchunk, 0, newchunk.length);
 								weakAlgorithmTemp = String.valueOf(c32_2.getValue());
-								try {
-									strongAlgorithmTemp = getStrongHash(hashingAlgorithm, newchunk);
-								} catch (HashingAlgorithmNotFound e) {
-									e.printStackTrace();
-									return null;
-								}
+								strongAlgorithmTemp = getStrongHash(hashingAlgorithm, newchunk);
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
@@ -168,7 +156,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
 						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
-						chunk.setStrongHash(DigestUtils.md5Hex(buffer.array()));
+						chunk.setStrongHash(getStrongHash(hashingAlgorithm, buffer.array()));
 						chunk.setWeakHash(String.valueOf(c32.getValue()));
 						chunk.setContent(buffer.array().clone());
 						
@@ -189,7 +177,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 							if(calculateAllHashes) {
 								c32.check(newchunk, 0, newchunk.length);
 								weakAlgorithmTemp = String.valueOf(c32.getValue());
-								strongAlgorithmTemp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+								strongAlgorithmTemp = getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							}
 							
 							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
@@ -214,7 +202,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								if(calculateAllHashes) {
 									c32.check(newchunk, 0, newchunk.length);
 									weakAlgorithmTemp = String.valueOf(c32.getValue());
-									strongAlgorithmTemp = DigestUtils.md5Hex(Arrays.copyOfRange(newchunk, 0, newchunk.length));
+									strongAlgorithmTemp = getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								}
 								
 								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
@@ -243,7 +231,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				if(calculateAllHashes) {
 					c32.check(buffer.array(), 0, buffer.capacity());
 					weakAlgorithmTemp = String.valueOf(c32.getValue());
-					strongAlgorithmTemp = DigestUtils.md5Hex(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
+					strongAlgorithmTemp = getStrongHash(hashingAlgorithm, Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				}
 				
 				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
@@ -279,20 +267,20 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 	 * @return hash value of the bytes set
 	 * @throws HashingAlgorithmNotFound The algorithm specified was not found
 	 */
-	public static String getStrongHash(HashingAlgorithm hashAlgorithm, byte[] content) throws HashingAlgorithmNotFound {
+	public static String getStrongHash(HashingAlgorithm hashAlgorithm, byte[] content) {
 		switch(hashAlgorithm) {
 			case MD5:
-				return DigestUtils.md5Hex(content);
-			case SHA1:
-				return DigestUtils.sha1Hex(content);
+				return DigestUtils.md5Hex(content);			
 			case SHA256:
 				return DigestUtils.sha256Hex(content);
 			case SHA384:
 				return DigestUtils.sha384Hex(content);
 			case SHA512:
 				return DigestUtils.sha512Hex(content);
+			case SHA1:
+			default:
+				return DigestUtils.sha1Hex(content);
 		}
-		throw new HashingAlgorithmNotFound();
 	}
 
 }

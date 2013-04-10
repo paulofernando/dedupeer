@@ -132,7 +132,7 @@ public class ChunksDaoOperations {
 				String chunk_num = String.valueOf(chunk_number);
 				Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 				
-				log.debug("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [MD5 = " + c.strongHash + "]");
+				log.debug("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [StrongHash = " + c.strongHash + "]");
 				
 				if(c.pfile == null) {
 					mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
@@ -193,7 +193,7 @@ public class ChunksDaoOperations {
 	 * 
 	 * @param file_id File ID
 	 * @param amountChunks Amount of chunks to retrieve the information
-	 * @return HashMap with <adler32, <MD5, chunkNum>>
+	 * @return HashMap with <weakHash, <strongHash, chunkNum>>
 	 */
 	public Map<Integer, Map<String, ChunkIDs>> getHashesOfAFile(String file_id, int amountChunks) {
 		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
@@ -251,22 +251,22 @@ public class ChunksDaoOperations {
 			QueryResult<SuperSlice<String, String, String>> result = query.execute(); 
 						
 			for(HSuperColumn<String, String, String> column: result.get().getSuperColumns()) {
-				String adler32 = column.getSubColumnByName("weakHash").getValue();
+				String weakHash = column.getSubColumnByName("weakHash").getValue();
 				
-				if(!chunksLoaded.containsKey(adler32)) {
+				if(!chunksLoaded.containsKey(weakHash)) {
 					Map<String, ChunkIDs> chunkInfo = new HashMap<String, ChunkIDs>();
 					ChunkIDs ids = new ChunkIDs();
 					ids.setChunkID(String.valueOf(loaded));
 					ids.setFileID(file_id);
 					chunkInfo.put(column.getSubColumnByName("strongHash").getValue(), ids);
 					
-					chunksLoaded.put(Integer.parseInt(adler32), chunkInfo);
+					chunksLoaded.put(Integer.parseInt(weakHash), chunkInfo);
 				} else {
-					Map<String, ChunkIDs> md5Set = chunksLoaded.get(adler32);
+					Map<String, ChunkIDs> strongHashSet = chunksLoaded.get(weakHash);
 					ChunkIDs ids = new ChunkIDs();
 					ids.setChunkID(String.valueOf(loaded));
 					ids.setFileID(file_id);
-					md5Set.put(column.getSubColumnByName("strongHash").getValue(), ids);
+					strongHashSet.put(column.getSubColumnByName("strongHash").getValue(), ids);
 				}
 				
 				loaded++;

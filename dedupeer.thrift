@@ -13,6 +13,14 @@ struct ChunkIDs {
 	2: required string chunkID,
 }
 
+enum HashingAlgorithm {
+  MD5 = 1,
+  SHA1 = 2,
+  SHA256 = 3,
+  SHA384 = 4,
+  SHA512 = 5
+}
+
 typedef map<weakHash,map<strongHash,ChunkIDs>> hashesToCompare
 
 struct Chunk {
@@ -29,5 +37,5 @@ struct Chunk {
 }
 
 service DeduplicationService {	
-	map<position,Chunk> deduplicate(1:hashesToCompare chunksInfo, 2:string pathOfFile, 3:int chunkSizeInBytes, 4:int bytesToLoadByTime),
+	map<position,Chunk> deduplicate(1:hashesToCompare chunksInfo, 2:string pathOfFile, 3:int chunkSizeInBytes, 4:int bytesToLoadByTime, 5:HashingAlgorithm hashingAlgorithm),
 }
