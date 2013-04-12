@@ -38,6 +38,11 @@ public class FilesDaoOpeartion {
         mutator.insert(ownerName, "Files", HFactory.createStringColumn(fileName, fileID));
 	}
 	
+	/**
+	 * Retrieves the files information of a owner
+	 * @param ownerName Owner of the files
+	 * @return A Map of file information. Filename as key and fileID as value
+	 */
 	public Map<String, Long> getAllFiles(String ownerName) {
 		SliceQuery<String,String,String> query = HFactory.createSliceQuery(keyspaceOperator, 
 				StringSerializer.get(), StringSerializer.get(), StringSerializer.get());
@@ -51,6 +56,12 @@ public class FilesDaoOpeartion {
 		return files;
 	}
 	
+	/**
+	 * Retrieves a ID of a file
+	 * @param ownerName File's owner
+	 * @param filename File name
+	 * @return ID of the file
+	 */
 	public String getFileID(String ownerName, String filename) {
 		ColumnQuery<String, String, String> columnQuery = HFactory.createStringColumnQuery(keyspaceOperator);
         columnQuery.setColumnFamily("Files").setKey(ownerName).setName(filename);

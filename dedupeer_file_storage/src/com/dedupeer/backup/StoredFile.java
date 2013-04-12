@@ -63,6 +63,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	
 	/** Indicates if the hashes of all chunks must be calculated or if only hashes of chunks with default size.
 	 * Drawback if false: do not deduplicate whole identical file because do not compares all chunks */
+	@SuppressWarnings("static-access")
 	private boolean calculateAllHashes = fileUtils.getPropertiesLoader().getProperties().getProperty("calculate.all.hashes").equalsIgnoreCase("true");
 		
 	public StoredFile(File file, String storageEconomy, long id) {

@@ -33,6 +33,10 @@ public class BackupQueue extends Thread {
 		return instance;
 	}
 	
+	/**
+	 * Adds a StoredFile in the queue
+	 * @param storedFile The StoredFile to add in the queue
+	 */
 	public void addBackup(StoredFile storedFile) {
 		backupQueue.add(storedFile);
 	}
@@ -45,11 +49,15 @@ public class BackupQueue extends Thread {
 		addBackup(storedFile);		
 	}
 
+	@SuppressWarnings("static-access")
 	@Override
 	public void run() {
 		for(;;) {
 			try {
+				
+				/* Blocks the Thread until the queue has a StoredFile */
 				StoredFile currentBackup = backupQueue.take();
+				
 				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
 					currentBackup.deduplicateABigFileByThrift(deduplicateMap.get(currentBackup.getFilename()), 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size")) * 

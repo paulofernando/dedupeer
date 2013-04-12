@@ -9,6 +9,7 @@ public class ThriftServer implements Runnable {
 	
 	private int port = 7911;
 		
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void run() {
 		try {
 			TServerSocket serverTransport = new TServerSocket(port);
@@ -18,7 +19,7 @@ public class ThriftServer implements Runnable {
 			TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport).
 
 			processor(processor));
-			System.out.println("Starting Thrift server on port " + port + " ...");
+			System.out.println("Waiting for Thrift clients on port " + port + " ...");
 			server.serve();
 			
 		} catch (TTransportException e) {

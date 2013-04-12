@@ -136,12 +136,9 @@ public class FileUtils {
 			FileChannel fc = raf.getChannel();
 			fc.position(offset);
 			fc.read(byteBuffer);
-			
-			
-			result = byteBuffer.array();
-			
-			byteBuffer.reset();
-		
+						
+			result = byteBuffer.array();			
+			byteBuffer.reset();		
 		} catch (OutOfMemoryError e) {
 			log.info("Bytes to read: " + bytesToRead);
 			e.printStackTrace();
@@ -165,6 +162,11 @@ public class FileUtils {
 		return (filename.indexOf(".") != -1 ? filename.substring(0, filename.lastIndexOf(".")) : filename);		
 	}
 	
+	/**
+	 * Extracts the extension of a file name.
+	 * @param filename File name to extract the extension
+	 * @return The extension of the file
+	 */
 	public static String getOnlyExtension(String filename) {
 		String extension;
 		if(filename.contains(".")) {

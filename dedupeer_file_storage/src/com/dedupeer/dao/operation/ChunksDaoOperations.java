@@ -63,6 +63,7 @@ public class ChunksDaoOperations {
 		this.feedback = feedback;
 	}
 		
+	@SuppressWarnings("unchecked")
 	public void insertRow(String fileID, String chunk_num, String strongHash, String weakHash, String index, String length, byte[] content) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
@@ -87,6 +88,7 @@ public class ChunksDaoOperations {
         }
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void insertRow(Chunk chunk) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
@@ -125,6 +127,7 @@ public class ChunksDaoOperations {
 	}
 	
 	/** Inserts a collection of chunks on the Chunk Column Family */
+	@SuppressWarnings("unchecked")
 	public void insertRows(ArrayList<Chunk> chunks) {
 		int chunk_number = 0;
 		for(Chunk c: chunks) {

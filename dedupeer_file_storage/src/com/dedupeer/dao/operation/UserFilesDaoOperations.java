@@ -37,6 +37,7 @@ public class UserFilesDaoOperations {
 	}
 
 	/** Inserts a new row on the UserFiles SuperColumn Family */
+	@SuppressWarnings("unchecked")
 	public void insertRow(String owner_name, String fileName, String fileID, String size, String chunks, String version) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
@@ -54,6 +55,7 @@ public class UserFilesDaoOperations {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void setAmountChunksWithContent(String owner_name, String fileName, long amountChunks) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
@@ -65,6 +67,7 @@ public class UserFilesDaoOperations {
 		}		
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void setAmountChunksWithoutContent(String owner_name, String fileName, long amountChunks) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
@@ -111,6 +114,12 @@ public class UserFilesDaoOperations {
 		return Long.parseLong(columnAmountChunks.getValue());
 	}
 	
+	/**
+	 * Retrieves the amount of chunk with content of a file
+	 * @param owner File's owner
+	 * @param filename File name
+	 * @return The amount of chunks with content 
+	 */
 	public long getChunksWithContentCount(String owner, String filename) {
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
@@ -118,6 +127,12 @@ public class UserFilesDaoOperations {
 		return Long.parseLong(columnAmountChunks.getValue());
 	}
 	
+	/**
+	 * Retrieves the amount of references to others chunks of a file.  These are the amount of deduplicated chunks
+	 * @param owner File's owner
+	 * @param filename File name
+	 * @return The amount of chunks without content, i.e. references to others chunks 
+	 */
 	public long getChunksWithoutContentCount(String owner, String filename) {
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);

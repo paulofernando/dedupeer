@@ -36,7 +36,6 @@ import com.dedupeer.gui.SettingsDialog;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.gui.component.renderer.IconLabelRenderer;
 import com.dedupeer.gui.component.renderer.JProgressRenderer;
-import com.dedupeer.utils.FileUtils;
 import com.dedupeer.utils.Utils;
 
 
