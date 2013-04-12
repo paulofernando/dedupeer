@@ -68,7 +68,7 @@ public class SettingsDialog {
 		
 		JPanel centerPanel = new JPanel(new GridLayout(0, 2,5,2));
         JLabel lbChunkSize = new JLabel("Default chunk size (bytes):", JLabel.RIGHT);
-        JLabel lbChunksToLoad = new JLabel("Chunks to load by time (bytes):", JLabel.RIGHT);
+        JLabel lbChunksToLoad = new JLabel("Chunks to load by time:", JLabel.RIGHT);
         tfChunkSize = new JTextField(20);
         tfChunksToLoad = new JTextField(20);
         check = new JCheckBox("Just calculate hashes of chunks with default size");

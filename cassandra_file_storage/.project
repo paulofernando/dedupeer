@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>CassandraFileStorage</name>
+	<name>DedupeerFileStorage</name>
 	<comment></comment>
 	<projects>
 	</projects>
