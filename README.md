@@ -7,7 +7,7 @@ To test the Dedupeer in operation, you can download the Dedupeer File Storage, t
 
 For more information, visit dedupeer.com
 
-=======
+-------------------
 
 Dedupeer Project is licensed under a The MIT License (MIT)
 Copyright (c) 2012-2013 Paulo Fernando A. Soares
