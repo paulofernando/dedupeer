@@ -1,7 +1,7 @@
 Dedupeer Project
 ========
 
-The Dedupeer Project was developed by Paulo Fernando, Master candidate in Computer Science in the Federal University of Pernambuco, with Silvio Meira as advisor and Vinicius Garcia as co-advisor, aiming create a software component that could be integrated in most storage systems and benefits them with saving space, this economy of disk usage result in contributed to the green storage.
+The Dedupeer Project was developed by Paulo Fernando, Master candidate in Computer Science in the Federal University of Pernambuco, with Silvio Meira as advisor and Vinicius Garcia as co-advisor, aiming create a software component that could be integrated in the storage systems and benefits them with saving space, this economy of disk usage result in contributed to the green storage.
 
 For more information, visit http://dedupeer.com
 
