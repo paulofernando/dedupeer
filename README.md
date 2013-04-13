@@ -5,7 +5,7 @@ The Dedupeer Project was developed by Paulo Fernando, Master candidate in Comput
 
 To test the Dedupeer in operation, you can download the Dedupeer File Storage, that is a project where the Dedupeer is integrated to system that uses the Apache Cassandra to manage the distributed data and create a distributed storage system easily.
 
-For more information, visit https://dedupeer.com
+For more information, visit http://dedupeer.com
 
 -------------------
 
