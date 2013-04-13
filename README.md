@@ -9,7 +9,7 @@ For more information, visit dedupeer.com
 
 -------------------
 
-Dedupeer Project is licensed under a The MIT License (MIT)
+Dedupeer Project is licensed under The MIT License (MIT)
 
 Copyright (c) 2012-2013 Paulo Fernando A. Soares
 
