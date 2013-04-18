@@ -13,12 +13,8 @@ import com.dedupeer.thrift.ThriftServer;
  * @author Paulo Fernando (pf@paulofernando.net.br)
  */
 public class DedupeerFileStorage {
-	
-	private static String defaultPartition = "E"; 
-	
-	public static void main (String[] args) {
-		System.setProperty("defaultPartition", defaultPartition);
 		
+	public static void main (String[] args) {
 		LogManager.getRootLogger().setLevel((Level)Level.INFO);
 		
 		ThriftServer srv = new ThriftServer();

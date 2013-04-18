@@ -148,7 +148,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					String fileID = String.valueOf(System.currentTimeMillis());
 					ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 					try {						
-						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("defaultPartition") + ":\\chunks\\"), defaultChunkSize, fileID, hashingAlgorithm, StoredFile.this); 
+						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+								"chunks" + System.getProperty("file.separator")), defaultChunkSize, fileID, hashingAlgorithm, StoredFile.this); 
 										
 						progressInfo.setType(ProgressInfo.TYPE_STORING);
 						ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
@@ -170,7 +171,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				}
 								
 				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");				
-				FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());				
+				FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+						"chunks" + System.getProperty("file.separator")), getFilename());				
 			}
 		});		
 		storageProcess.start();		
@@ -303,7 +305,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " milisecods");		
-		FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());
+		FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+				"chunks") + System.getProperty("file.separator"), getFilename());
 	}
 	
 	/**
@@ -555,7 +558,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			
 			setProgress((int)(Math.ceil((((double)globalIndex) * 100) / file.length())));			
 			newFileChunks.clear();			
-			FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), getFilename());			
+			FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+					"chunks") + System.getProperty("file.separator"), getFilename());			
 			
 			offset += bytesToLoadByTime;
 			

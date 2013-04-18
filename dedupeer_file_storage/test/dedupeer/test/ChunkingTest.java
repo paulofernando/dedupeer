@@ -17,7 +17,7 @@ public class ChunkingTest extends TestCase {
 	
 	private static final Logger log = Logger.getLogger(ChunkingTest.class);
 
-	private String defaultPartition = "E"; 
+	private String defaultDir = System.getProperty("user.home"); 
 	private int defaultChunkSize = 4;
 	private File file;
 	private String fileName = "lorem.txt";
@@ -27,12 +27,12 @@ public class ChunkingTest extends TestCase {
 	 */	
 	@Test
 	public void testChunking() {
-		File txtFile = new File(defaultPartition + ":/teste/lorem.txt");
+		File txtFile = new File(defaultDir + ":/teste/lorem.txt");
 		
-		try { Chunking.slicingAndDicing(txtFile, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
+		try { Chunking.slicingAndDicing(txtFile, new String(defaultDir + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
-		String path = defaultPartition + ":\\teste\\chunks\\";
+		String path = defaultDir + ":\\teste\\chunks\\";
 		String initalNameOfCHunk = FileUtils.getOnlyName(txtFile.getName()) + "_chunk";
 				
 		byte[] txtFileBytes = FileUtils.getBytesFromFile(txtFile.getAbsolutePath());
@@ -67,16 +67,16 @@ public class ChunkingTest extends TestCase {
 	 */
 	@Test
 	public void testChunkingBasic() {
-		file = new File(defaultPartition + ":\\teste\\" + fileName);
+		file = new File(defaultDir + ":\\teste\\" + fileName);
 		try { 
-			Chunking.slicingAndDicing(file, new String(defaultPartition + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
+			Chunking.slicingAndDicing(file, new String(defaultDir + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
 		
-		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.0")).getAbsolutePath());		
-		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.1")).getAbsolutePath());
-		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultPartition + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.2")).getAbsolutePath());
+		byte[] chunk0 = FileUtils.getBytesFromFile((new File(defaultDir + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.0")).getAbsolutePath());		
+		byte[] chunk1 = FileUtils.getBytesFromFile((new File(defaultDir + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.1")).getAbsolutePath());
+		byte[] chunk2 = FileUtils.getBytesFromFile((new File(defaultDir + ":\\teste\\chunks\\" + FileUtils.getOnlyName(file.getName()) + "_chunk.2")).getAbsolutePath());
 		
 		assertTrue(!((chunk0[chunk0.length - 1] == chunk1[0]) && (chunk1[chunk1.length - 1] == chunk2[0])));		
 	}

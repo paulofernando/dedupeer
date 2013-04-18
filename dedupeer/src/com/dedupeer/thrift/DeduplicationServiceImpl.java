@@ -251,7 +251,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 			}
 					
 			newFileChunks.clear();
-			FileUtils.cleanUpChunks(new String(System.getProperty("defaultPartition") + ":\\chunks\\"), file.getName());			
+			FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+					"chunks" + System.getProperty("file.separator")), file.getName());			
 			
 			offset += bytesToLoadByTime;			
 		}
