@@ -592,6 +592,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
 		String newFileID;
 		
+		progressInfo.setType(ProgressInfo.TYPE_RETRIEVING_INFO);
+		updateProgress(1);
 		//----------  Retrieving the information about the stored file -----------------		
 		/** Map<adler32, Map<strongHash, [FileID, chunkNumber]>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
@@ -599,24 +601,33 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
 		
+		progressInfo.setType(ProgressInfo.TYPE_SEARCHING);
+		updateProgress(33);
 		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime, HashingAlgorithm.SHA1);
 		
-		int totalChunks = 0;
+		progressInfo.setType(ProgressInfo.TYPE_STORING);
+		updateProgress(66);
+		
+		double processedChunk = 0d;
 		int referencesCount = 0;
 		
-		for(Chunk chunk: newFileChunks.values()) {				
+		for(Chunk chunk: newFileChunks.values()) {
+			updateProgress((int) ( ((processedChunk/newFileChunks.size()) * 34) + 66) );
 			cdo.insertRow(chunk);
-			totalChunks++;
+			processedChunk++;
 			if(chunk.getPchunk() != null) {
 				referencesCount++;
 			}
 		}
+		
+		int totalChunks = (int) processedChunk;
 		newFileID = newFileChunks.get(new Long(0l)).fileID;
 		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?");
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), totalChunks - referencesCount);
 		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 		
+		updateProgress(100);
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");	
 	}
 	

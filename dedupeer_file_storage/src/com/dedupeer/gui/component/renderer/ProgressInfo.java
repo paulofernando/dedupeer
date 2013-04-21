@@ -10,7 +10,9 @@ public class ProgressInfo {
 	public final static int TYPE_REHYDRATING = 3;
 	public final static int TYPE_CALCULATION_STORAGE_ECONOMY = 4;
 	public final static int TYPE_WRITING = 5;
-	public final static int TYPE_NONE = 6;
+	public final static int TYPE_SEARCHING = 6;
+	public final static int TYPE_RETRIEVING_INFO = 7;
+	public final static int TYPE_NONE = 8;
 	
 	public ProgressInfo(int progress, int type) {
 		this.progress = progress;
@@ -43,6 +45,10 @@ public class ProgressInfo {
 				return "Calculating...";
 			case TYPE_WRITING:
 				return "Writing...";
+			case TYPE_SEARCHING:
+				return "Searching...";
+			case TYPE_RETRIEVING_INFO:
+				return "Retrieving info...";
 			case TYPE_NONE:
 			default:
 				return "";
