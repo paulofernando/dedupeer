@@ -106,7 +106,7 @@ public class MainPanel extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(btCalculate.isEnabled()) {					
-					List<StoredFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileList();
+					List<StoredFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileWithoutEconomyCalculated();
 					for(StoredFile sf: listStoredFiles) {						
 						sf.calculateStorageEconomy();													
 					}
@@ -152,9 +152,11 @@ public class MainPanel extends JPanel {
 						contextmenu.show(e.getComponent(), e.getX(), e.getY());
 					}
 				} else if (e.getButton() == MouseEvent.BUTTON1) {					
-					StoredFile sf = ((StoredFileDataModel)(table.getModel())).getStoredFileList().get(table.getSelectedRow());
-					if(sf.getSmallestChunk() != -1)
-						infoTextArea.setText("Smallest chunk of '" + sf.getFilename() + "' = [" + sf.getSmallestChunk() + "]");
+					if(table.getSelectedRow() != -1) {
+						StoredFile sf = ((StoredFileDataModel)(table.getModel())).getStoredFileList().get(table.getSelectedRow());
+						if(sf.getSmallestChunk() != -1)
+							infoTextArea.setText("Smallest chunk of '" + sf.getFilename() + "' = [" + sf.getSmallestChunk() + "]");
+					}
 				}
 			}
 

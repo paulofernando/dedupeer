@@ -60,6 +60,20 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 		return storedFileList;
 	}
 	
+	/**
+	 * Retrieves the list of the StoredFiles that still was not calculated the economy
+	 * @return List with the StoredFiles that still was not calculated the economy
+	 */
+	public List<StoredFile> getStoredFileWithoutEconomyCalculated() {
+		List<StoredFile> listWithoutEconomyCalculated = new ArrayList<StoredFile>();
+		for(StoredFile sf: storedFileList) {
+			if((sf.getStorageEconomy() == null) || (sf.getStorageEconomy().equals(""))) {
+				listWithoutEconomyCalculated.add(sf);
+			}
+		}
+		return listWithoutEconomyCalculated;
+	}
+	
 	public StoredFile getStoredFileByRow(int row) {
 		return storedFileList.get(row);
 	}
