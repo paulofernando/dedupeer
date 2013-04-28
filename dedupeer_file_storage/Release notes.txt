@@ -1,0 +1,6 @@
+-------------------------
+Version 0.1.3 - Tagged in 28/Apr/2013
+- Change of the directory (to home) where the chunks are saved before sent to storage
+- Economy calculation is no longer done for files already calculated
+- Exception when is clicked out of the table is manipulated now
+- ProgressBar fixed to the deduplication
