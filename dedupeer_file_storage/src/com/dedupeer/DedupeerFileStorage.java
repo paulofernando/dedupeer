@@ -4,6 +4,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
+import org.apache.log4j.PropertyConfigurator;
 
 import com.dedupeer.gui.MainGUI;
 import com.dedupeer.thrift.ThriftServer;
@@ -15,6 +16,7 @@ import com.dedupeer.thrift.ThriftServer;
 public class DedupeerFileStorage {
 		
 	public static void main (String[] args) {
+		PropertyConfigurator.configure("resources/log4j.properties");
 		LogManager.getRootLogger().setLevel((Level)Level.INFO);
 		
 		ThriftServer srv = new ThriftServer();

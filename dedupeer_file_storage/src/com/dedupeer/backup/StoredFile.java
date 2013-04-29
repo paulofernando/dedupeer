@@ -316,6 +316,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	 * With this method, the deduplication is executed without Thrift.
 	 * @param filenameStored
 	 * @throws HashingAlgorithmNotFound 
+	 * @Deprecated Changed by the deduplicateABigFileByThrift
 	 */
 	public void deduplicateABigFile(String filenameStored, int bytesToLoadByTime) {		
 		long time = System.currentTimeMillis();
@@ -774,7 +775,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	
 	@Override
 	public void updateProgress(int progress) {
-		setProgress(progress);		
+		setProgress(progress);
 	}
 
 	@Override
