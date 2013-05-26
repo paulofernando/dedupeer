@@ -240,9 +240,10 @@ public class FileUtils {
 	 * Delete the chunks created in the hard disk to store in Cassandra
 	 * @param Folder path where the data were stored
 	 * @param filename File name of the file that chunks were created
+	 * @param filename Number of the first chunk in the folder
 	 */
-	public static void cleanUpChunks(String destination, String filename) {		
-		int chunkCount = 0;
+	public static void cleanUpChunks(String destination, String filename, int intialChunk) {		
+		int chunkCount = intialChunk;
 		String fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + chunkCount;
 		while(new File(fname).delete()) {
 			fname = destination + FileUtils.getOnlyName(filename) + "_chunk" + "." + (++chunkCount);

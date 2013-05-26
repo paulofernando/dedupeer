@@ -251,8 +251,9 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 			}
 					
 			newFileChunks.clear();
+			//TODO test if all the chunks are deleted
 			FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-					"chunks" + System.getProperty("file.separator")), file.getName());			
+					"chunks" + System.getProperty("file.separator")), file.getName(), 0);
 			
 			offset += bytesToLoadByTime;			
 		}

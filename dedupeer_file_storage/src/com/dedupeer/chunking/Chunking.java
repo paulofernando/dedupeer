@@ -34,12 +34,15 @@ public class Chunking {
 	 * Slice a file into pieces
 	 * @param file File to be sliced
 	 * @param destination Destination folder of the chunks
-	 * @param size Amount of bytes for chunk
+	 * @param chunkSize Amount of bytes for chunk
+	 * @param chunkOffset initial chunk position to slice and dicing
+	 * @param chunksToSlice Amount of chunk to return
 	 * @param fileID File ID that is been stored
 	 * @param feedback sends a feedback to the user about the progress                 
 	 * @return chunks information and path to each chunk in hard disk 
 	 */
-	public static ArrayList<Chunk> slicingAndDicing(File file, String destination, int size, String fileID, HashingAlgorithm hashingAlgorithm, StoredFileFeedback feedback) throws IOException {
+	public static ArrayList<Chunk> slicingAndDicing(File file, String destination, int chunkSize, long chunkOffset, 
+			int chunksToSlice, String fileID, HashingAlgorithm hashingAlgorithm, StoredFileFeedback feedback) throws IOException {
 		if(feedback != null)
 			feedback.setProgressType(ProgressInfo.TYPE_CHUNKING);
 		
@@ -48,20 +51,28 @@ public class Chunking {
 		new File(destination).mkdir();
 		long filesize = file.length();
 		
-		FileInputStream fis = new FileInputStream(file.getAbsolutePath()); 
+		FileInputStream fis = new FileInputStream(file.getAbsolutePath());
+		fis.skip(chunkOffset * chunkSize);
 		
 		log.debug("Starting the slicing and dicing...");
 		long time = System.currentTimeMillis();
 		String prefix = FileUtils.getOnlyName(file.getName());
 		
-		byte[] b = new byte[size];
+		byte[] b = new byte[chunkSize];
 	    int ch = 0;
-	    long chunkCount = 0l;
+	    long chunkCount = chunkOffset;
 	    Checksum32 c32 = new Checksum32();
 	    
-	    long globalIndex = 0;
-	    while(filesize > 0) {
-		     ch = fis.read(b,0,size);	
+	    filesize -= (chunkOffset  * chunkSize);
+	    if(filesize < 0) {
+	    	fis.close();
+	    	throw new IOException();
+	    }
+	    
+	    long globalIndex = chunkOffset * chunkSize;
+	    
+	    while((filesize > 0) && (chunks.size() != chunksToSlice)) {
+		     ch = fis.read(b,0,chunkSize);	
 		
 		     filesize = filesize-ch;
 		
@@ -74,7 +85,7 @@ public class Chunking {
 		     
 		     c32.check(b, 0, ch);
 		     
-		     if(ch < size) { //If a chunk size is smaller than default
+		     if(ch < chunkSize) { //If a chunk size is smaller than default
 		    	 b = Arrays.copyOf(b, ch);
 		     }
 		     
@@ -93,7 +104,7 @@ public class Chunking {
 		     globalIndex += b.length;
 	    }	    	    fis.close();	
 		
-		log.debug(chunkCount + " created of " + (size/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.debug(chunkCount + " created of " + (chunkSize/1000) + "KB in " + (System.currentTimeMillis() - time) + " miliseconds");
 		return chunks;
 	}
 

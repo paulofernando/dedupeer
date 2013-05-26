@@ -147,22 +147,35 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				if(!ufdo.fileExists(System.getProperty("username"), file.getName())) { //File is not in the system yet
 					String fileID = String.valueOf(System.currentTimeMillis());
 					ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-					try {						
-						chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-								"chunks" + System.getProperty("file.separator")), defaultChunkSize, fileID, hashingAlgorithm, StoredFile.this); 
-										
-						progressInfo.setType(ProgressInfo.TYPE_STORING);
-						ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
-						cdo.insertRows(chunks);
+					
+					int amountStoredChunks = 0;
+					int chunksToLoadByTime = Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load"));
+					try {
+						while(amountStoredChunks < (int)Math.ceil(((double)file.length()/defaultChunkSize))) {
+							chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+									"chunks" + System.getProperty("file.separator")), defaultChunkSize, amountStoredChunks, chunksToLoadByTime,
+									fileID, hashingAlgorithm, StoredFile.this); 
+											
+							progressInfo.setType(ProgressInfo.TYPE_STORING);
+							ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
+							cdo.insertRows(chunks, amountStoredChunks);
+							
+							setId(Long.parseLong(fileID));
+														
+							FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
+									"chunks" + System.getProperty("file.separator")), getFilename(), amountStoredChunks);
+							
+							amountStoredChunks += chunks.size();
+							chunks.clear();
+						}
 						
-						ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(chunks.size()), "?");
+						ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(amountStoredChunks), "?");
 						fdo.insertRow(System.getProperty("username"), file.getName(), fileID);
 						
 						UserFilesDaoOperations udo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-						udo.setAmountChunksWithContent(System.getProperty("username"), file.getName(), chunks.size());
+						udo.setAmountChunksWithContent(System.getProperty("username"), file.getName(), amountStoredChunks);
 						udo.setAmountChunksWithoutContent(System.getProperty("username"), file.getName(), 0l);
-						
-						setId(Long.parseLong(fileID));
+												
 					} catch (IOException e) { 
 						e.printStackTrace(); 
 					}
@@ -170,9 +183,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					deduplicate(file.getName());					
 				}
 								
-				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");				
-				FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-						"chunks" + System.getProperty("file.separator")), getFilename());				
+				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");								
 			}
 		});		
 		storageProcess.start();		
@@ -306,275 +317,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " milisecods");		
 		FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-				"chunks") + System.getProperty("file.separator"), getFilename());
+				"chunks") + System.getProperty("file.separator"), getFilename(), 0);
 	}
-	
-	/**
-	 * Uses a new way of to deduplicate a file, comparing a current adler32 with a special HashMap that contains
-	 * the adler32 in the key and other HashMap with <strongHash, chunkkNumber> how value
-	 * divideInTimes divide the processing in <code> divideInTimes </code> times
-	 * With this method, the deduplication is executed without Thrift.
-	 * @param filenameStored
-	 * @throws HashingAlgorithmNotFound 
-	 * @Deprecated Changed by the deduplicateABigFileByThrift
-	 */
-	public void deduplicateABigFile(String filenameStored, int bytesToLoadByTime) {		
-		long time = System.currentTimeMillis();
-		log.info("\n[Deduplicating...]");
-		progressInfo.setType(ProgressInfo.TYPE_DEDUPLICATION);
 		
-		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
-
-		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
-		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
-		int amountChunks = Integer.parseInt(columnAmountChunks.getValue());
-
-		String fileIDStored = ufdo.getValues(System.getProperty("username"), filenameStored).get().getSubColumnByName("file_id").getValue();		
-
-		long timeToRetrieve = System.currentTimeMillis();
-
-		//----------  Retrieving the information about the stored file -----------------		
-		/** Map<adler32, Map<strongHash, chunkNumber>> */		
-		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
-		log.info("Retrieving chunks information...");
-		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
-		//--------------------------------------------------------------------------------
-						
-		log.info("Time to retrieve chunks information: " + (System.currentTimeMillis() - timeToRetrieve));
-		String newFileID = String.valueOf(System.currentTimeMillis());
-		HashMap<Long, Chunk> newFileChunks = new HashMap<Long, Chunk>();
-		int chunk_number = 0;
-		Checksum32 c32 = new Checksum32();
-		
-		long offset = 0;
-		ByteBuffer buffer = ByteBuffer.allocate(defaultChunkSize);
-		/** Current index in the divided byte array */
-		int localIndex = 0;
-		/** Index in the whole file */
-		long globalIndex = 0;
-		long referencesCount = 0;
-		
-		if(bytesToLoadByTime > file.length()) {
-			bytesToLoadByTime = (int)file.length();
-		} else {
-			bytesToLoadByTime = (bytesToLoadByTime % defaultChunkSize == 0 ? bytesToLoadByTime : bytesToLoadByTime + (defaultChunkSize - (bytesToLoadByTime % defaultChunkSize)));
-		}
-		int divideInTimes = (int)Math.ceil((double)file.length() / (double)bytesToLoadByTime);
-		
-		String strongHashTemp = "-1";
-		String weakHashTemp = "-1";
-		
-		for(int i = 0; i < divideInTimes; i++) {
-			log.info("Searching in part " + i + "...");
-			localIndex = 0;
-			int moreBytesToLoad = 0;
-			
-			if(i == (divideInTimes - 1)) {
-				bytesToLoadByTime = (int)(file.length() - globalIndex);				
-			}
-			
-			log.debug("Memory: total[" + Runtime.getRuntime().totalMemory() + "] free[" + Runtime.getRuntime().freeMemory() + "]" +
-					"used[" +  (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) + "]");
-									
-			byte[] modFile = fileUtils.getBytesFromFile(file.getAbsolutePath(), offset, bytesToLoadByTime);
-			byte[] currentChunk = new byte[defaultChunkSize];
-			
-			currentChunk = Arrays.copyOfRange(modFile, localIndex, 
-					(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));	
-			c32.check(currentChunk, 0, currentChunk.length);
-			while(localIndex < modFile.length) {								
-				if(globalIndex % 1000 == 0) {
-					log.debug("Global index: " + globalIndex);
-				}
-				
-				if(modFile.length - localIndex < defaultChunkSize) {
-					if(modFile.length - localIndex + moreBytesToLoad == defaultChunkSize) { //Sets up the last chunk with the default size to do not create new chunks unnecessarily, because with the default size it has a chance of to deduplicate						
-						if(offset + (bytesToLoadByTime + moreBytesToLoad) > file.length()) { //Not to exceed the file size
-							modFile = fileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (int)(file.length() - offset));
-							currentChunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
-						} else {
-							modFile = fileUtils.getBytesFromFile(file.getAbsolutePath(), offset, (bytesToLoadByTime + moreBytesToLoad));
-							currentChunk = Arrays.copyOfRange(modFile, localIndex, localIndex + defaultChunkSize);
-						}						
-						c32.check(currentChunk, 0, currentChunk.length);
-						offset += moreBytesToLoad;
-					}
-				}
-				
-				boolean differentChunk = true;
-				if(chunksInStorageServer.containsKey(c32.getValue())) {						
-					if(currentChunk == null) { //To avoid reload the chunk
-						currentChunk = Arrays.copyOfRange(modFile, localIndex, 
-								(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
-					}
-					
-					String strongHash = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, currentChunk);
-					if(chunksInStorageServer.get(c32.getValue()).containsKey(strongHash)) {						
-						if(buffer.position() > 0) { //If the buffer has some data, creates a chunk with this data								
-							newchunk = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
-							log.debug("[0] Creating new chunk " + chunk_number + " in " + (globalIndex - newchunk.length) + " [length = " + newchunk.length + "]");
-							
-							if(calculateAllHashes) {
-								Checksum32 c32_2 = new Checksum32();
-								c32_2.check(newchunk, 0, newchunk.length);
-								weakHashTemp = String.valueOf(c32_2.getValue());
-								strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, newchunk);
-							}
-							
-							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
-							chunk.setWeakHash(String.valueOf(weakHashTemp));
-							chunk.setStrongHash(strongHashTemp);
-							chunk.setContent(newchunk.clone());
-							
-							newFileChunks.put(globalIndex - newchunk.length, chunk);
-							chunk_number++;
-							moreBytesToLoad += newchunk.length;
-							buffer.clear();
-						}						
-						log.debug("Duplicated chunk " + chunk_number + ": " + strongHash + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
-						
-						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
-						chunk.setPfile(chunksInStorageServer.get(c32.getValue()).get(strongHash).getFileID());
-						chunk.setPchunk(chunksInStorageServer.get(c32.getValue()).get(strongHash).getChunkID());
-						
-						newFileChunks.put(globalIndex, chunk);						
-						chunk_number++;
-						globalIndex += currentChunk.length;
-						localIndex += currentChunk.length;	
-						
-						currentChunk = Arrays.copyOfRange(modFile, localIndex, 
-								(localIndex + defaultChunkSize < modFile.length ? localIndex + defaultChunkSize : modFile.length));
-						c32.check(currentChunk, 0, currentChunk.length);						
-						differentChunk = false;
-						referencesCount++;
-					}					
-				} 
-				
-				if(differentChunk) {
-					currentChunk = null;
-					if(buffer.remaining() == 0) {
-						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");						
-						
-						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
-						chunk.setWeakHash(String.valueOf(c32.getValue()));
-						chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, buffer.array()));
-						chunk.setContent(buffer.array().clone());
-						
-						newFileChunks.put(globalIndex - buffer.position(), chunk);
-						chunk_number++;
-						buffer.clear();
-					} else {
-						if(modFile.length - (localIndex + defaultChunkSize) > 0) {
-							buffer.put(modFile[localIndex]);
-							c32.roll(modFile[localIndex + defaultChunkSize]);
-							globalIndex++;
-							localIndex++;
-						} else {
-							newchunk = Arrays.copyOfRange(modFile, localIndex - buffer.position(), (localIndex - buffer.position()) + 
-								(modFile.length - (localIndex - buffer.position()) >= defaultChunkSize ? defaultChunkSize : modFile.length - (localIndex - buffer.position())));
-							
-							log.debug("[2] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + newchunk.length + "]");							
-							if(calculateAllHashes) {
-								c32.check(newchunk, 0, newchunk.length);
-								weakHashTemp = String.valueOf(c32.getValue());
-								strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
-							}
-							
-							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
-							chunk.setWeakHash(weakHashTemp);
-							chunk.setStrongHash(strongHashTemp);
-							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
-							
-							newFileChunks.put(globalIndex - buffer.position(), chunk);							
-							chunk_number++;
-															
-							localIndex += newchunk.length - buffer.position();
-							globalIndex += newchunk.length - buffer.position();	
-							
-							buffer.clear();
-							
-							//Creating the final chunk, if has rest
-							if(localIndex < modFile.length) {
-								newchunk = Arrays.copyOfRange(modFile, localIndex, modFile.length);
-								log.debug("[3] Creating new chunk " + chunk_number + " in " + (globalIndex) + " [length = " + newchunk.length + "]");
-								
-								if(calculateAllHashes) {
-									c32.check(newchunk, 0, newchunk.length);
-									weakHashTemp = String.valueOf(c32.getValue());
-									strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
-								}
-								
-								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-										String.valueOf(globalIndex), String.valueOf(newchunk.length));
-								chunk.setWeakHash(weakHashTemp);
-								chunk.setStrongHash(strongHashTemp);
-								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
-								
-								newFileChunks.put(globalIndex, chunk);
-																
-								chunk_number++;
-								buffer.clear();
-								
-								localIndex += newchunk.length;
-								globalIndex += newchunk.length;
-							}
-						}
-					}			
-				}								
-			}
-						
-			//If the buffer has some data, creates a chunk with this data
-			if(buffer.position() > 0) { 				
-				log.debug("[4] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
-				
-				if(calculateAllHashes) {
-					c32.check(buffer.array(), 0, buffer.capacity());
-					weakHashTemp = String.valueOf(c32.getValue());
-					strongHashTemp = DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
-				}
-				
-				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
-				chunk.setWeakHash(weakHashTemp);
-				chunk.setStrongHash(strongHashTemp);
-				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
-				
-				newFileChunks.put(globalIndex - buffer.position(), chunk);
-				
-				chunk_number++;
-				globalIndex += newchunk.length;
-				buffer.clear();
-			}
-			
-			progressInfo.setType(ProgressInfo.TYPE_STORING);
-			
-			for(Chunk chunk: newFileChunks.values()) {				
-				cdo.insertRow(chunk);
-			}
-			
-			setProgress((int)(Math.ceil((((double)globalIndex) * 100) / file.length())));			
-			newFileChunks.clear();			
-			FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-					"chunks") + System.getProperty("file.separator"), getFilename());			
-			
-			offset += bytesToLoadByTime;
-			
-		}
-		
-		//Last time		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number), "?"); //+1 because start in 0
-		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), chunk_number - referencesCount);
-		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
-		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
-		
-		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");		
-	}
-	
 	/**
 	 * Deduplicate a file using ThriftClient
 	 * @param filenameStored Name of file stored in the system

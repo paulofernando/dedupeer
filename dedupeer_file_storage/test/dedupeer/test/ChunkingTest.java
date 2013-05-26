@@ -29,7 +29,7 @@ public class ChunkingTest extends TestCase {
 	public void testChunking() {
 		File txtFile = new File(defaultDir + ":/teste/lorem.txt");
 		
-		try { Chunking.slicingAndDicing(txtFile, new String(defaultDir + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
+		try { Chunking.slicingAndDicing(txtFile, new String(defaultDir + ":\\teste\\chunks\\"), defaultChunkSize, 0, (int)Math.ceil(((double)txtFile.length())/defaultChunkSize),String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
 		} catch (IOException e) { e.printStackTrace(); }
 		
 		String path = defaultDir + ":\\teste\\chunks\\";
@@ -69,7 +69,7 @@ public class ChunkingTest extends TestCase {
 	public void testChunkingBasic() {
 		file = new File(defaultDir + ":\\teste\\" + fileName);
 		try { 
-			Chunking.slicingAndDicing(file, new String(defaultDir + ":\\teste\\chunks\\"), defaultChunkSize, String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
+			Chunking.slicingAndDicing(file, new String(defaultDir + ":\\teste\\chunks\\"), defaultChunkSize, 0l, (int)Math.ceil(((double)file.length())/defaultChunkSize), String.valueOf(System.currentTimeMillis()), HashingAlgorithm.MD5, null); 
 		} catch (IOException e) { 
 			e.printStackTrace(); 
 		}
