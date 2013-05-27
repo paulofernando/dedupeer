@@ -394,19 +394,26 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				progressInfo.setType(ProgressInfo.TYPE_WRITING);
 				long initialChunkToLoad = 0;
+				
+				//--- retrieving the id ----
+				HColumn<String, String> columnFileID = ufdo.getValues(System.getProperty("username"), filename).get().getSubColumnByName("file_id");
+				String fileID = columnFileID.getValue();
+				long chunksCount = ufdo.getChunksCount(System.getProperty("username"), filename);
+				//-------------------------				
+				
 				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {
 					int amountChunksToLoad = (int)(amountChunksWithContent - amountChunksWithContentLoaded >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithContent - amountChunksWithContentLoaded);
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, initialChunkToLoad, amountChunksToLoad);					
 					
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, 
+							fileID, chunksCount, initialChunkToLoad, amountChunksToLoad);					
+										
 					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-						log.debug(chunk.get().getName() + "[index = " + chunk.get().getSubColumnByName("index").getValue() + 
-								"] [length = " + BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()).length + "]");
+						log.info(chunk.get().getName()/* + "[index = " + chunk.get().getSubColumnByName("index").getValue() + 
+								"] [length = " + BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()).length + "]"*/);
 						
 						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunk.get().getSubColumnByName("index").getValue())
 								, pathToRestore + "\\" + filename);						
-						count++;					
-						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
-						setProgress(prog);						
+						count++;			
 						initialChunkToLoad = Long.parseLong(chunk.get().getName());
 					}
 					
@@ -416,6 +423,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					
 					amountChunksWithContentLoaded += chunksWithContent.size();
 					chunksWithContent.clear();
+					
+					StoredFile.this.updateProgress((int)(Math.ceil((((double)amountChunksWithContentLoaded) * 100) / chunksCount)));			        
 				}
 				
 				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());

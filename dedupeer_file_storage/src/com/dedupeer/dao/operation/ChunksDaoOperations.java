@@ -1,14 +1,22 @@
 package com.dedupeer.dao.operation;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import me.prettyprint.cassandra.connection.HConnectionManager;
+import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ColumnSliceIterator;
+import me.prettyprint.cassandra.service.FailoverPolicy;
+import me.prettyprint.cassandra.service.KeyspaceService;
+import me.prettyprint.cassandra.service.KeyspaceServiceImpl;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -22,6 +30,10 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.api.query.SuperColumnQuery;
 import me.prettyprint.hector.api.query.SuperSliceQuery;
 
+import org.apache.cassandra.thrift.ColumnParent;
+import org.apache.cassandra.thrift.SlicePredicate;
+import org.apache.cassandra.thrift.SliceRange;
+import org.apache.cassandra.thrift.SuperColumn;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
@@ -42,6 +54,8 @@ public class ChunksDaoOperations {
 	private static StringSerializer stringSerializer = StringSerializer.get();
 	private StoredFileFeedback feedback;
 	
+	KeyspaceService keyspace;
+	
 	/**
 	 * Creates an object to manipulate the operations on the Chunks Column Family
 	 * @param clusterName The cluster name from instance of Cassandra
@@ -50,6 +64,12 @@ public class ChunksDaoOperations {
 	public ChunksDaoOperations (String clusterName, String keyspaceName) {
 		cluster = HFactory.getOrCreateCluster(clusterName, "localhost:9160");
 		keyspaceOperator = HFactory.createKeyspace(keyspaceName, cluster);		
+		
+		HConnectionManager connectionManager = new HConnectionManager(clusterName, new CassandraHostConfigurator("localhost:9160"));
+		
+		keyspace = new KeyspaceServiceImpl(keyspaceName, new QuorumAllConsistencyLevelPolicy(), 
+				connectionManager, FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE);
+		
 	}
 	
 	/**
@@ -348,20 +368,15 @@ public class ChunksDaoOperations {
         return result;
 	}
 	
-	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename, long initialChunk, long amountOfChunks) {
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename, String fileID, 
+			long chunksCount,long initialChunk, long amountOfChunks) {
+		
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
 	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
 	                    stringSerializer, stringSerializer);
 			
 		Vector<QueryResult<HSuperColumn<String, String, String>>> result = new Vector<QueryResult<HSuperColumn<String, String, String>>>();
-		
-		//--- retrieving the id ----
-		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
-		String fileID = columnFileID.getValue();
-		//-------------------------
-		
-		long count = ufdo.getChunksCount(owner, filename);
+				
 		long i = initialChunk;
 		while(result.size() < amountOfChunks) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
@@ -370,12 +385,29 @@ public class ChunksDaoOperations {
 	        if(column.get().getSubColumnByName("content") != null) {
 	        	result.add(column);
 	        }
-	        if(feedback != null) {
-	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
-	        }
+	        
 	        i++;
 		}
         return result;
+	}
+	//TODO implement this
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContentWithRange(String owner, String filename, String fileID, 
+			long chunksCount,long initialChunk, long amountOfChunks) {
+		
+		
+		/*ColumnParent clp = new ColumnParent("Chunks");
+	    SliceRange sr = new SliceRange(ByteBuffer.wrap(new byte[0]), ByteBuffer.wrap(new byte[0]), false, 150);
+	    SlicePredicate sp = new SlicePredicate();
+	    sp.setSlice_range(sr);
+	    List<SuperColumn> cols = keyspace.getSuperSlice(fileID, clp, sp);*/
+		
+		/*SliceQuery<String, String> q = HFactory.createSliceQuery(ko, se, se, se);
+		q.setColumnFamily(cf)
+		.setKey("jsmith")
+		.setColumnNames("first", "last", "middle");
+		Result<ColumnSlice<String, String>> r = q.execute();*/
+		
+		return null;		
 	}
 	
 	/**
