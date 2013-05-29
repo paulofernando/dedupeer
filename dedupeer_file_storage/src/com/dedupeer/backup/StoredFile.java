@@ -15,6 +15,7 @@ import javax.swing.JButton;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
+import me.prettyprint.hector.api.beans.SuperSlice;
 import me.prettyprint.hector.api.query.QueryResult;
 
 import org.apache.log4j.Logger;
@@ -389,7 +390,6 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
 				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());				
-				long count = 0;
 				long amountChunksWithContentLoaded = 0;
 				
 				progressInfo.setType(ProgressInfo.TYPE_WRITING);
@@ -401,35 +401,26 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				long chunksCount = ufdo.getChunksCount(System.getProperty("username"), filename);
 				//-------------------------				
 				
-				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {
-					int amountChunksToLoad = (int)(amountChunksWithContent - amountChunksWithContentLoaded >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithContent - amountChunksWithContentLoaded);
-					
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksWithContent = cdo.getValuesWithContent(System.getProperty("username"), filename, 
-							fileID, chunksCount, initialChunkToLoad, amountChunksToLoad);					
+				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {					
+					QueryResult<SuperSlice<String, String, String>> chunksByRange = cdo.getChunksByRange(System.getProperty("username"), filename, 
+							fileID, chunksCount, initialChunkToLoad);					
 										
-					for(QueryResult<HSuperColumn<String, String, String>> chunk: chunksWithContent) {
-						log.info(chunk.get().getName()/* + "[index = " + chunk.get().getSubColumnByName("index").getValue() + 
-								"] [length = " + BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()).length + "]"*/);
-						
-						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunk.get().getSubColumnByName("index").getValue())
-								, pathToRestore + "\\" + filename);						
-						count++;			
-						initialChunkToLoad = Long.parseLong(chunk.get().getName());
-					}
-					
-					if(chunksWithContent.size() > 0) {
-						initialChunkToLoad++;
-					}
-					
-					amountChunksWithContentLoaded += chunksWithContent.size();
-					chunksWithContent.clear();
-					
+					for(HSuperColumn<String, String, String> chunk: chunksByRange.get().getSuperColumns()) {
+						if(chunk.getSubColumnByName("content") != null) {
+							log.info(chunk.getName() + "[index = " + chunk.getSubColumnByName("index").getValue() + "] "/*[length = " + BytesArraySerializer.get().fromByteBuffer(chunk.getSubColumnByName("content").getValueBytes()).length + "]"*/);							
+							FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.getSubColumnByName("content").getValueBytes()), Long.parseLong(chunk.getSubColumnByName("index").getValue())
+									, pathToRestore + "\\" + filename);							
+							amountChunksWithContentLoaded++;
+						}
+						initialChunkToLoad++;						
+					}										
+					chunksByRange.get().getSuperColumns().clear();					
 					StoredFile.this.updateProgress((int)(Math.ceil((((double)amountChunksWithContentLoaded) * 100) / chunksCount)));			        
 				}
 				
 				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
 				
-				count = 0;
+				long count = 0;
 				long amountChunksWithoutContentLoaded = 0;
 				initialChunkToLoad = 0;
 				while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {

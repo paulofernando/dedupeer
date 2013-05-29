@@ -19,6 +19,7 @@ import me.prettyprint.cassandra.service.KeyspaceService;
 import me.prettyprint.cassandra.service.KeyspaceServiceImpl;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.beans.SuperSlice;
@@ -368,6 +369,9 @@ public class ChunksDaoOperations {
         return result;
 	}
 	
+	/**
+	 * Retrieves the range of super columns (chunks). Chunks with and without content are included
+	 */
 	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename, String fileID, 
 			long chunksCount,long initialChunk, long amountOfChunks) {
 		
@@ -390,24 +394,25 @@ public class ChunksDaoOperations {
 		}
         return result;
 	}
-	//TODO implement this
-	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContentWithRange(String owner, String filename, String fileID, 
-			long chunksCount,long initialChunk, long amountOfChunks) {
+	
+	
+	public QueryResult<SuperSlice<String, String, String>> getChunksByRange(String owner, String filename, String fileID, 
+			long chunksCount,long initialChunk) {
+				
+		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 
+				stringSerializer, stringSerializer, stringSerializer);
+		query.setColumnFamily("Chunks"); 
+		query.setKey(fileID);
 		
+		long i = initialChunk;
+		query.setColumnNames(String.valueOf(i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), //5
+				String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), //10
+				String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), //15
+				String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i), String.valueOf(++i)); //20
+				
+		QueryResult<SuperSlice<String, String, String>> result = query.execute(); 
 		
-		/*ColumnParent clp = new ColumnParent("Chunks");
-	    SliceRange sr = new SliceRange(ByteBuffer.wrap(new byte[0]), ByteBuffer.wrap(new byte[0]), false, 150);
-	    SlicePredicate sp = new SlicePredicate();
-	    sp.setSlice_range(sr);
-	    List<SuperColumn> cols = keyspace.getSuperSlice(fileID, clp, sp);*/
-		
-		/*SliceQuery<String, String> q = HFactory.createSliceQuery(ko, se, se, se);
-		q.setColumnFamily(cf)
-		.setKey("jsmith")
-		.setColumnNames("first", "last", "middle");
-		Result<ColumnSlice<String, String>> r = q.execute();*/
-		
-		return null;		
+		return result;
 	}
 	
 	/**
