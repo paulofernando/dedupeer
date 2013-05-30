@@ -143,11 +143,13 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			public void run() {
 				long time = System.currentTimeMillis();
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-				FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 				
 				if(!ufdo.fileExists(System.getProperty("username"), file.getName())) { //File is not in the system yet
 					String fileID = String.valueOf(System.currentTimeMillis());
 					ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+					
+					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
+					FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 					
 					int amountStoredChunks = 0;
 					int chunksToLoadByTime = Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load"));
@@ -158,7 +160,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 									fileID, hashingAlgorithm, StoredFile.this); 
 											
 							progressInfo.setType(ProgressInfo.TYPE_STORING);
-							ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);					
+												
 							cdo.insertRows(chunks, amountStoredChunks);
 							
 							setId(Long.parseLong(fileID));
