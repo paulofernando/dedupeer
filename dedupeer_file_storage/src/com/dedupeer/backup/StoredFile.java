@@ -184,7 +184,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					}
 				} else { //Other file version being stored
 					deduplicate(file.getName());					
-				}
+				} 
 								
 				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");								
 			}
@@ -362,6 +362,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		for(Chunk chunk: newFileChunks.values()) {
 			updateProgress((int) ( ((processedChunk/newFileChunks.size()) * 34) + 66) );
+			
+			chunk.setContent(fileUtils.getBytesFromFile(file.getAbsolutePath(), Integer.parseInt(chunk.index), Integer.parseInt(chunk.length)));
+			
 			cdo.insertRow(chunk);
 			processedChunk++;
 			if(chunk.getPchunk() != null) {

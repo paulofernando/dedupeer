@@ -68,4 +68,9 @@ public class FilesDaoOpeartion {
         QueryResult<HColumn<String, String>> result = columnQuery.execute();
         return result.get().getValue();
 	}	
+	
+	/** Closes the connection with cluster */
+	public void close() {
+		cluster.getConnectionManager().shutdown();
+	}
 }

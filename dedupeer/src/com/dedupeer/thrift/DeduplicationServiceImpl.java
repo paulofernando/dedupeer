@@ -121,7 +121,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
 							chunk.setStrongHash(strongAlgorithmTemp);
 							chunk.setWeakHash(String.valueOf(weakAlgorithmTemp));
-							chunk.setContent(newchunk.clone());
 							
 							newFileChunks.put(globalIndex - newchunk.length, chunk);
 							
@@ -158,7 +157,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
 						chunk.setStrongHash(getStrongHash(hashingAlgorithm, buffer.array()));
 						chunk.setWeakHash(String.valueOf(c32.getValue()));
-						chunk.setContent(buffer.array().clone());
 						
 						newFileChunks.put(globalIndex - buffer.position(), chunk);
 						chunk_number++;
@@ -184,7 +182,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
 							chunk.setStrongHash(strongAlgorithmTemp);
 							chunk.setWeakHash(weakAlgorithmTemp);
-							chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							
 							newFileChunks.put(globalIndex - buffer.position(), chunk);							
 							chunk_number++;
@@ -209,7 +206,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 										String.valueOf(globalIndex), String.valueOf(newchunk.length));
 								chunk.setStrongHash(strongAlgorithmTemp);
 								chunk.setWeakHash(weakAlgorithmTemp);
-								chunk.setContent(Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								
 								newFileChunks.put(globalIndex, chunk);
 								
@@ -238,7 +234,6 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
 				chunk.setStrongHash(strongAlgorithmTemp);
 				chunk.setWeakHash(weakAlgorithmTemp);
-				chunk.setContent(Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				newFileChunks.put(globalIndex - buffer.position(), chunk);
 				
 				chunk_number++;

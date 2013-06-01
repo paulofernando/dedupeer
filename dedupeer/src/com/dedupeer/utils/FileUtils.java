@@ -33,7 +33,7 @@ public class FileUtils {
 	private static Map<String, Integer> extensions;	
 	
 	private static PropertiesLoader propertiesLoader = new PropertiesLoader();
-	private ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.parseInt(getPropertiesLoader().getProperties().getProperty("default.chunk.size")));
+	private static ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.parseInt(getPropertiesLoader().getProperties().getProperty("default.chunk.size")));
 	
 	static {
 		extensions = new HashMap<String, Integer>();
@@ -81,47 +81,10 @@ public class FileUtils {
 	 */
 	public static byte[] getBytesFromFile(String filePath) {
 		File file = new File(filePath);		
-		return getBytesFromFile(filePath, 0, (int) file.length());
+		return getBytesFromFile(filePath, 0l,  (int)file.length());
 	}
 	
-	/**
-	 * Read a piece of a file in a storage device
-	 * @param filePath Path of the file in the storage device
-	 * @param bytesToRead amount of bytes to read
-	 * @return Bytes of the file
-	 */
-	public static byte[] getBytesFromFile(String filePath, int offset, int bytesToRead) {
-		//TODO Change the load bytes to long
-		File file = new File(filePath);
-		byte[] result = new byte[bytesToRead];
-
-		InputStream input = null;
-		try {
-			int totalBytesRead = 0;
-			input = new BufferedInputStream(new FileInputStream(file));
-			while (totalBytesRead < result.length) {
-				int bytesRemaining = result.length - totalBytesRead;
-				int bytesRead = input.read(result, offset + totalBytesRead,
-						bytesRemaining);
-				if (bytesRead > 0) {
-					totalBytesRead = totalBytesRead + bytesRead;
-				}
-			}
-		} catch (FileNotFoundException ex) {
-			log.info("File not found.");
-		} catch (IOException ex) {
-			log.info(ex);
-		} finally {
-			try {
-				input.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return result;
-	}
-	
-	public synchronized byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
+	public synchronized static byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
 		byte[] result = null;
 		RandomAccessFile raf = null;
 		try {
