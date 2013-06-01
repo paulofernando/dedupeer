@@ -363,7 +363,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		for(Chunk chunk: newFileChunks.values()) {
 			updateProgress((int) ( ((processedChunk/newFileChunks.size()) * 34) + 66) );
 			
-			chunk.setContent(fileUtils.getBytesFromFile(file.getAbsolutePath(), Integer.parseInt(chunk.index), Integer.parseInt(chunk.length)));
+			chunk.setContent(fileUtils.getBytesFromFile(file.getAbsolutePath(), Long.parseLong(chunk.index), Integer.parseInt(chunk.length)));
 			
 			cdo.insertRow(chunk);
 			processedChunk++;

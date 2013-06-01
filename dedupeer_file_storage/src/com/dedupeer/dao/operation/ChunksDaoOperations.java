@@ -295,7 +295,7 @@ public class ChunksDaoOperations {
 				
 				loaded++;
 			}			
-			log.debug("Last chunk loaded: " + loaded);
+			log.info("Last chunk loaded: " + loaded);
 		}		
 		return chunksLoaded;
 	}
