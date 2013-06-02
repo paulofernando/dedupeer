@@ -34,6 +34,7 @@ import com.dedupeer.thrift.DeduplicationServiceImpl;
 import com.dedupeer.thrift.HashingAlgorithm;
 import com.dedupeer.thrift.ThriftClient;
 import com.dedupeer.utils.FileUtils;
+import com.dedupeer.utils.Range;
 
 
 /**
@@ -514,13 +515,35 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);					
 					long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());									
 					setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
-					log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy());					
+					log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy() + " | Bytes stored = " + bytesStored);					
 					progressInfo.setProgress(100);
 				}
 			}
 		});
-		calculateProcess.start();
+		calculateProcess.start();	
+	}
 	
+	public void analizeFile() {
+		Thread analizeProcess = new Thread(new Runnable() {
+			@Override
+			public void run() {	
+				log.info("Analyzing informtaion about file " + getFilename() + "...");
+				progressInfo.setType(ProgressInfo.TYPE_ANALYZING);
+				
+				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());				
+				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
+								
+				ArrayList<Range> rangesList = (ArrayList<Range>)cdo.getAreasModified(System.getProperty("username"), getFilename());
+				
+				for(Range range: rangesList) {
+					System.out.println("(" + range.getInitialValue() + "," + range.getFinalValue() + ")");
+				}
+				
+				progressInfo.setProgress(100);
+			}
+		});
+		analizeProcess.start();
 	}
 	
 	@Override

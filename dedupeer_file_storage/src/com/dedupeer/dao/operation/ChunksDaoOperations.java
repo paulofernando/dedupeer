@@ -1,8 +1,8 @@
 package com.dedupeer.dao.operation;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,6 @@ import me.prettyprint.cassandra.service.KeyspaceService;
 import me.prettyprint.cassandra.service.KeyspaceServiceImpl;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
-import me.prettyprint.hector.api.beans.ColumnSlice;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.beans.SuperSlice;
@@ -31,15 +30,12 @@ import me.prettyprint.hector.api.query.SliceQuery;
 import me.prettyprint.hector.api.query.SuperColumnQuery;
 import me.prettyprint.hector.api.query.SuperSliceQuery;
 
-import org.apache.cassandra.thrift.ColumnParent;
-import org.apache.cassandra.thrift.SlicePredicate;
-import org.apache.cassandra.thrift.SliceRange;
-import org.apache.cassandra.thrift.SuperColumn;
 import org.apache.log4j.Logger;
 
 import com.dedupeer.backup.StoredFileFeedback;
 import com.dedupeer.thrift.Chunk;
 import com.dedupeer.thrift.ChunkIDs;
+import com.dedupeer.utils.Range;
 
 
 /**
@@ -339,6 +335,62 @@ public class ChunksDaoOperations {
             }
 		}
         return bytesStored;
+	}
+	
+	public List<Range> getAreasModified(String owner, String filename) {
+		SuperColumnQuery<String, String, String, String> superColumnQuery = 
+	            HFactory.createSuperColumnQuery(keyspaceOperator, stringSerializer, stringSerializer, 
+	                    stringSerializer, stringSerializer);
+				
+		//--------------- retrieving the id ---------------
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		HColumn<String, String> columnFileID = ufdo.getValues(owner, filename).get().getSubColumnByName("file_id");
+		String fileID = columnFileID.getValue();
+		//------------------------------------------------
+		
+		ArrayList<Range> chunksPosition = new ArrayList<Range>();
+		
+		long count = ufdo.getChunksCount(owner, filename);	
+		for(int i = 0; i < count; i++) {
+	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
+	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
+	        
+	        if(column.get().getSubColumnByName("length") != null) {
+	        	long index = Long.parseLong(column.get().getSubColumnByName("index").getValue()); 
+	        	chunksPosition.add(new Range(index, index + Long.parseLong(column.get().getSubColumnByName("length").getValue())));
+	        }
+	        
+	        if(feedback != null) {
+            	feedback.updateProgress((int) Math.ceil((((double)i) * 100) / count));
+            }
+		}
+				
+        return mergeAreas(chunksPosition);
+	}
+	
+	/**
+	 * Join the areas that have the final index equals with the initial index of the chunks. 
+	 * For instance, the ranges (0,10) and (10,14) turns into (0,14). 
+	 * @param ranges Chunks position to merge
+	 * @return Merged areas
+	 */
+	private static List<Range> mergeAreas(List<Range> ranges) {
+		//TODO Change to Interval tree to be more fast
+		
+		Collections.sort(ranges);		
+		List<Range> result = new ArrayList<Range>();
+		
+		for(int i = 0; i < (ranges.size() - 1); i++) {
+			Range newRange = new Range(ranges.get(i).getInitialValue(), ranges.get(i).getFinalValue());
+			while((i <= (ranges.size() - 2)) && (newRange.getFinalValue() == ranges.get(i+1).getInitialValue())) {
+				newRange.setFinalValue(ranges.get(i+1).getFinalValue());
+				i++;
+			}
+			result.add(newRange);
+		}
+		
+		return result;
+		
 	}
 	
 	public Vector<QueryResult<HSuperColumn<String, String, String>>> getAllValuesWithContent(String owner, String filename) {

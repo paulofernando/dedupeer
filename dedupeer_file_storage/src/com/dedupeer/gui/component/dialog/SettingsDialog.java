@@ -1,4 +1,4 @@
-package com.dedupeer.gui;
+package com.dedupeer.gui.component.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.Container;

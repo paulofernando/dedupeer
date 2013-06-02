@@ -32,7 +32,7 @@ import com.dedupeer.backup.BackupQueue;
 import com.dedupeer.backup.RestoreQueue;
 import com.dedupeer.backup.StoredFile;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
-import com.dedupeer.gui.SettingsDialog;
+import com.dedupeer.gui.component.dialog.SettingsDialog;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.gui.component.renderer.IconLabelRenderer;
 import com.dedupeer.gui.component.renderer.JProgressRenderer;
@@ -45,7 +45,7 @@ import com.dedupeer.utils.Utils;
 public class MainPanel extends JPanel {
 	
 	private static final long serialVersionUID = -6912344879931889592L;
-	private JButton btLogin, btAdd, btCalculate, btSettings;
+	private JButton btLogin, btAdd, btCalculate, btAnalyze, btSettings;
 	private JPanel groupButtons = new JPanel();
 	private BorderLayout borderLayout = new BorderLayout();
 	
@@ -110,6 +110,16 @@ public class MainPanel extends JPanel {
 					for(StoredFile sf: listStoredFiles) {						
 						sf.calculateStorageEconomy();													
 					}
+				}
+			}
+		});
+		
+		btAnalyze.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(btAnalyze.isEnabled()) {					
+					StoredFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
+					selectedFile.analizeFile();					
 				}
 			}
 		});
@@ -248,6 +258,7 @@ public class MainPanel extends JPanel {
 		//uUnlock components
 		btAdd.setEnabled(true);
 		btCalculate.setEnabled(true);
+		btAnalyze.setEnabled(true);
 		btSettings.setEnabled(true);
 		
 		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
@@ -270,6 +281,10 @@ public class MainPanel extends JPanel {
 		btCalculate.setToolTipText("Calculate the storage economy of the files stored");
 		btCalculate.setEnabled(false);
 		
+		btAnalyze = new JButton(new ImageIcon("resources/images/analyze.png"));
+		btAnalyze.setToolTipText("Analyze and show information about the selected file");
+		btAnalyze.setEnabled(false);
+		
 		btSettings = new JButton(new ImageIcon("resources/images/settings.png"));
 		btSettings.setToolTipText("Settings");
 		btSettings.setEnabled(false);
@@ -279,6 +294,7 @@ public class MainPanel extends JPanel {
 		groupButtons.add(btLogin);
 		groupButtons.add(btAdd);
 		groupButtons.add(btCalculate);
+		groupButtons.add(btAnalyze);
 		groupButtons.add(btSettings);				
 	}
 	
