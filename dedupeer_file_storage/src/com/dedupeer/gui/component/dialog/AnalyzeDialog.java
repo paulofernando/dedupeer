@@ -2,27 +2,18 @@ package com.dedupeer.gui.component.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
-import com.dedupeer.utils.FileUtils;
+import com.dedupeer.gui.component.ModificationBar;
+import com.dedupeer.utils.Range;
 
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
@@ -30,30 +21,29 @@ import com.dedupeer.utils.FileUtils;
 public class AnalyzeDialog {
 	private JDialog dialog;
 	private JPanel mainPanel;
-	private JFrame parentFrame;
+	private ArrayList<Range> ranges;
+	private long fileLength;
 	
-	public AnalyzeDialog(JFrame parentFrame) {
+	public AnalyzeDialog(JFrame parentFrame, ArrayList<Range> ranges, long fileLength) {		
+		this.ranges = ranges;
+		this.fileLength = fileLength;
 		
-		this.parentFrame = parentFrame;
-		
-		this.dialog = new JDialog(parentFrame, "Settings", true);
-		
+		this.dialog = new JDialog(parentFrame, "Content Analyzer", true);		
 		this.dialog.setResizable(false);
 		this.dialog.getContentPane().add(createPane());
-		this.dialog.pack();
-		
-		this.dialog.setSize(350, 120);
-		
+		this.dialog.pack();		
+		this.dialog.setSize(300, 80);		
 		this.dialog.setLocation(new Double((Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2) - (dialog.getWidth() / 2)).intValue(), 
-				new Double((Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 2) - (dialog.getHeight() / 2)).intValue());
-		
+				new Double((Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 2) - (dialog.getHeight() / 2)).intValue());		
 		this.dialog.setVisible(true);
 	}
 	
 	protected Container createPane() {
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
-		        		
+		
+		ModificationBar modificationBar = new ModificationBar(ranges, fileLength);
+		
         JButton btCancel = new JButton("Cancel");
 		btCancel.addMouseListener(new MouseAdapter() {			
 			@Override
@@ -62,6 +52,7 @@ public class AnalyzeDialog {
 			}
 		});
 		
+		mainPanel.add(modificationBar, BorderLayout.CENTER);
 		mainPanel.add(btCancel, BorderLayout.SOUTH);
 		
 		return mainPanel;

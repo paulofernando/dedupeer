@@ -117,9 +117,13 @@ public class MainPanel extends JPanel {
 		btAnalyze.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(btAnalyze.isEnabled()) {					
-					StoredFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
-					selectedFile.analizeFile();					
+				if(btAnalyze.isEnabled()) {
+					if(table.getSelectedRow() != -1) {
+						StoredFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
+						selectedFile.analizeFile();		
+					} else {
+						JOptionPane.showMessageDialog(jframe, "One file need be selected");
+					}
 				}
 			}
 		});

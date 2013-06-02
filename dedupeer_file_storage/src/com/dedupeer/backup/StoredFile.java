@@ -11,6 +11,7 @@ import java.util.Observable;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -26,6 +27,7 @@ import com.dedupeer.dao.operation.ChunksDaoOperations;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
 import com.dedupeer.dao.operation.UserFilesDaoOperations;
 import com.dedupeer.exception.FieldNotFoundException;
+import com.dedupeer.gui.component.dialog.AnalyzeDialog;
 import com.dedupeer.gui.component.renderer.ProgressInfo;
 import com.dedupeer.processing.EagleEye;
 import com.dedupeer.thrift.Chunk;
@@ -531,10 +533,16 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				progressInfo.setType(ProgressInfo.TYPE_ANALYZING);
 				
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-				long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());				
+				final long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 								
-				ArrayList<Range> rangesList = (ArrayList<Range>)cdo.getAreasModified(System.getProperty("username"), getFilename());
+				final ArrayList<Range> rangesList = (ArrayList<Range>)cdo.getAreasModified(System.getProperty("username"), getFilename());
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						new AnalyzeDialog(null, rangesList, fileLength);						
+					}
+				});				
 				
 				for(Range range: rangesList) {
 					System.out.println("(" + range.getInitialValue() + "," + range.getFinalValue() + ")");

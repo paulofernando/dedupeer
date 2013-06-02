@@ -355,7 +355,7 @@ public class ChunksDaoOperations {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
 	        QueryResult<HSuperColumn<String, String, String>> column = superColumnQuery.execute();
 	        
-	        if(column.get().getSubColumnByName("length") != null) {
+	        if(column.get().getSubColumnByName("length") != null) { //chunk with content
 	        	long index = Long.parseLong(column.get().getSubColumnByName("index").getValue()); 
 	        	chunksPosition.add(new Range(index, index + Long.parseLong(column.get().getSubColumnByName("length").getValue())));
 	        }
@@ -377,20 +377,20 @@ public class ChunksDaoOperations {
 	private static List<Range> mergeAreas(List<Range> ranges) {
 		//TODO Change to Interval tree to be more fast
 		
-		Collections.sort(ranges);		
 		List<Range> result = new ArrayList<Range>();
-		
-		for(int i = 0; i < (ranges.size() - 1); i++) {
-			Range newRange = new Range(ranges.get(i).getInitialValue(), ranges.get(i).getFinalValue());
-			while((i <= (ranges.size() - 2)) && (newRange.getFinalValue() == ranges.get(i+1).getInitialValue())) {
-				newRange.setFinalValue(ranges.get(i+1).getFinalValue());
-				i++;
+		if((ranges != null) && (ranges.size() > 0)) {
+			Collections.sort(ranges);			
+						
+			result.add(new Range(ranges.get(0).getInitialValue(), ranges.get(0).getFinalValue()));
+			for(int i = 1; i < (ranges.size()); i++) {
+				if(result.get(result.size()-1).getFinalValue() == ranges.get(i).getInitialValue()) {
+					result.get(result.size()-1).setFinalValue(ranges.get(i).getFinalValue());
+				} else {
+					result.add(new Range(ranges.get(i).getInitialValue(), ranges.get(i).getFinalValue()));
+				}
 			}
-			result.add(newRange);
-		}
-		
-		return result;
-		
+		}		
+		return result;		
 	}
 	
 	public Vector<QueryResult<HSuperColumn<String, String, String>>> getAllValuesWithContent(String owner, String filename) {
