@@ -32,7 +32,7 @@ public class AnalyzeDialog {
 		this.dialog.setResizable(false);
 		this.dialog.getContentPane().add(createPane());
 		this.dialog.pack();		
-		this.dialog.setSize(300, 80);		
+		this.dialog.setSize(300, 65);		
 		this.dialog.setLocation(new Double((Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2) - (dialog.getWidth() / 2)).intValue(), 
 				new Double((Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 2) - (dialog.getHeight() / 2)).intValue());		
 		this.dialog.setVisible(true);
@@ -44,8 +44,8 @@ public class AnalyzeDialog {
 		
 		ModificationBar modificationBar = new ModificationBar(ranges, fileLength);
 		
-        JButton btCancel = new JButton("Cancel");
-		btCancel.addMouseListener(new MouseAdapter() {			
+        JButton btClose = new JButton("Close");
+		btClose.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {				
 				close();
@@ -53,7 +53,7 @@ public class AnalyzeDialog {
 		});
 		
 		mainPanel.add(modificationBar, BorderLayout.CENTER);
-		mainPanel.add(btCancel, BorderLayout.SOUTH);
+		//mainPanel.add(btClose, BorderLayout.SOUTH);
 		
 		return mainPanel;
 	}
