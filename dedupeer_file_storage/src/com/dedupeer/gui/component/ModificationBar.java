@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
@@ -21,15 +23,22 @@ public class ModificationBar extends JComponent {
 	
 	private ArrayList<Range> ranges;
 	private long fileLength;
-	
-	private int componenteWidth = 300;
+		
 	private int componenteHeight = 40;
 	
 	public ModificationBar(ArrayList<Range> ranges, long fileLength) {
 		super();
-		this.setPreferredSize(new Dimension(componenteWidth, componenteHeight));		
+		this.setPreferredSize(new Dimension(this.getWidth(), componenteHeight));		
 		this.ranges = ranges;
 		this.fileLength = fileLength;
+		
+		addComponentListener(new ComponentAdapter() {
+		    @Override
+		    public void componentResized(ComponentEvent e) {
+		        setSize(new Dimension(ModificationBar.this.getWidth(), componenteHeight));
+		        super.componentResized(e);
+		    }
+		});
 	}
 	
 	@Override
@@ -42,15 +51,16 @@ public class ModificationBar extends JComponent {
          g2.fill(r);
 		 
 		 for(Range range: ranges) {
-			 int intialPosition = (int) ((((range.getInitialValue()*100)/fileLength)/100f) * componenteWidth);
-			 int finalPosition = (int) ((((range.getFinalValue()*100)/fileLength)/100f) * componenteWidth);
+			 int intialPosition = (int) ((((range.getInitialValue()*100)/fileLength)/100f) * this.getWidth());
+			 int finalPosition = (int) ((((range.getFinalValue()*100)/fileLength)/100f) * this.getWidth());
 			 
-			 r = new Rectangle2D.Double(intialPosition, 0, finalPosition - intialPosition, componenteHeight);
-	         gp = new GradientPaint(0, 0, colorsModifiedArea[0], 0, this.getHeight(), colorsModifiedArea[1], true);
-	         g2.setPaint(gp);
-	         g2.fill(r);			 
+			 if(finalPosition - intialPosition > 0) {
+				 r = new Rectangle2D.Double(intialPosition, 0, finalPosition - intialPosition, componenteHeight);
+		         gp = new GradientPaint(0, 0, colorsModifiedArea[0], 0, this.getHeight(), colorsModifiedArea[1], true);
+		         g2.setPaint(gp);
+		         g2.fill(r);			 
+			 }
 		 }
-	}
-
+	}	
 }
 

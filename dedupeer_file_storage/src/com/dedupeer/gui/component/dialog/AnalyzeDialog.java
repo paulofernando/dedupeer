@@ -2,7 +2,10 @@ package com.dedupeer.gui.component.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -24,18 +27,20 @@ public class AnalyzeDialog {
 	private ArrayList<Range> ranges;
 	private long fileLength;
 	
-	public AnalyzeDialog(JFrame parentFrame, ArrayList<Range> ranges, long fileLength) {		
+	private int maximumHeight = 65;
+	
+	public AnalyzeDialog(JFrame parentFrame, ArrayList<Range> ranges, long fileLength, String filename) {		
 		this.ranges = ranges;
 		this.fileLength = fileLength;
 		
-		this.dialog = new JDialog(parentFrame, "Content Analyzer", true);		
-		this.dialog.setResizable(false);
+		this.dialog = new JDialog(parentFrame, "Content Analyzer - [" + filename + "]", true);		
 		this.dialog.getContentPane().add(createPane());
 		this.dialog.pack();		
-		this.dialog.setSize(300, 65);		
+		this.dialog.setSize(300, maximumHeight);		
 		this.dialog.setLocation(new Double((Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2) - (dialog.getWidth() / 2)).intValue(), 
 				new Double((Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 2) - (dialog.getHeight() / 2)).intValue());		
 		this.dialog.setVisible(true);
+		
 	}
 	
 	protected Container createPane() {
@@ -62,4 +67,5 @@ public class AnalyzeDialog {
 		this.dialog.dispose();
 		this.dialog.setVisible(false);
 	}
+
 }

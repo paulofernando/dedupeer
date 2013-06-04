@@ -517,7 +517,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);					
 					long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());									
 					setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
-					log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy() + " | Bytes stored = " + bytesStored);					
+					log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy() + " | Bytes stored: " + bytesStored + " from " + fileLength);					
 					progressInfo.setProgress(100);
 				}
 			}
@@ -537,18 +537,14 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 								
 				final ArrayList<Range> rangesList = (ArrayList<Range>)cdo.getAreasModified(System.getProperty("username"), getFilename());
+				
+				progressInfo.setProgress(100);
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						new AnalyzeDialog(null, rangesList, fileLength);						
+						new AnalyzeDialog(null, rangesList, fileLength, getFilename());						
 					}
-				});				
-				
-				for(Range range: rangesList) {
-					System.out.println("(" + range.getInitialValue() + "," + range.getFinalValue() + ")");
-				}
-				
-				progressInfo.setProgress(100);
+				});
 			}
 		});
 		analizeProcess.start();
