@@ -152,7 +152,7 @@ public class ChunksDaoOperations {
 				String chunk_num = String.valueOf(chunk_number);
 				Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 				
-				log.info("Chunk " + chunk_num + " [length = " + c.length + "]" + " [index = " + c.index + "]" + " [StrongHash = " + c.strongHash + "]");
+				log.info("Chunk " + chunk_num + " [length = " + c.length + "] [index = " + c.index + "] [StrongHash = " + c.strongHash + "]");
 				
 				if(c.pfile == null) {
 					mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 

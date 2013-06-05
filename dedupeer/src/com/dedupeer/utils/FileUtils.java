@@ -33,8 +33,7 @@ public class FileUtils {
 	private static Map<String, Integer> extensions;	
 	
 	private static PropertiesLoader propertiesLoader = new PropertiesLoader();
-	private static ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.parseInt(getPropertiesLoader().getProperties().getProperty("default.chunk.size")));
-	
+		
 	static {
 		extensions = new HashMap<String, Integer>();
 		extensions.put("mp3", TYPE_AUDIO);
@@ -86,14 +85,10 @@ public class FileUtils {
 	
 	public synchronized static byte[] getBytesFromFile(String filePath, long offset, int bytesToRead) {
 		byte[] result = null;
+		ByteBuffer byteBuffer = ByteBuffer.allocate(bytesToRead);
 		RandomAccessFile raf = null;
 		try {
-			raf = new RandomAccessFile(filePath, "r");
-			
-			if(byteBuffer.capacity() != bytesToRead) {
-				byteBuffer = ByteBuffer.allocate(bytesToRead);
-			}
-			
+			raf = new RandomAccessFile(filePath, "r");			
 			byteBuffer.mark();
 			
 			FileChannel fc = raf.getChannel();
