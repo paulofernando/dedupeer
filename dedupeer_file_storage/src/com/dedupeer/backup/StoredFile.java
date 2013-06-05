@@ -369,6 +369,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			chunk.setContent(fileUtils.getBytesFromFile(file.getAbsolutePath(), Long.parseLong(chunk.index), Integer.parseInt(chunk.length)));
 			
 			cdo.insertRow(chunk);
+			chunk.setContent(new byte[0]);
 			processedChunk++;
 			if(chunk.getPchunk() != null) {
 				referencesCount++;
