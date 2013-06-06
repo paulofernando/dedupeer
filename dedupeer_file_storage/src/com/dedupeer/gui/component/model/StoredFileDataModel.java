@@ -88,6 +88,14 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 		storedFileList.remove(row);
 		fireTableRowsDeleted(row, row);
 	}
+	
+	public void removeAllStoredFiles() {
+		int size = storedFileList.size();
+		if(size > 0) {
+			storedFileList.clear();
+			fireTableRowsDeleted(0, size - 1);
+		}
+	}
 
 	@Override
 	public void update(Observable observable, Object obj) {	

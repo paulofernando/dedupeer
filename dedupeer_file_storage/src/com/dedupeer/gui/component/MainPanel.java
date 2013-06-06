@@ -257,7 +257,7 @@ public class MainPanel extends JPanel {
 
 	protected void registerUser(String username) {
 		System.setProperty("username", username);
-		this.jframe.setTitle(jframe.getTitle() + " [@" + username + "]");
+		this.jframe.setTitle("Dedupeer [@" + username + "]");
 		
 		//uUnlock components
 		btAdd.setEnabled(true);
@@ -267,6 +267,7 @@ public class MainPanel extends JPanel {
 		
 		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
 		
+		((StoredFileDataModel) table.getModel()).removeAllStoredFiles();
 		for(Entry<String, Long> file: files.entrySet()) {
 			((StoredFileDataModel) table.getModel()).addStoredFile(
 					new StoredFile((String)file.getKey(), "", (Long)file.getValue()));
