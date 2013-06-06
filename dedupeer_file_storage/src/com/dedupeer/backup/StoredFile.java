@@ -146,6 +146,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			public void run() {
 				long time = System.currentTimeMillis();
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				progressInfo.setType(ProgressInfo.TYPE_STORING);
 				
 				if(!ufdo.fileExists(System.getProperty("username"), file.getName())) { //File is not in the system yet
 					String fileID = String.valueOf(System.currentTimeMillis());
@@ -155,16 +156,15 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
 					
 					int amountStoredChunks = 0;
-					int chunksToLoadByTime = Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load"));
+					int chunksToLoadByTime = Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load"));					
 					try {
 						while(amountStoredChunks < (int)Math.ceil(((double)file.length()/defaultChunkSize))) {
 							chunks = Chunking.slicingAndDicing(file, new String(System.getProperty("user.home") + System.getProperty("file.separator") +
 									"chunks" + System.getProperty("file.separator")), defaultChunkSize, amountStoredChunks, chunksToLoadByTime,
 									fileID, hashingAlgorithm, StoredFile.this); 
-											
-							progressInfo.setType(ProgressInfo.TYPE_STORING);
-												
+																										
 							cdo.insertRows(chunks, amountStoredChunks);
+							updateProgress(1); //because the bar can fill many times in this process.
 							
 							setId(Long.parseLong(fileID));
 														
@@ -181,7 +181,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						UserFilesDaoOperations udo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 						udo.setAmountChunksWithContent(System.getProperty("username"), file.getName(), amountStoredChunks);
 						udo.setAmountChunksWithoutContent(System.getProperty("username"), file.getName(), 0l);
-												
+						updateProgress(100);						
 					} catch (IOException e) { 
 						e.printStackTrace(); 
 					}
@@ -189,7 +189,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					deduplicate(file.getName());					
 				} 
 								
-				log.info("Stored in " + (System.currentTimeMillis() - time) + " miliseconds");								
+				log.info("\"" + getFilename() + "\" stored in " + (System.currentTimeMillis() - time) + " miliseconds");								
 			}
 		});		
 		storageProcess.start();		
@@ -320,8 +320,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), newFileChunks.size() - referencesCount);
 		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		
-		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
-		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " milisecods");		
+		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
+		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
 		FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
 				"chunks") + System.getProperty("file.separator"), getFilename(), 0);
 	}
@@ -353,18 +353,15 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
 		//--------------------------------------------------------------------------------
 		
-		progressInfo.setType(ProgressInfo.TYPE_SEARCHING);
-		updateProgress(33);
+		progressInfo.setType(ProgressInfo.TYPE_SEARCHING);		
 		Map<Long,Chunk> newFileChunks = ThriftClient.getInstance().deduplicate(chunksInStorageServer, file.getAbsolutePath(), defaultChunkSize, bytesToLoadByTime, HashingAlgorithm.SHA1);
 		
-		progressInfo.setType(ProgressInfo.TYPE_STORING);
-		updateProgress(66);
-		
+		progressInfo.setType(ProgressInfo.TYPE_STORING);		
 		double processedChunk = 0d;
 		int referencesCount = 0;
 		
 		for(Chunk chunk: newFileChunks.values()) {
-			updateProgress((int) ( ((processedChunk/newFileChunks.size()) * 34) + 66) );
+			updateProgress((int) ((processedChunk/newFileChunks.size()) * 100));
 			
 			chunk.setContent(fileUtils.getBytesFromFile(file.getAbsolutePath(), Long.parseLong(chunk.index), Integer.parseInt(chunk.length)));
 			
@@ -384,7 +381,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 		
 		updateProgress(100);
-		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");	
+		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");	
 	}
 	
 	/** Retrieves the file, even though it is deduplicated */
@@ -397,7 +394,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 				
-				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
+				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());				
 				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());				
 				long amountChunksWithContentLoaded = 0;
 				
@@ -406,13 +403,12 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				//--- retrieving the id ----
 				HColumn<String, String> columnFileID = ufdo.getValues(System.getProperty("username"), filename).get().getSubColumnByName("file_id");
-				String fileID = columnFileID.getValue();
-				long chunksCount = ufdo.getChunksCount(System.getProperty("username"), filename);
+				String fileID = columnFileID.getValue();				
 				//-------------------------				
 				
 				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {					
 					QueryResult<SuperSlice<String, String, String>> chunksByRange = cdo.getChunksByRange(System.getProperty("username"), filename, 
-							fileID, chunksCount, initialChunkToLoad);					
+							fileID, amountTotalChunks, initialChunkToLoad);					
 										
 					for(HSuperColumn<String, String, String> chunk: chunksByRange.get().getSuperColumns()) {
 						if(chunk.getSubColumnByName("content") != null) {
@@ -424,7 +420,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 						initialChunkToLoad++;						
 					}										
 					chunksByRange.get().getSuperColumns().clear();					
-					StoredFile.this.updateProgress((int)(Math.ceil((((double)amountChunksWithContentLoaded) * 100) / chunksCount)));			        
+					StoredFile.this.updateProgress((int)(Math.floor((((double)amountChunksWithContentLoaded) * 100) / amountTotalChunks)));			        
 				}
 				
 				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
@@ -447,7 +443,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								, pathToRestore + "\\" + filename);	
 						
 						count++;
-						int prog = (int)(Math.ceil((((double)count) * 100) / amountTotalChunks));
+						int prog = (int)(Math.ceil((((double)(count + amountChunksWithContentLoaded)) * 100) / amountTotalChunks));
 						setProgress(prog);						
 						initialChunkToLoad = Long.parseLong(chunkReference.get().getName());
 					}
@@ -460,7 +456,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				}
 				
 				setProgress(0);
-				log.info("Rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
+				log.info("\"" + getFilename() + "\" rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
 				
 			}
 		});

@@ -184,7 +184,7 @@ public class ChunksDaoOperations {
 	            chunk_number++;
 	            
 	            if(feedback != null) {
-	            	feedback.updateProgress((int) Math.ceil((((double)chunk_number) * 100) / chunks.size()));
+	            	feedback.updateProgress((int) Math.floor((((double)(chunk_number - initialChunk)) * 100) / chunks.size()));
 	            }
 	        } catch (HectorException e) {
 	        	log.error("Data was not inserted");
@@ -506,7 +506,6 @@ public class ChunksDaoOperations {
 		String fileID = columnFileID.getValue();
 		//-------------------------
 		
-		long count = ufdo.getChunksCount(owner, filename);
 		long i = initialChunk;
 		while(result.size() < amountOfChunks) {
 	        superColumnQuery.setColumnFamily("Chunks").setKey(fileID).setSuperName(String.valueOf(i));
@@ -514,9 +513,6 @@ public class ChunksDaoOperations {
 	        
 	        if(column.get().getSubColumnByName("pfile") != null) { 
 	        	result.add(column);
-	        }
-	        if(feedback != null) {
-	        	feedback.updateProgress((int)(Math.ceil((((double)i) * 100) / count)));
 	        }
 	        i++;
 		}

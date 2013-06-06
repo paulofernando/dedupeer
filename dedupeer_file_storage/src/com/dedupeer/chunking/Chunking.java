@@ -43,9 +43,7 @@ public class Chunking {
 	 */
 	public static ArrayList<Chunk> slicingAndDicing(File file, String destination, int chunkSize, long chunkOffset, 
 			int chunksToSlice, String fileID, HashingAlgorithm hashingAlgorithm, StoredFileFeedback feedback) throws IOException {
-		if(feedback != null)
-			feedback.setProgressType(ProgressInfo.TYPE_CHUNKING);
-		
+				
 		ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 		
 		new File(destination).mkdir();
@@ -94,12 +92,7 @@ public class Chunking {
 		     chunk.setStrongHash(DeduplicationServiceImpl.getStrongHash(hashingAlgorithm, b));
 		     chunk.setContent(FileUtils.getBytesFromFile(fname));
 		     
-		     chunks.add(chunk);
-		     
-		     if(feedback != null) {
-	        	feedback.updateProgress((int)Math.ceil(((double)(file.length() - filesize) * 100) / file.length()));
-	         }
-		     
+		     chunks.add(chunk);		     
 		     chunkCount++;
 		     globalIndex += b.length;
 	    }	    	    fis.close();	
