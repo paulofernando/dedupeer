@@ -265,12 +265,15 @@ public class MainPanel extends JPanel {
 		btAnalyze.setEnabled(true);
 		btSettings.setEnabled(true);
 		
-		Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
-		
-		((StoredFileDataModel) table.getModel()).removeAllStoredFiles();
-		for(Entry<String, Long> file: files.entrySet()) {
-			((StoredFileDataModel) table.getModel()).addStoredFile(
-					new StoredFile((String)file.getKey(), "", (Long)file.getValue()));
+		try {
+			Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
+			((StoredFileDataModel) table.getModel()).removeAllStoredFiles();
+			for(Entry<String, Long> file: files.entrySet()) {
+				((StoredFileDataModel) table.getModel()).addStoredFile(
+						new StoredFile((String)file.getKey(), "", (Long)file.getValue()));
+			}
+		} catch (me.prettyprint.hector.api.exceptions.HectorException ex) {
+			JOptionPane.showMessageDialog(this, "Apache Cassandra is not running!", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	

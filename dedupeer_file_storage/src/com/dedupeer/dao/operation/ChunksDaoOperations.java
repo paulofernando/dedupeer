@@ -338,7 +338,7 @@ public class ChunksDaoOperations {
 		        chunksLoaded++;
 			}
 			
-			log.info("Calculating economy of " + filename + ": " + chunksLoaded);
+			log.info("Calculating economy of \"" + filename + "\": " + chunksLoaded);
 		} while(result.get().getSuperColumns().size() != 0);
 		
         return bytesStored;

@@ -499,7 +499,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		Thread calculateProcess = new Thread(new Runnable() {
 			@Override
 			public void run() {				
-				log.info("Calculating storage economy of " + getFilename() + "...");
+				log.info("Calculating storage economy of \"" + getFilename() + "\"...");
 				
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
@@ -514,7 +514,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);					
 					long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());									
 					setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
-					log.info("Storage economy of " + getFilename() + " = " + getStorageEconomy() + " | Bytes stored: " + bytesStored + " from " + fileLength);					
+					log.info("Storage economy of \"" + getFilename() + "\" = " + getStorageEconomy() + " | Bytes stored: " + bytesStored + " from " + fileLength);					
 					progressInfo.setProgress(100);
 				}
 			}
