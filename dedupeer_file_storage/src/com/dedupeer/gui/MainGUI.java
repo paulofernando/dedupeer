@@ -3,6 +3,7 @@ package com.dedupeer.gui;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.IOException;
+import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -26,6 +27,11 @@ public class MainGUI extends JFrame {
 		
 	public MainGUI() {
 		this.setTitle("Dedupeer");
+		
+		Toolkit kit = Toolkit.getDefaultToolkit();
+		URL resource = getClass().getResource("/images/logo.png");
+		Image img = kit.createImage(resource);
+		this.setIconImage(img);
 		
 		setup();
 		add(new MainPanel(this));
