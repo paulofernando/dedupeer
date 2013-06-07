@@ -1,4 +1,21 @@
 -------------------------
+Version 0.1.4 - Tagged in 28/Apr/2013
+- Error message added to inform when Cassandra is not running.
+- Feature to change user added.
+- Progress bar corrected.
+- Content of the Chunk removed of the memory after use.
+- ByteBuffer changed because was being shared by all Chunk objects.
+- Performance of the getAreasModified and getSpaceOccupiedByTheFile increased.
+- ModificationBar now can be resizable.
+- ModificationBar added to analyze the content modified in the file to show visually.
+- Deduplication do not returns chunk objects with content anymore.
+- Bug fixed: many Hector thread was being open.
+- Performance to rehydrate increased using SuperSliceQuery.
+- Performance increased to rehydrate.
+- DeFS changed to slice a file by demand.
+- Economy calculation is no longer done for files already calculated.
+
+-------------------------
 Version 0.1.3 - Tagged in 28/Apr/2013
 - Change of the directory (to home) where the chunks are saved before sent to storage
 - Economy calculation is no longer done for files already calculated

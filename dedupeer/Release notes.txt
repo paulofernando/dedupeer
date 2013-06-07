@@ -1,0 +1,8 @@
+-------------------------
+Version 0.1.3 - Tagged in 06/jun/2013
+- DeFS changed to slice a file by demand.
+- Performance to rehydrate increased using SuperSliceQuery.
+- Hector 1.1.3 added in the pom.xml file.
+- Deduplication do not returns chunk objects with content anymore.
+- Content of the Chunk removed of the memory after use.
+- ByteBuffer changed because was being shared by all Chunk objects.
