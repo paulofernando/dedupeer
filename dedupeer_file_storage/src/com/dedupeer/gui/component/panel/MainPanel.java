@@ -1,4 +1,4 @@
-package com.dedupeer.gui.component;
+package com.dedupeer.gui.component.panel;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -11,8 +11,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -31,7 +29,8 @@ import javax.swing.SwingUtilities;
 import com.dedupeer.backup.BackupQueue;
 import com.dedupeer.backup.RestoreQueue;
 import com.dedupeer.backup.StoredFile;
-import com.dedupeer.dao.operation.FilesDaoOpeartion;
+import com.dedupeer.dao.CassandraManager;
+import com.dedupeer.dao.Login;
 import com.dedupeer.gui.component.dialog.SettingsDialog;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.gui.component.renderer.IconLabelRenderer;
@@ -58,6 +57,8 @@ public class MainPanel extends JPanel {
 	
 	private final String contextmenuDeduplicate = "Use it to deduplicate other file";
 	private final String contextmenuRestore = "Rehydrate";
+	
+	private Login login;
 		
 	public MainPanel(final JFrame jframe) {
 		this.jframe = jframe;
@@ -135,7 +136,7 @@ public class MainPanel extends JPanel {
 					SwingUtilities.invokeLater(new Runnable(){
 						@Override
 						public void run() {							
-							new SettingsDialog(jframe);							
+							new SettingsDialog(jframe, login);							
 						}
 					});
 					
@@ -256,25 +257,21 @@ public class MainPanel extends JPanel {
 	}
 
 	protected void registerUser(String username) {
-		System.setProperty("username", username);
+		
+		CassandraManager cm = new CassandraManager();		
+		if(!cm.isDedupeerKeySpaceCreated()) {
+			cm.createDedupeerDataModel();
+		}
+							
 		this.jframe.setTitle("Dedupeer [@" + username + "]");
 		
-		//uUnlock components
+		//Unlock components
 		btAdd.setEnabled(true);
 		btCalculate.setEnabled(true);
 		btAnalyze.setEnabled(true);
 		btSettings.setEnabled(true);
 		
-		try {
-			Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(System.getProperty("username"));
-			((StoredFileDataModel) table.getModel()).removeAllStoredFiles();
-			for(Entry<String, Long> file: files.entrySet()) {
-				((StoredFileDataModel) table.getModel()).addStoredFile(
-						new StoredFile((String)file.getKey(), "", (Long)file.getValue()));
-			}
-		} catch (me.prettyprint.hector.api.exceptions.HectorException ex) {
-			JOptionPane.showMessageDialog(this, "Apache Cassandra is not running!", "Error", JOptionPane.ERROR_MESSAGE);
-		}
+		login = new Login(username, (StoredFileDataModel)table.getModel());	
 	}
 	
 	private void initComponents() {

@@ -13,7 +13,7 @@ import javax.swing.SwingUtilities;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.OfficeSilver2007Skin;
 
-import com.dedupeer.gui.component.MainPanel;
+import com.dedupeer.gui.component.panel.MainPanel;
 
 
 /**

@@ -20,8 +20,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
+import com.dedupeer.dao.CassandraManager;
+import com.dedupeer.dao.Login;
 import com.dedupeer.utils.FileUtils;
 
 
@@ -31,17 +35,19 @@ import com.dedupeer.utils.FileUtils;
 public class SettingsDialog {
 	private JDialog dialog;
 	private JPanel mainPanel;
-	private JButton btSave, btCancel;
+	private JButton btDelete, btSave, btCancel;
 	
 	private JTextField tfChunkSize;
 	private JTextField tfChunksToLoad;
 	private JCheckBox check;
 	
 	private JFrame parentFrame;
+	private Login login;
 	
-	public SettingsDialog(JFrame parentFrame) {
+	public SettingsDialog(JFrame parentFrame, Login login) {
 		
 		this.parentFrame = parentFrame;
+		this.login = login;
 		
 		this.dialog = new JDialog(parentFrame, "Settings", true);
 		
@@ -83,6 +89,25 @@ public class SettingsDialog {
 		
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
         
+        btDelete = new JButton("Delete All Files");
+        btDelete.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int response = JOptionPane.showConfirmDialog(parentFrame, "All data will be deleted. Do you want really delete all files?", "Delete all files", JOptionPane.WARNING_MESSAGE);
+				if(response == JOptionPane.OK_OPTION) {
+					CassandraManager cm = new CassandraManager();
+					if(cm.dropDedupeerDataModel()) {
+						JOptionPane.showMessageDialog(parentFrame, "All files were deleted!", "Files deleted", JOptionPane.INFORMATION_MESSAGE);
+						cm.createDedupeerDataModel();						
+						login.loadFiles();
+					} else {
+						JOptionPane.showMessageDialog(parentFrame, "Error when deleting files!", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+					
+				}
+			}
+		});
+        
 		btSave = new JButton("Save");
 		btSave.addMouseListener(new MouseAdapter() {			
 			@Override
@@ -110,12 +135,12 @@ public class SettingsDialog {
 		btCancel = new JButton("Cancel");
 		btCancel.addMouseListener(new MouseAdapter() {			
 			@Override
-			public void mouseClicked(MouseEvent e) {
-				
+			public void mouseClicked(MouseEvent e) {				
 				close();
 			}
 		});
 		
+		buttons.add(btDelete);		
 		buttons.add(btSave);
 		buttons.add(btCancel);
 		mainPanel.add(buttons, BorderLayout.SOUTH);
