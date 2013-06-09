@@ -15,6 +15,9 @@ import me.prettyprint.hector.api.ddl.ComparatorType;
 import me.prettyprint.hector.api.ddl.KeyspaceDefinition;
 import me.prettyprint.hector.api.factory.HFactory;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class CassandraManager {
 	
 	private static final String CLUSTER_NAME = "TestCluster";

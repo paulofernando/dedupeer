@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -89,11 +90,11 @@ public class SettingsDialog {
 		
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
         
-        btDelete = new JButton("Delete All Files");
+        btDelete = new JButton("Delete All Files", new ImageIcon("resources/images/warning.png"));
         btDelete.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				int response = JOptionPane.showConfirmDialog(parentFrame, "All data will be deleted. Do you want really delete all files?", "Delete all files", JOptionPane.WARNING_MESSAGE);
+				int response = JOptionPane.showConfirmDialog(parentFrame, "Do you want really delete ALL files?", "Delete all files", JOptionPane.WARNING_MESSAGE);
 				if(response == JOptionPane.OK_OPTION) {
 					CassandraManager cm = new CassandraManager();
 					if(cm.dropDedupeerDataModel()) {
