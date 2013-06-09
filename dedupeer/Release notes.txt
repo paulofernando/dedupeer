@@ -1,5 +1,5 @@
 -------------------------
-Version 0.1.3 - Tagged in 06/jun/2013
+Version 0.1.3 - Created and Tagged in 06/jun/2013
 - DeFS changed to slice a file by demand.
 - Performance to rehydrate increased using SuperSliceQuery.
 - Hector 1.1.3 added in the pom.xml file.

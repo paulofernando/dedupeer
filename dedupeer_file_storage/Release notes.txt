@@ -1,5 +1,11 @@
 -------------------------
-Version 0.1.4 - Tagged in 06/Jun/2013
+Version 0.1.5 - Created in 09/Jun/2013
+- Cassandra Column Families are created automatically now.
+- "Delete All Files" added in the "SettingsDialog".
+- Logo added.
+
+-------------------------
+Version 0.1.4 - Created and Tagged in 06/Jun/2013
 - Error message added to inform when Cassandra is not running.
 - Feature to change user added.
 - Progress bar corrected.
@@ -16,7 +22,7 @@ Version 0.1.4 - Tagged in 06/Jun/2013
 - Economy calculation is no longer done for files already calculated.
 
 -------------------------
-Version 0.1.3 - Tagged in 28/Apr/2013
+Version 0.1.3 - Created and Tagged in 28/Apr/2013
 - Change of the directory (to home) where the chunks are saved before sent to storage
 - Economy calculation is no longer done for files already calculated
 - Exception when is clicked out of the table is manipulated now
