@@ -263,7 +263,7 @@ public class MainPanel extends JPanel {
 			cm.createDedupeerDataModel();
 		}
 							
-		this.jframe.setTitle("Dedupeer [@" + username + "]");
+		this.jframe.setTitle("Dedupeer File Storage [@" + username + "]");
 		
 		//Unlock components
 		btAdd.setEnabled(true);

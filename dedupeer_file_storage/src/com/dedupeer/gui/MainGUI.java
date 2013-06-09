@@ -26,7 +26,7 @@ public class MainGUI extends JFrame {
 	private final int height = 500;
 		
 	public MainGUI() {
-		this.setTitle("Dedupeer");
+		this.setTitle("Dedupeer File Storage");
 		
 		Toolkit kit = Toolkit.getDefaultToolkit();
 		URL resource = getClass().getResource("/images/logo.png");
