@@ -3,6 +3,8 @@ package com.dedupeer.dao;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.swing.JOptionPane;
+
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ThriftCfDef;
 import me.prettyprint.cassandra.service.ThriftCluster;
@@ -64,9 +66,14 @@ public class CassandraManager {
 	}
 	
 	public boolean isDedupeerKeySpaceCreated() {
-		CassandraHostConfigurator  cassandraHostConfigurator = new CassandraHostConfigurator(HOST);
-		ThriftCluster cassandraCluster = new ThriftCluster(CLUSTER_NAME, cassandraHostConfigurator);
-		KeyspaceDefinition keyspaceDetail = cassandraCluster.describeKeyspace(KEYSPACE_NAME);
+		KeyspaceDefinition keyspaceDetail = null;
+		try {
+			CassandraHostConfigurator  cassandraHostConfigurator = new CassandraHostConfigurator(HOST);
+			ThriftCluster cassandraCluster = new ThriftCluster(CLUSTER_NAME, cassandraHostConfigurator);
+			keyspaceDetail = cassandraCluster.describeKeyspace(KEYSPACE_NAME);		
+		} catch (me.prettyprint.hector.api.exceptions.HectorException ex) {
+			JOptionPane.showMessageDialog(null, "Apache Cassandra is not running!", "Error", JOptionPane.ERROR_MESSAGE);
+		}
 		return (keyspaceDetail != null);
 	}
 }

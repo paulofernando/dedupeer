@@ -32,10 +32,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 		log.info("\n[Deduplicating...]");
 		
 		long timeToRetrieve = System.currentTimeMillis();
-				
+		
+		String defaultChunkSize = String.valueOf(chunkSizeInBytes);
+		
 		String newFileID = String.valueOf(System.currentTimeMillis());
 		HashMap<Long, Chunk> newFileChunks = new HashMap<Long, Chunk>();
-		HashMap<Long, Chunk> resultChunks = new HashMap<Long, Chunk>();
+		
 		int chunk_number = 0;
 		Checksum32 c32 = new Checksum32();
 		
@@ -117,7 +119,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								strongAlgorithmTemp = getStrongHash(hashingAlgorithm, newchunk);
 							}
 							
-							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							Chunk chunk = new Chunk(newFileID, String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - newchunk.length), String.valueOf(newchunk.length));
 							chunk.setStrongHash(strongAlgorithmTemp);
 							chunk.setWeakHash(String.valueOf(weakAlgorithmTemp));
@@ -130,8 +132,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 						}						
 						log.debug("Duplicated chunk " + chunk_number + ": " + strongHash + " [length = " + currentChunk.length + "]" + " [globalIndex = " + globalIndex + "]");
 						
-						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-								String.valueOf(globalIndex), String.valueOf(currentChunk.length));
+						Chunk chunk = new Chunk(newFileID, String.valueOf(chunk_number), 
+								String.valueOf(globalIndex), defaultChunkSize);
 						chunk.setPfile(chunksInfo.get(c32.getValue()).get(strongHash).fileID);
 						chunk.setPchunk(chunksInfo.get(c32.getValue()).get(strongHash).chunkID);
 						
@@ -153,8 +155,8 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 					currentChunk = null;
 					if(buffer.remaining() == 0) {
 						log.debug("[1] Creating new chunk " + chunk_number + " in " + (globalIndex - buffer.position()) + " [length = " + buffer.array().length + "]");
-						Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
-								String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.array().length));
+						Chunk chunk = new Chunk(newFileID, String.valueOf(chunk_number), 
+								String.valueOf(globalIndex - buffer.position()), defaultChunkSize);
 						chunk.setStrongHash(getStrongHash(hashingAlgorithm, buffer.array()));
 						chunk.setWeakHash(String.valueOf(c32.getValue()));
 						
@@ -178,7 +180,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 								strongAlgorithmTemp = getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
 							}
 							
-							Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
+							Chunk chunk = new Chunk(newFileID, String.valueOf(chunk_number), 
 									String.valueOf(globalIndex - buffer.position()), String.valueOf(newchunk.length));
 							chunk.setStrongHash(strongAlgorithmTemp);
 							chunk.setWeakHash(weakAlgorithmTemp);
@@ -202,7 +204,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 									strongAlgorithmTemp = getStrongHash(hashingAlgorithm, Arrays.copyOfRange(newchunk, 0, newchunk.length));
 								}
 								
-								chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
+								chunk = new Chunk(newFileID, String.valueOf(chunk_number), 
 										String.valueOf(globalIndex), String.valueOf(newchunk.length));
 								chunk.setStrongHash(strongAlgorithmTemp);
 								chunk.setWeakHash(weakAlgorithmTemp);
@@ -230,7 +232,7 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 					strongAlgorithmTemp = getStrongHash(hashingAlgorithm, Arrays.copyOfRange(buffer.array(), 0, buffer.position()));
 				}
 				
-				Chunk chunk = new Chunk(String.valueOf(newFileID), String.valueOf(chunk_number), 
+				Chunk chunk = new Chunk(newFileID, String.valueOf(chunk_number), 
 						String.valueOf(globalIndex - buffer.position()), String.valueOf(buffer.capacity()));
 				chunk.setStrongHash(strongAlgorithmTemp);
 				chunk.setWeakHash(weakAlgorithmTemp);
@@ -240,18 +242,12 @@ public class DeduplicationServiceImpl implements DeduplicationService.Iface {
 				globalIndex += newchunk.length;
 				buffer.clear();
 			}
-			
-			for(Map.Entry<Long, Chunk> entry: newFileChunks.entrySet()) {				
-				resultChunks.put(entry.getKey(), entry.getValue());			
-			}
-					
-			newFileChunks.clear();
-			
+									
 			offset += bytesToLoadByTime;			
 		}
 						
 		log.info("Deduplicated in " + (System.currentTimeMillis() - time) + " miliseconds");
-		return resultChunks;
+		return newFileChunks;
 	}
 	
 	/**
