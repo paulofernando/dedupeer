@@ -14,6 +14,9 @@ import javax.swing.JComponent;
 
 import com.dedupeer.utils.Range;
 
+/**
+ * @author Paulo Fernando (pf@paulofernando.net.br)
+ */
 public class ModificationBar extends JComponent {
 
 	private static final long serialVersionUID = 3032628316015934754L;
@@ -61,6 +64,9 @@ public class ModificationBar extends JComponent {
 		         g2.fill(r);			 
 			 }
 		 }
+		 
+		 g2.setColor(new Color(0x626262));
+		 g2.drawLine(0, this.getHeight() - 1, this.getWidth(), this.getHeight() - 1);
 	}	
 }
 

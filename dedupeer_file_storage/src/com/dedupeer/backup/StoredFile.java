@@ -79,23 +79,20 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		this(file, file.getName(), storageEconomy);
 	}
 	
-	/** Store a file in the system with another name */
+	/** File with another name */
 	public StoredFile(File file, String newFilename, String storageEconomy) {
 		this.file = file;
 		this.filename = newFilename;
 		this.storageEconomy = storageEconomy;
 	}
 	
-	public StoredFile(String filename, String storageEconomy, long id) {
-		this(filename, storageEconomy);
-		this.id = id;
-	}
-	
-	public StoredFile(String filename, String storageEconomy) {
+	public StoredFile(String filename, String storageEconomy, long id, int defaultChunkSize) {
 		this.filename = filename;
 		this.storageEconomy = storageEconomy;
+		this.id = id;
+		this.defaultChunkSize = defaultChunkSize;
 	}
-	
+		
 	public File getFile() {
 		return file;
 	}
@@ -175,7 +172,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 							chunks.clear();
 						}
 						
-						ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(amountStoredChunks), "?");
+						ufdo.insertRow(System.getProperty("username"), file.getName(), fileID, String.valueOf(file.length()), String.valueOf(amountStoredChunks), "?", defaultChunkSize);
 						fdo.insertRow(System.getProperty("username"), file.getName(), fileID);
 						
 						UserFilesDaoOperations udo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
@@ -208,6 +205,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 		FilesDaoOpeartion fdo = new FilesDaoOpeartion("TestCluster", "Dedupeer");
+		
+		//Default chunk size changes to the same value of the file stored
+		defaultChunkSize = ufdo.getDefaultChunkSize(System.getProperty("username"), filenameStored);
 		
 		QueryResult<HSuperColumn<String, String, String>> result = ufdo.getValues(System.getProperty("username"), filenameStored);				
 		HColumn<String, String> columnAmountChunks = result.get().getSubColumnByName("chunks");		
@@ -316,7 +316,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 			setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
 		}
 		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?"); //+1 because start in 0
+		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?", defaultChunkSize); //+1 because start in 0
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), newFileChunks.size() - referencesCount);
 		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		
@@ -350,7 +350,10 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		/** Map<adler32, Map<strongHash, [FileID, chunkNumber]>> */		
 		ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", this);				
 		log.info("Retrieving chunks information...");
-		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);		
+		Map<Integer, Map<String, ChunkIDs>> chunksInStorageServer = cdo.getHashesOfAFile(fileIDStored, amountChunks);
+		
+		//Default chunk size changes to the same value of the file stored
+		defaultChunkSize = ufdo.getDefaultChunkSize(System.getProperty("username"), filenameStored);
 		//--------------------------------------------------------------------------------
 		
 		progressInfo.setType(ProgressInfo.TYPE_SEARCHING);		
@@ -375,7 +378,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		
 		int totalChunks = (int) processedChunk;
 		newFileID = newFileChunks.get(new Long(0l)).fileID;
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?");
+		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?", defaultChunkSize);
 		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), totalChunks - referencesCount);
 		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
@@ -407,7 +410,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				//-------------------------				
 				
 				while(amountChunksWithContent - amountChunksWithContentLoaded > 0) {					
-					QueryResult<SuperSlice<String, String, String>> chunksByRange = cdo.getChunksByRange(System.getProperty("username"), filename, 
+					QueryResult<SuperSlice<String, String, String>> chunksByRange = cdo.getChunksByRange(System.getProperty("username"), 
 							fileID, amountTotalChunks, initialChunkToLoad);					
 										
 					for(HSuperColumn<String, String, String> chunk: chunksByRange.get().getSuperColumns()) {
@@ -529,7 +532,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				log.info("Analyzing informtaion about file " + getFilename() + "...");
 				progressInfo.setType(ProgressInfo.TYPE_ANALYZING);
 				
-				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+				final UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
 				final long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", StoredFile.this);
 								
@@ -539,7 +542,9 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						new AnalyzeDialog(null, rangesList, fileLength, getFilename());						
+						new AnalyzeDialog(null, rangesList, fileLength, getFilename(), 
+								ufdo.getChunksWithContentCount(System.getProperty("username"), filename),
+								ufdo.getChunksWithoutContentCount(System.getProperty("username"), filename));						
 					}
 				});
 			}

@@ -25,7 +25,7 @@ public class UserFilesDaoOperations {
 	private Cluster cluster;
 	private Keyspace keyspaceOperator;
 	private static StringSerializer stringSerializer = StringSerializer.get();
-
+	
 	/**
 	 * Creates an object to manipulate the operations on the UserFiles SuperColumn Family 
 	 * @param clusterName The cluster name from instance of Cassandra
@@ -38,7 +38,7 @@ public class UserFilesDaoOperations {
 
 	/** Inserts a new row on the UserFiles SuperColumn Family */
 	@SuppressWarnings("unchecked")
-	public void insertRow(String owner_name, String fileName, String fileID, String size, String chunks, String version) {
+	public void insertRow(String owner_name, String fileName, String fileID, String size, String chunks, String version, int defaultChunkSize) {
 		try {
 			Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
 			mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(
@@ -49,6 +49,8 @@ public class UserFilesDaoOperations {
 					fileName, Arrays.asList(HFactory.createStringColumn("chunks", chunks)), stringSerializer, stringSerializer, stringSerializer));
 			mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(
 					fileName, Arrays.asList(HFactory.createStringColumn("version", version)), stringSerializer, stringSerializer, stringSerializer));
+			mutator.insert(owner_name, "UserFiles", HFactory.createSuperColumn(
+					fileName, Arrays.asList(HFactory.createStringColumn("default_chunk_size", String.valueOf(defaultChunkSize))), stringSerializer, stringSerializer, stringSerializer));
 		} catch (HectorException e) {
 			log.error("Data was not inserted");
 			e.printStackTrace();
@@ -151,6 +153,19 @@ public class UserFilesDaoOperations {
 		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
 		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("size");
 		return Long.parseLong(columnAmountChunks.getValue());
+	}
+	
+	/**
+	 * Retrieves the chunk size used when the file was stored. 
+	 * @param owner File's owner
+	 * @param filename File name
+	 * @return
+	 */
+	public int getDefaultChunkSize(String owner, String filename) {
+		UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
+		QueryResult<HSuperColumn<String, String, String>> userFileResult = ufdo.getValues(owner, filename);
+		HColumn<String, String> columnAmountChunks = userFileResult.get().getSubColumnByName("default_chunk_size");
+		return Integer.parseInt(columnAmountChunks.getValue());
 	}
 
 	/** Closes the connection with cluster */

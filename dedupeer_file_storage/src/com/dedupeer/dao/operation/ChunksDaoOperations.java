@@ -11,6 +11,7 @@ import java.util.Vector;
 import me.prettyprint.cassandra.connection.HConnectionManager;
 import me.prettyprint.cassandra.model.QuorumAllConsistencyLevelPolicy;
 import me.prettyprint.cassandra.serializers.BytesArraySerializer;
+import me.prettyprint.cassandra.serializers.LongSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.cassandra.service.CassandraHostConfigurator;
 import me.prettyprint.cassandra.service.ColumnSliceIterator;
@@ -35,6 +36,7 @@ import org.apache.log4j.Logger;
 import com.dedupeer.backup.StoredFileFeedback;
 import com.dedupeer.thrift.Chunk;
 import com.dedupeer.thrift.ChunkIDs;
+import com.dedupeer.utils.FileUtils;
 import com.dedupeer.utils.Range;
 
 
@@ -52,7 +54,7 @@ public class ChunksDaoOperations {
 	private StoredFileFeedback feedback;
 	
 	KeyspaceService keyspace;
-	
+		
 	/**
 	 * Creates an object to manipulate the operations on the Chunks Column Family
 	 * @param clusterName The cluster name from instance of Cassandra
@@ -65,8 +67,7 @@ public class ChunksDaoOperations {
 		HConnectionManager connectionManager = new HConnectionManager(clusterName, new CassandraHostConfigurator("localhost:9160"));
 		
 		keyspace = new KeyspaceServiceImpl(keyspaceName, new QuorumAllConsistencyLevelPolicy(), 
-				connectionManager, FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE);
-		
+				connectionManager, FailoverPolicy.ON_FAIL_TRY_ALL_AVAILABLE);				
 	}
 	
 	/**
@@ -444,7 +445,7 @@ public class ChunksDaoOperations {
 	/**
 	 * Retrieves the range of super columns (chunks). Chunks with and without content are included
 	 */
-	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String filename, String fileID, 
+	public Vector<QueryResult<HSuperColumn<String, String, String>>> getValuesWithContent(String owner, String fileID, 
 			long chunksCount,long initialChunk, long amountOfChunks) {
 		
 		SuperColumnQuery<String, String, String, String> superColumnQuery = 
@@ -468,7 +469,7 @@ public class ChunksDaoOperations {
 	}
 	
 	
-	public QueryResult<SuperSlice<String, String, String>> getChunksByRange(String owner, String filename, String fileID, 
+	public QueryResult<SuperSlice<String, String, String>> getChunksByRange(String owner, String fileID, 
 			long chunksCount,long initialChunk) {
 				
 		SuperSliceQuery<String, String, String, String> query = HFactory.createSuperSliceQuery(keyspaceOperator, stringSerializer, 

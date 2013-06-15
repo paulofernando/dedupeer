@@ -74,17 +74,20 @@ public class MainPanel extends JPanel {
 		infoTextArea.setEditable(false);
 		this.add(infoTextArea, BorderLayout.PAGE_END);
 		
-		registerListeners();		
+		registerListeners();
+		SwingUtilities.invokeLater(new Runnable() {			
+			@Override
+			public void run() {
+				showLoginDialog();				
+			}
+		});
 	}
 	
 	private void registerListeners() {
 		btLogin.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				String username = JOptionPane.showInputDialog("Inform your username");
-				if(username != null) {
-					registerUser(username);
-				}
+				showLoginDialog();
 			}
 		});
 		
@@ -325,5 +328,12 @@ public class MainPanel extends JPanel {
 		
 		JScrollPane scrollPane = new JScrollPane(table);
 		this.add(scrollPane, BorderLayout.CENTER);
+	}
+	
+	private void showLoginDialog() {
+		String username = JOptionPane.showInputDialog("Inform your username");
+		if(username != null) {
+			registerUser(username);
+		}
 	}
 }

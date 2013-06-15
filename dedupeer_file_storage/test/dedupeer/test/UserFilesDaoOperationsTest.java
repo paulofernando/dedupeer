@@ -20,7 +20,7 @@ public class UserFilesDaoOperationsTest extends TestCase {
 	
 	public void testGetValues() {
 		UserFilesDaoOperations cdh = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-		cdh.insertRow(key, filename, file_id, size, chunks, version);
+		cdh.insertRow(key, filename, file_id, size, chunks, version, 4);
 		
 		HColumn<String, String> columnChunks = cdh.getValues(key, filename).get().getSubColumnByName("chunks");
 		HColumn<String, String> columnFileID = cdh.getValues(key, filename).get().getSubColumnByName("file_id");
