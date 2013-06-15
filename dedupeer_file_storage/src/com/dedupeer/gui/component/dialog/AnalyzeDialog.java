@@ -28,20 +28,22 @@ public class AnalyzeDialog {
 	private long fileLength;
 	private long chunkWithContent;
 	private long chunkWithoutContent;
+	private long defaultChunkSize;
 	
 	private int maximumHeight = 130;
 	
 	public AnalyzeDialog(JFrame parentFrame, ArrayList<Range> ranges, long fileLength, String filename, 
-			long chunkWithContent, long chunkWithoutContent) {		
+			long chunkWithContent, long chunkWithoutContent, int defaultChunkSize) {		
 		this.ranges = ranges;
 		this.fileLength = fileLength;
 		this.chunkWithContent = chunkWithContent;
 		this.chunkWithoutContent = chunkWithoutContent;
+		this.defaultChunkSize = defaultChunkSize;
 		
 		this.dialog = new JDialog(parentFrame, "Content Analyzer - [" + filename + "]", true);		
 		this.dialog.getContentPane().add(createPane());
 		this.dialog.pack();		
-		this.dialog.setSize(400, maximumHeight);		
+		this.dialog.setSize(600, maximumHeight);		
 		this.dialog.setLocation(new Double((Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2) - (dialog.getWidth() / 2)).intValue(), 
 				new Double((Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 2) - (dialog.getHeight() / 2)).intValue());		
 		this.dialog.setVisible(true);
@@ -68,6 +70,7 @@ public class AnalyzeDialog {
 		labelsPane.add(new JLabel("Chunks with content: " + chunkWithContent));
 		labelsPane.add(new JLabel("  |  References: " + chunkWithoutContent));
 		labelsPane.add(new JLabel("  |  Total chunks: " + (chunkWithContent + chunkWithoutContent)));
+		labelsPane.add(new JLabel("  |  Default chunk size: " + defaultChunkSize));
 		
         JButton btClose = new JButton("Close");
 		btClose.addMouseListener(new MouseAdapter() {			

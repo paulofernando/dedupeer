@@ -544,7 +544,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					public void run() {
 						new AnalyzeDialog(null, rangesList, fileLength, getFilename(), 
 								ufdo.getChunksWithContentCount(System.getProperty("username"), filename),
-								ufdo.getChunksWithoutContentCount(System.getProperty("username"), filename));						
+								ufdo.getChunksWithoutContentCount(System.getProperty("username"), filename),
+								ufdo.getDefaultChunkSize(System.getProperty("username"), filename));						
 					}
 				});
 			}
