@@ -54,7 +54,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 	public int defaultChunkSize = Integer.parseInt(FileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size"));
 		
 	private File file;
-	private ProgressInfo progressInfo = new ProgressInfo(0, ProgressInfo.TYPE_CHUNKING);
+	private ProgressInfo progressInfo = new ProgressInfo(0, ProgressInfo.TYPE_NONE);
 	private String storageEconomy;
 	private JButton btRestore;
 	private String filename;	
