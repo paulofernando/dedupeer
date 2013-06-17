@@ -22,8 +22,8 @@ public class Legend extends JLabel {
 	public final static int TYPE_REFERENCE = 1;
 	
 	private static final String space = "       ";
-	private static final String chunkText = space + "Chunk with content";
-	private static final String referenceText = space + "Reference to other chunk";
+	private static final String chunkText = space + "Chunks with content";
+	private static final String referenceText = space + "References to other chunks";
 	
 	private static final int boxWidth = 12, boxHeight = 12; 
 	private Color boxColor;
