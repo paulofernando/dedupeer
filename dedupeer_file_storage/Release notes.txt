@@ -1,4 +1,15 @@
 -------------------------
+Version 0.1.6 - Created in 18/Jun/2013
+- Bug fixed: text on the progress bar now is showed since the start of processes.
+- Progress bar information showed since the start of processes
+- Default chunk size of the file added in the AnalyzeDialog.
+- Default chunk size add in the UserFiles column family.
+- Chunk size used in the deduplication is get from the stored file.
+- More information added in the AnalyzeDialog, including the legend describing the colors of the bar.
+- Login dialog is showed when the user open the application.
+- New strings changed by references to reduces the memory usage.
+
+-------------------------
 Version 0.1.5 - Created in 09/Jun/2013
 - Cassandra Column Families are created automatically now.
 - "Delete All Files" added in the "SettingsDialog".

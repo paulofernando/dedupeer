@@ -186,7 +186,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					deduplicate(file.getName());					
 				} 
 								
-				log.info("\"" + getFilename() + "\" stored in " + (System.currentTimeMillis() - time) + " miliseconds");								
+				log.info("\"" + getFilename() + "\" stored in " + (System.currentTimeMillis() - time) + " miliseconds");
+				progressInfo.setType(ProgressInfo.TYPE_NONE);
 			}
 		});		
 		storageProcess.start();		
@@ -324,6 +325,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
 		FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
 				"chunks") + System.getProperty("file.separator"), getFilename(), 0);
+		
+		progressInfo.setType(ProgressInfo.TYPE_NONE);
 	}
 		
 	/**
@@ -384,7 +387,8 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
 		
 		updateProgress(100);
-		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");	
+		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
+		progressInfo.setType(ProgressInfo.TYPE_NONE);
 	}
 	
 	/** Retrieves the file, even though it is deduplicated */
@@ -460,7 +464,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 				
 				setProgress(0);
 				log.info("\"" + getFilename() + "\" rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
-				
+				progressInfo.setType(ProgressInfo.TYPE_NONE);
 			}
 		});
 		restoreProcess.start();
@@ -520,6 +524,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 					log.info("Storage economy of \"" + getFilename() + "\" = " + getStorageEconomy() + " | Bytes stored: " + bytesStored + " from " + fileLength);					
 					progressInfo.setProgress(100);
 				}
+				progressInfo.setType(ProgressInfo.TYPE_NONE);
 			}
 		});
 		calculateProcess.start();	
@@ -548,6 +553,7 @@ public class StoredFile extends Observable implements StoredFileFeedback {
 								ufdo.getDefaultChunkSize(System.getProperty("username"), filename));						
 					}
 				});
+				progressInfo.setType(ProgressInfo.TYPE_NONE);
 			}
 		});
 		analizeProcess.start();

@@ -60,9 +60,9 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	        		colors[1], true);
 	        g2.setPaint(gp);
 	        g2.fill(r);
-			
-			graphics.setColor(textColor);
-			graphics.drawString(progressInfo.getTypeString(), 2, ((this.getHeight()>>1) + (graphics.getFontMetrics().getHeight()>>1)));
 		}
+		
+		graphics.setColor(textColor);
+		graphics.drawString(progressInfo.getTypeString(), 2, ((this.getHeight()>>1) + (graphics.getFontMetrics().getHeight()>>1)));
 	}
 }
