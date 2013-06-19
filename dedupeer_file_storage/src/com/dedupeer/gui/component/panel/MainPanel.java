@@ -44,19 +44,22 @@ import com.dedupeer.utils.Utils;
 public class MainPanel extends JPanel {
 	
 	private static final long serialVersionUID = -6912344879931889592L;
-	private JButton btLogin, btAdd, btCalculate, btAnalyze, btSettings;
-	private JPanel groupButtons = new JPanel();
+	private JButton btLogin, btAdd, btCalculate, btSettings,
+					btRehydrate, btDeduplicate, btAnalyze;
+	private JPanel groupButtonsTop = new JPanel();
+	private JPanel groupButtonsBottom = new JPanel();
+	
 	private BorderLayout borderLayout = new BorderLayout();
 	
 	private JTable table;
 	private JFrame jframe;
-	public static JTextArea infoTextArea;
 	
 	private MouseListener mouseListener;
 	private ActionListener menuListener;
 	
-	private final String contextmenuDeduplicate = "Use it to deduplicate other file";
-	private final String contextmenuRestore = "Rehydrate";
+	private final String tooltipDeduplicate = "Use it to deduplicate other file";
+	private final String tooltipRehydrate = "Rehydrate this file";
+	private final String tooltipAnalyze = "Analyze and show information about the selected file";
 	
 	private Login login;
 		
@@ -66,13 +69,11 @@ public class MainPanel extends JPanel {
 		initComponents();
 		
 		this.setLayout(borderLayout);		
-		this.add(groupButtons, BorderLayout.PAGE_START);
+		this.add(groupButtonsTop, BorderLayout.PAGE_START);
 
 		createAndAddTable();
-
-		infoTextArea = new JTextArea();
-		infoTextArea.setEditable(false);
-		this.add(infoTextArea, BorderLayout.PAGE_END);
+		
+		this.add(groupButtonsBottom, BorderLayout.PAGE_END);
 		
 		registerListeners();
 		SwingUtilities.invokeLater(new Runnable() {			
@@ -118,20 +119,6 @@ public class MainPanel extends JPanel {
 			}
 		});
 		
-		btAnalyze.addMouseListener(new MouseAdapter() {			
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(btAnalyze.isEnabled()) {
-					if(table.getSelectedRow() != -1) {
-						StoredFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
-						selectedFile.analizeFile();		
-					} else {
-						JOptionPane.showMessageDialog(jframe, "One file need be selected");
-					}
-				}
-			}
-		});
-		
 		btSettings.addMouseListener(new MouseAdapter() {			
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -147,6 +134,60 @@ public class MainPanel extends JPanel {
 			}
 		});
 		
+		//-----------------------------------------------------------------------
+		
+		btRehydrate.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(btRehydrate.isEnabled()) {
+					SwingUtilities.invokeLater(new Runnable(){
+						@Override
+						public void run() {							
+							restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));				
+						}
+					});
+					
+				}
+			}
+		});
+		
+		btDeduplicate.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(btDeduplicate.isEnabled()) {
+					SwingUtilities.invokeLater(new Runnable(){
+						@Override
+						public void run() {							
+							JFileChooser fc = new JFileChooser();
+							int result = fc.showOpenDialog(MainPanel.this);
+							File fileToBackup = fc.getSelectedFile();
+							
+							if(result == JFileChooser.APPROVE_OPTION) {
+								backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getFilename());
+							}						
+						}
+					});
+					
+				}
+			}
+		});
+		
+		btAnalyze.addMouseListener(new MouseAdapter() {			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(btAnalyze.isEnabled()) {
+					if(table.getSelectedRow() != -1) {
+						StoredFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
+						selectedFile.analizeFile();		
+					} else {
+						JOptionPane.showMessageDialog(jframe, "One file need be selected");
+					}
+				}
+			}
+		});
+		
+		//-----------------------------------------------------------------------
+		
 		mouseListener = new MouseListener() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -159,21 +200,25 @@ public class MainPanel extends JPanel {
 											
 						JPopupMenu contextmenu = new JPopupMenu();
 						
-						JMenuItem deduplicateMenu = new JMenuItem(contextmenuDeduplicate);
+						JMenuItem deduplicateMenu = new JMenuItem(tooltipDeduplicate);
 						deduplicateMenu.addActionListener(menuListener);
 						contextmenu.add(deduplicateMenu);
 						
-						JMenuItem restoreMenu = new JMenuItem(contextmenuRestore);
+						JMenuItem restoreMenu = new JMenuItem(tooltipRehydrate);
 						restoreMenu.addActionListener(menuListener);
 						contextmenu.add(restoreMenu);
 						
 						contextmenu.show(e.getComponent(), e.getX(), e.getY());
 					}
-				} else if (e.getButton() == MouseEvent.BUTTON1) {					
+				} else if (e.getButton() == MouseEvent.BUTTON1) {
 					if(table.getSelectedRow() != -1) {
-						StoredFile sf = ((StoredFileDataModel)(table.getModel())).getStoredFileList().get(table.getSelectedRow());
-						if(sf.getSmallestChunk() != -1)
-							infoTextArea.setText("Smallest chunk of '" + sf.getFilename() + "' = [" + sf.getSmallestChunk() + "]");
+						btRehydrate.setEnabled(true);
+						btDeduplicate.setEnabled(true);
+						btAnalyze.setEnabled(true);
+					} else {
+						btRehydrate.setEnabled(false);
+						btDeduplicate.setEnabled(false);
+						btAnalyze.setEnabled(false);
 					}
 				}
 			}
@@ -195,7 +240,7 @@ public class MainPanel extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				if(event.getActionCommand().equals(contextmenuDeduplicate)) {
+				if(event.getActionCommand().equals(tooltipDeduplicate)) {
 					JFileChooser fc = new JFileChooser();
 					int result = fc.showOpenDialog(MainPanel.this);
 					File fileToBackup = fc.getSelectedFile();
@@ -203,7 +248,7 @@ public class MainPanel extends JPanel {
 					if(result == JFileChooser.APPROVE_OPTION) {
 						backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getFilename());
 					}
-				} else if(event.getActionCommand().equals(contextmenuRestore)) {
+				} else if(event.getActionCommand().equals(tooltipRehydrate)) {
 					restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));
 				}
 			}
@@ -271,7 +316,6 @@ public class MainPanel extends JPanel {
 		//Unlock components
 		btAdd.setEnabled(true);
 		btCalculate.setEnabled(true);
-		btAnalyze.setEnabled(true);
 		btSettings.setEnabled(true);
 		
 		login = new Login(username, (StoredFileDataModel)table.getModel());	
@@ -288,22 +332,36 @@ public class MainPanel extends JPanel {
 		btCalculate = new JButton(new ImageIcon("resources/images/calculate_storage_economy.png"));
 		btCalculate.setToolTipText("Calculate the storage economy of the files stored");
 		btCalculate.setEnabled(false);
-		
-		btAnalyze = new JButton(new ImageIcon("resources/images/analyze.png"));
-		btAnalyze.setToolTipText("Analyze and show information about the selected file");
-		btAnalyze.setEnabled(false);
-		
+			
 		btSettings = new JButton(new ImageIcon("resources/images/settings.png"));
 		btSettings.setToolTipText("Settings");
 		btSettings.setEnabled(false);
 		
-		groupButtons.setLayout(new FlowLayout());
+		groupButtonsTop.setLayout(new FlowLayout());
 		
-		groupButtons.add(btLogin);
-		groupButtons.add(btAdd);
-		groupButtons.add(btCalculate);
-		groupButtons.add(btAnalyze);
-		groupButtons.add(btSettings);				
+		groupButtonsTop.add(btLogin);
+		groupButtonsTop.add(btAdd);
+		groupButtonsTop.add(btCalculate);		
+		groupButtonsTop.add(btSettings);
+		
+		//---------------------------------------------------------------------------------
+		
+		btRehydrate = new JButton(new ImageIcon("resources/images/rehydrate.png"));
+		btRehydrate.setToolTipText("Rehydrate the selected file");
+		btRehydrate.setEnabled(false);
+		
+		btDeduplicate = new JButton(new ImageIcon("resources/images/deduplicate.png"));
+		btDeduplicate.setToolTipText("Use the selected file to deduplicate other file");
+		btDeduplicate.setEnabled(false);
+
+		btAnalyze = new JButton(new ImageIcon("resources/images/analyze.png"));
+		btAnalyze.setToolTipText(tooltipAnalyze);
+		btAnalyze.setEnabled(false);
+		
+		groupButtonsBottom.setLayout(new FlowLayout());
+		groupButtonsBottom.add(btRehydrate);
+		groupButtonsBottom.add(btDeduplicate);
+		groupButtonsBottom.add(btAnalyze);
 	}
 	
 	private void createAndAddTable() {
