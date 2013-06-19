@@ -1,5 +1,6 @@
 -------------------------
 Version 0.1.6 - Created in 18/Jun/2013
+- New buttons added: "rehydrate" and "deduplicate".
 - Bug fixed: text on the progress bar now is showed since the start of processes.
 - Progress bar information showed since the start of processes
 - Default chunk size of the file added in the AnalyzeDialog.
