@@ -35,6 +35,7 @@ import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.gui.component.renderer.IconLabelRenderer;
 import com.dedupeer.gui.component.renderer.JProgressRenderer;
 import com.dedupeer.navigation.DFile;
+import com.dedupeer.navigation.Navigable;
 import com.dedupeer.thrift.HashingAlgorithm;
 import com.dedupeer.utils.FileUtils;
 import com.dedupeer.utils.Utils;
@@ -113,8 +114,8 @@ public class MainPanel extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(btCalculate.isEnabled()) {					
-					List<DFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileWithoutEconomyCalculated();
-					for(DFile sf: listStoredFiles) {						
+					List<Navigable> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileWithoutEconomyCalculated();
+					for(Navigable sf: listStoredFiles) {						
 						sf.calculateStorageEconomy();													
 					}
 				}
@@ -145,7 +146,7 @@ public class MainPanel extends JPanel {
 					SwingUtilities.invokeLater(new Runnable(){
 						@Override
 						public void run() {							
-							restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));				
+							restoreIt((DFile)((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));				
 						}
 					});
 					
@@ -165,7 +166,7 @@ public class MainPanel extends JPanel {
 							File fileToBackup = fc.getSelectedFile();
 							
 							if(result == JFileChooser.APPROVE_OPTION) {
-								backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getFilename());
+								backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getName());
 							}						
 						}
 					});
@@ -179,7 +180,7 @@ public class MainPanel extends JPanel {
 			public void mouseClicked(MouseEvent e) {
 				if(btAnalyze.isEnabled()) {
 					if(table.getSelectedRow() != -1) {
-						DFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
+						DFile selectedFile = (DFile)((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
 						selectedFile.analizeFile();		
 					} else {
 						JOptionPane.showMessageDialog(jframe, "One file need be selected");
@@ -248,10 +249,10 @@ public class MainPanel extends JPanel {
 					File fileToBackup = fc.getSelectedFile();
 					
 					if(result == JFileChooser.APPROVE_OPTION) {
-						backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getFilename());
+						backupIt(fileToBackup, ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).getName());
 					}
 				} else if(event.getActionCommand().equals(tooltipRehydrate)) {
-					restoreIt(((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));
+					restoreIt((DFile)((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()));
 				}
 			}
 		};		

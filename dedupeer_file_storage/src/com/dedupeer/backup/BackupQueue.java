@@ -46,7 +46,7 @@ public class BackupQueue extends Thread {
 	 * Adds in the backup queue and informs the filename to compare the chunks
 	 */
 	public void addBackup(DFile dFile, String deduplicateWith) {
-		deduplicateMap.put(dFile.getFilename(), deduplicateWith);
+		deduplicateMap.put(dFile.getName(), deduplicateWith);
 		addBackup(dFile);		
 	}
 
@@ -59,11 +59,11 @@ public class BackupQueue extends Thread {
 				/* Blocks the Thread until the queue has a DFile */
 				DFile currentBackup = backupQueue.take();
 				
-				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
-					currentBackup.deduplicateABigFileByThrift(deduplicateMap.get(currentBackup.getFilename()), 
+				if(deduplicateMap.containsKey(currentBackup.getName())) {
+					currentBackup.deduplicateABigFileByThrift(deduplicateMap.get(currentBackup.getName()), 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size")) * 
 							Integer.parseInt(fileUtils.getPropertiesLoader().getProperties().getProperty("chunks.to.load")));
-					deduplicateMap.remove(currentBackup.getFilename());
+					deduplicateMap.remove(currentBackup.getName());
 				} else {
 					currentBackup.store();
 				}				

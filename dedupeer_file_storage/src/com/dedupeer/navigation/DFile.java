@@ -39,15 +39,11 @@ import com.dedupeer.thrift.ThriftClient;
 import com.dedupeer.utils.FileUtils;
 import com.dedupeer.utils.Range;
 
-
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
  */
 public class DFile extends Observable implements StoredFileFeedback, Navigable {
-	
-	public static final int FILE_NAME = 0;
-	public static final int PROGRESS = 1;
-	public static final int ECONOMY = 2;
+		
 	private static final int CHUNKS_TO_LOAD = 20;
 	
 	private static final Logger log = Logger.getLogger(DFile.class);
@@ -110,7 +106,8 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 		return file;
 	}
 	
-	public String getFilename() {
+	@Override
+	public String getName() {
 		return filename;
 	}
 
@@ -118,10 +115,12 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 		return progressInfo.getProgress();
 	}
 
+	@Override
 	public ProgressInfo getProgressInfo() {
 		return progressInfo;
 	}
 	
+	@Override
 	public String getStorageEconomy() {
 		return storageEconomy;
 	}
@@ -138,8 +137,8 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 	 */
 	public Object getItem(int item) throws FieldNotFoundException {
 		switch (item) {
-			case FILE_NAME:
-				return getFilename();
+			case NAME:
+				return getName();
 			case PROGRESS:
 				return progressInfo.getProgress();
 			case ECONOMY:
@@ -178,7 +177,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 							setId(Long.parseLong(fileID));
 														
 							FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-									"chunks" + System.getProperty("file.separator")), getFilename(), amountStoredChunks);
+									"chunks" + System.getProperty("file.separator")), getName(), amountStoredChunks);
 							
 							amountStoredChunks += chunks.size();
 							chunks.clear();
@@ -198,7 +197,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 					deduplicate(file.getName());					
 				} 
 								
-				log.info("\"" + getFilename() + "\" stored in " + (System.currentTimeMillis() - time) + " miliseconds");
+				log.info("\"" + getName() + "\" stored in " + (System.currentTimeMillis() - time) + " miliseconds");
 				progressInfo.setType(ProgressInfo.TYPE_NONE);
 			}
 		});		
@@ -329,14 +328,14 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 			setProgress((int)(Math.ceil((((double)count) * 100) / newFileChunks.size())));
 		}
 		
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?", defaultChunkSize); //+1 because start in 0
-		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), newFileChunks.size() - referencesCount);
-		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
+		ufdo.insertRow(System.getProperty("username"), getName(), newFileID, String.valueOf(file.length()), String.valueOf(chunk_number + 1), "?", defaultChunkSize); //+1 because start in 0
+		ufdo.setAmountChunksWithContent(System.getProperty("username"), getName(), newFileChunks.size() - referencesCount);
+		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getName(), referencesCount);
 		
-		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);
-		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
+		fdo.insertRow(System.getProperty("username"), getName(), newFileID);
+		log.info("Deduplication of the file \"" + getName() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
 		FileUtils.cleanUpChunks(new String(System.getProperty("user.home") + System.getProperty("file.separator") +
-				"chunks") + System.getProperty("file.separator"), getFilename(), 0);
+				"chunks") + System.getProperty("file.separator"), getName(), 0);
 		
 		progressInfo.setType(ProgressInfo.TYPE_NONE);
 	}
@@ -393,13 +392,13 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 		
 		int totalChunks = (int) processedChunk;
 		newFileID = newFileChunks.get(new Long(0l)).fileID;
-		ufdo.insertRow(System.getProperty("username"), getFilename(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?", defaultChunkSize);
-		ufdo.setAmountChunksWithContent(System.getProperty("username"), getFilename(), totalChunks - referencesCount);
-		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getFilename(), referencesCount);
-		fdo.insertRow(System.getProperty("username"), getFilename(), newFileID);		
+		ufdo.insertRow(System.getProperty("username"), getName(), newFileID, String.valueOf(file.length()), String.valueOf(totalChunks), "?", defaultChunkSize);
+		ufdo.setAmountChunksWithContent(System.getProperty("username"), getName(), totalChunks - referencesCount);
+		ufdo.setAmountChunksWithoutContent(System.getProperty("username"), getName(), referencesCount);
+		fdo.insertRow(System.getProperty("username"), getName(), newFileID);		
 		
 		updateProgress(100);
-		log.info("Deduplication of the file \"" + getFilename() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
+		log.info("Deduplication of the file \"" + getName() + "\" finished in " + (System.currentTimeMillis() - time) + " miliseconds");
 		progressInfo.setType(ProgressInfo.TYPE_NONE);
 	}
 	
@@ -413,8 +412,8 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");				
 				ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", DFile.this);
 				
-				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());				
-				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());				
+				long amountTotalChunks = ufdo.getChunksCount(System.getProperty("username"), getName());				
+				long amountChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getName());				
 				long amountChunksWithContentLoaded = 0;
 				
 				progressInfo.setType(ProgressInfo.TYPE_WRITING);
@@ -442,7 +441,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 					DFile.this.updateProgress((int)(Math.floor((((double)amountChunksWithContentLoaded) * 100) / amountTotalChunks)));			        
 				}
 				
-				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getFilename());
+				long amountChunksWithoutContent = ufdo.getChunksWithoutContentCount(System.getProperty("username"), getName());
 				
 				long count = 0;
 				long amountChunksWithoutContentLoaded = 0;
@@ -475,7 +474,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 				}
 				
 				setProgress(0);
-				log.info("\"" + getFilename() + "\" rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
+				log.info("\"" + getName() + "\" rehydrated in " + (System.currentTimeMillis() - time) + " miliseconds");
 				progressInfo.setType(ProgressInfo.TYPE_NONE);
 			}
 		});
@@ -518,12 +517,12 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 		Thread calculateProcess = new Thread(new Runnable() {
 			@Override
 			public void run() {				
-				log.info("Calculating storage economy of \"" + getFilename() + "\"...");
+				log.info("Calculating storage economy of \"" + getName() + "\"...");
 				
 				UserFilesDaoOperations ufdo = new UserFilesDaoOperations("TestCluster", "Dedupeer");
-				long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());
-				long amountOfChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getFilename());
-				long totalChunks = ufdo.getChunksCount(System.getProperty("username"), getFilename());
+				long fileLength = ufdo.getFileLength(System.getProperty("username"), getName());
+				long amountOfChunksWithContent = ufdo.getChunksWithContentCount(System.getProperty("username"), getName());
+				long totalChunks = ufdo.getChunksCount(System.getProperty("username"), getName());
 				
 				if(totalChunks == amountOfChunksWithContent) {					
 					setStorageEconomy("0%");
@@ -531,9 +530,9 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 				} else {				
 					ChunksDaoOperations cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", DFile.this);
 					progressInfo.setType(ProgressInfo.TYPE_CALCULATION_STORAGE_ECONOMY);					
-					long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getFilename());									
+					long bytesStored = cdo.getSpaceOccupiedByTheFile(System.getProperty("username"), getName());									
 					setStorageEconomy((100 - ((bytesStored * 100) / fileLength)) + "%");
-					log.info("Storage economy of \"" + getFilename() + "\" = " + getStorageEconomy() + " | Bytes stored: " + bytesStored + " from " + fileLength);					
+					log.info("Storage economy of \"" + getName() + "\" = " + getStorageEconomy() + " | Bytes stored: " + bytesStored + " from " + fileLength);					
 					progressInfo.setProgress(100);
 				}
 				progressInfo.setType(ProgressInfo.TYPE_NONE);
@@ -546,18 +545,18 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 		Thread analizeProcess = new Thread(new Runnable() {
 			@Override
 			public void run() {	
-				log.info("Analyzing informtaion about file " + getFilename() + "...");
+				log.info("Analyzing informtaion about file " + getName() + "...");
 				progressInfo.setType(ProgressInfo.TYPE_ANALYZING);
 				
-				final long fileLength = ufdo.getFileLength(System.getProperty("username"), getFilename());		
+				final long fileLength = ufdo.getFileLength(System.getProperty("username"), getName());		
 								
-				final ArrayList<Range> rangesList = (ArrayList<Range>)cdo.getAreasModified(System.getProperty("username"), getFilename());
+				final ArrayList<Range> rangesList = (ArrayList<Range>)cdo.getAreasModified(System.getProperty("username"), getName());
 				
 				progressInfo.setProgress(100);
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
-						new AnalyzeDialog(null, rangesList, fileLength, getFilename(), 
+						new AnalyzeDialog(null, rangesList, fileLength, getName(), 
 								ufdo.getChunksWithContentCount(System.getProperty("username"), filename),
 								ufdo.getChunksWithoutContentCount(System.getProperty("username"), filename),
 								ufdo.getDefaultChunkSize(System.getProperty("username"), filename));						
