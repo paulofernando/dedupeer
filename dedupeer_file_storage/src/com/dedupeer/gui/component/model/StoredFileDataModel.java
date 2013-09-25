@@ -7,7 +7,7 @@ import java.util.Observer;
 
 import javax.swing.table.AbstractTableModel;
 
-import com.dedupeer.backup.StoredFile;
+import com.dedupeer.navigation.DFile;
 
 
 /**
@@ -15,7 +15,7 @@ import com.dedupeer.backup.StoredFile;
  */
 public class StoredFileDataModel extends AbstractTableModel implements Observer {
 
-	private List<StoredFile> storedFileList = new ArrayList<StoredFile>();
+	private List<DFile> storedFileList = new ArrayList<DFile>();
 	
 	private static final long serialVersionUID = 6620911388379308486L;
 	private String[] columnNames = {"File", "Progress", "Storage economy"};
@@ -41,22 +41,22 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		StoredFile storedFile =  storedFileList.get(rowIndex);
-		if(storedFile == null) return null;
+		DFile dFile =  storedFileList.get(rowIndex);
+		if(dFile == null) return null;
 		
 		switch(columnIndex) {
-			case StoredFile.FILE_NAME:
-				return storedFile.getFilename();
-			case StoredFile.PROGRESS:
-				return storedFile.getProgressInfo();
-			case StoredFile.ECONOMY:
-				return storedFile.getStorageEconomy();
+			case DFile.FILE_NAME:
+				return dFile.getFilename();
+			case DFile.PROGRESS:
+				return dFile.getProgressInfo();
+			case DFile.ECONOMY:
+				return dFile.getStorageEconomy();
 		}
 		
 		return null;
 	}
 	
-	public List<StoredFile> getStoredFileList() {
+	public List<DFile> getStoredFileList() {
 		return storedFileList;
 	}
 	
@@ -64,9 +64,9 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 	 * Retrieves the list of the StoredFiles that still was not calculated the economy
 	 * @return List with the StoredFiles that still was not calculated the economy
 	 */
-	public List<StoredFile> getStoredFileWithoutEconomyCalculated() {
-		List<StoredFile> listWithoutEconomyCalculated = new ArrayList<StoredFile>();
-		for(StoredFile sf: storedFileList) {
+	public List<DFile> getStoredFileWithoutEconomyCalculated() {
+		List<DFile> listWithoutEconomyCalculated = new ArrayList<DFile>();
+		for(DFile sf: storedFileList) {
 			if((sf.getStorageEconomy() == null) || (sf.getStorageEconomy().equals(""))) {
 				listWithoutEconomyCalculated.add(sf);
 			}
@@ -74,17 +74,17 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 		return listWithoutEconomyCalculated;
 	}
 	
-	public StoredFile getStoredFileByRow(int row) {
+	public DFile getStoredFileByRow(int row) {
 		return storedFileList.get(row);
 	}
 	
-	public void addStoredFile(StoredFile backup) {
+	public void addStoredFile(DFile backup) {
 		backup.addObserver(this);
 		storedFileList.add(backup);
 		fireTableRowsInserted(getRowCount() - 1, getRowCount() - 1);
 	}
 	
-	public void removeStoredFile(StoredFile backup, int row) {
+	public void removeStoredFile(DFile backup, int row) {
 		storedFileList.remove(row);
 		fireTableRowsDeleted(row, row);
 	}

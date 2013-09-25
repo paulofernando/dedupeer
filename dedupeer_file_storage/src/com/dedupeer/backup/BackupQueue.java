@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.dedupeer.navigation.DFile;
 import com.dedupeer.utils.FileUtils;
 
 
@@ -23,7 +24,7 @@ public class BackupQueue extends Thread {
 	/**
 	 * Map with a file path as key and the backup as value
 	 */
-	private LinkedBlockingQueue<StoredFile> backupQueue = new LinkedBlockingQueue<StoredFile>();
+	private LinkedBlockingQueue<DFile> backupQueue = new LinkedBlockingQueue<DFile>();
 	
 	public static BackupQueue getInstance() {
 		if(instance == null) {
@@ -34,19 +35,19 @@ public class BackupQueue extends Thread {
 	}
 	
 	/**
-	 * Adds a StoredFile in the queue
-	 * @param storedFile The StoredFile to add in the queue
+	 * Adds a DFile in the queue
+	 * @param dFile The DFile to add in the queue
 	 */
-	public void addBackup(StoredFile storedFile) {
-		backupQueue.add(storedFile);
+	public void addBackup(DFile dFile) {
+		backupQueue.add(dFile);
 	}
 	
 	/**
 	 * Adds in the backup queue and informs the filename to compare the chunks
 	 */
-	public void addBackup(StoredFile storedFile, String deduplicateWith) {
-		deduplicateMap.put(storedFile.getFilename(), deduplicateWith);
-		addBackup(storedFile);		
+	public void addBackup(DFile dFile, String deduplicateWith) {
+		deduplicateMap.put(dFile.getFilename(), deduplicateWith);
+		addBackup(dFile);		
 	}
 
 	@SuppressWarnings("static-access")
@@ -55,8 +56,8 @@ public class BackupQueue extends Thread {
 		for(;;) {
 			try {
 				
-				/* Blocks the Thread until the queue has a StoredFile */
-				StoredFile currentBackup = backupQueue.take();
+				/* Blocks the Thread until the queue has a DFile */
+				DFile currentBackup = backupQueue.take();
 				
 				if(deduplicateMap.containsKey(currentBackup.getFilename())) {
 					currentBackup.deduplicateABigFileByThrift(deduplicateMap.get(currentBackup.getFilename()), 

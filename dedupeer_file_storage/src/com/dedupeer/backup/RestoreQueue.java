@@ -2,6 +2,8 @@ package com.dedupeer.backup;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.dedupeer.navigation.DFile;
+
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
  */
@@ -9,7 +11,7 @@ public class RestoreQueue extends Thread {
 	
 	private static RestoreQueue instance;
 	/** Map with a file path as key and the backup as value */
-	private LinkedBlockingQueue<StoredFile> restoreQueue = new LinkedBlockingQueue<StoredFile>();
+	private LinkedBlockingQueue<DFile> restoreQueue = new LinkedBlockingQueue<DFile>();
 	
 	public static RestoreQueue getInstance() {
 		if(instance == null) {
@@ -19,15 +21,15 @@ public class RestoreQueue extends Thread {
 		return instance;
 	}
 	
-	public void addRestore(StoredFile storedFile) {
-		restoreQueue.add(storedFile);
+	public void addRestore(DFile dFile) {
+		restoreQueue.add(dFile);
 	}
 
 	@Override
 	public void run() {
 		for(;;) {
 			try {
-				StoredFile currentBackup = restoreQueue.take();
+				DFile currentBackup = restoreQueue.take();
 				currentBackup.rehydrate();
 			} catch (InterruptedException e) {
 				e.printStackTrace();

@@ -1,8 +1,11 @@
 package com.dedupeer.utils;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -181,6 +184,21 @@ public class FileUtils {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static void writeNewLine(String line, File file) {
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
+			writer.println(line);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			writer.close();
+		}
+		
 	}
 	
 	public static PropertiesLoader getPropertiesLoader() {

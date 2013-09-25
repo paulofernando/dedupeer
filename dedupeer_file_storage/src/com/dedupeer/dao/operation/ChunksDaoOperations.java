@@ -148,13 +148,16 @@ public class ChunksDaoOperations {
 	@SuppressWarnings("unchecked")
 	public void insertRows(ArrayList<Chunk> chunks, int initialChunk) {
 		int chunk_number = initialChunk;
+		
+		if(chunks.get(0) != null) {
+			log.info("Chunk: " + chunks.get(0).chunkNumber);
+		}
+		
 		for(Chunk c: chunks) {
 			try {
 				String chunk_num = String.valueOf(chunk_number);
 				Mutator<String> mutator = HFactory.createMutator(keyspaceOperator, stringSerializer);
-				
-				log.info("Chunk " + chunk_num);
-				
+								
 				if(c.pfile == null) {
 					mutator.insert(c.fileID, "Chunks", HFactory.createSuperColumn(chunk_num, 
 		                    Arrays.asList(HFactory.createStringColumn("strongHash", c.strongHash)), 

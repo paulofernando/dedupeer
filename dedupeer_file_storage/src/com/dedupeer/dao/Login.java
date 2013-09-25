@@ -5,10 +5,10 @@ import java.util.Map.Entry;
 
 import javax.swing.JOptionPane;
 
-import com.dedupeer.backup.StoredFile;
 import com.dedupeer.dao.operation.FilesDaoOpeartion;
 import com.dedupeer.dao.operation.UserFilesDaoOperations;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
+import com.dedupeer.navigation.DFile;
 
 public class Login {
 	
@@ -30,7 +30,7 @@ public class Login {
 			((StoredFileDataModel) listener).removeAllStoredFiles();
 			for(Entry<String, Long> file: files.entrySet()) {
 				((StoredFileDataModel) listener).addStoredFile(
-						new StoredFile((String)file.getKey(), "", (Long)file.getValue(), ufdo.getDefaultChunkSize(username, file.getKey())));
+						new DFile((String)file.getKey(), "", (Long)file.getValue(), ufdo.getDefaultChunkSize(username, file.getKey())));
 			}
 		} catch (me.prettyprint.hector.api.exceptions.HectorException ex) {
 			JOptionPane.showMessageDialog(null, "Apache Cassandra is not running!", "Error", JOptionPane.ERROR_MESSAGE);

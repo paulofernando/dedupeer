@@ -28,13 +28,15 @@ import javax.swing.SwingUtilities;
 
 import com.dedupeer.backup.BackupQueue;
 import com.dedupeer.backup.RestoreQueue;
-import com.dedupeer.backup.StoredFile;
 import com.dedupeer.dao.CassandraManager;
 import com.dedupeer.dao.Login;
 import com.dedupeer.gui.component.dialog.SettingsDialog;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.gui.component.renderer.IconLabelRenderer;
 import com.dedupeer.gui.component.renderer.JProgressRenderer;
+import com.dedupeer.navigation.DFile;
+import com.dedupeer.thrift.HashingAlgorithm;
+import com.dedupeer.utils.FileUtils;
 import com.dedupeer.utils.Utils;
 
 
@@ -111,8 +113,8 @@ public class MainPanel extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(btCalculate.isEnabled()) {					
-					List<StoredFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileWithoutEconomyCalculated();
-					for(StoredFile sf: listStoredFiles) {						
+					List<DFile> listStoredFiles = ((StoredFileDataModel) table.getModel()).getStoredFileWithoutEconomyCalculated();
+					for(DFile sf: listStoredFiles) {						
 						sf.calculateStorageEconomy();													
 					}
 				}
@@ -177,7 +179,7 @@ public class MainPanel extends JPanel {
 			public void mouseClicked(MouseEvent e) {
 				if(btAnalyze.isEnabled()) {
 					if(table.getSelectedRow() != -1) {
-						StoredFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
+						DFile selectedFile = ((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow());
 						selectedFile.analizeFile();		
 					} else {
 						JOptionPane.showMessageDialog(jframe, "One file need be selected");
@@ -260,12 +262,12 @@ public class MainPanel extends JPanel {
 	private void backupIt(File fileToBackup) {
 		String filename = fileToBackup.getName();
 		String newFileName = Utils.getValidName(fileToBackup.getName());				
-		StoredFile backup;
+		DFile backup;
 				
 		if(filename.equals(newFileName)) {
-			backup = new StoredFile(fileToBackup, "");
+			backup = new DFile(fileToBackup, "");
 		} else {
-			backup = new StoredFile(fileToBackup, newFileName, "");
+			backup = new DFile(fileToBackup, newFileName, "");
 		}
 		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
@@ -279,12 +281,12 @@ public class MainPanel extends JPanel {
 	private void backupIt(File fileToBackup, String deduplicateWith) {
 		String filename = fileToBackup.getName();
 		String newFileName = Utils.getValidName(fileToBackup.getName());				
-		StoredFile backup;
+		DFile backup;
 				
 		if(filename.equals(newFileName)) {
-			backup = new StoredFile(fileToBackup, "");
+			backup = new DFile(fileToBackup, "");
 		} else {
-			backup = new StoredFile(fileToBackup, newFileName, "");
+			backup = new DFile(fileToBackup, newFileName, "");
 		}
 		
 		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
@@ -292,15 +294,15 @@ public class MainPanel extends JPanel {
 	}
 	
 	/** Adds a file in the queue to restore */
-	private void restoreIt(StoredFile storedFile) {
+	private void restoreIt(DFile dFile) {
 		JFileChooser jfc = new JFileChooser();
 		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		jfc.showOpenDialog(this);
 		File file = jfc.getSelectedFile();
 		
 		if(file != null) {
-			storedFile.setPathToRestore(file.getAbsolutePath());		
-			RestoreQueue.getInstance().addRestore(storedFile);
+			dFile.setPathToRestore(file.getAbsolutePath());		
+			RestoreQueue.getInstance().addRestore(dFile);
 		}
 	}
 
@@ -336,7 +338,7 @@ public class MainPanel extends JPanel {
 		btSettings = new JButton(new ImageIcon("resources/images/settings.png"));
 		btSettings.setToolTipText("Settings");
 		btSettings.setEnabled(false);
-		
+				
 		groupButtonsTop.setLayout(new FlowLayout());
 		
 		groupButtonsTop.add(btLogin);
