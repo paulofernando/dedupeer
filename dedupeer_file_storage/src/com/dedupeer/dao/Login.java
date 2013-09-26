@@ -9,6 +9,7 @@ import com.dedupeer.dao.operation.FilesDaoOpeartion;
 import com.dedupeer.dao.operation.UserFilesDaoOperations;
 import com.dedupeer.gui.component.model.StoredFileDataModel;
 import com.dedupeer.navigation.DFile;
+import com.dedupeer.navigation.DFolder;
 
 public class Login {
 	
@@ -29,7 +30,7 @@ public class Login {
 			Map<String, Long> files = new FilesDaoOpeartion("TestCluster", "Dedupeer").getAllFiles(username);
 			((StoredFileDataModel) listener).removeAllStoredFiles();
 			for(Entry<String, Long> file: files.entrySet()) {
-				((StoredFileDataModel) listener).addStoredFile(
+				((StoredFileDataModel) listener).addNavigable(
 						new DFile((String)file.getKey(), "", (Long)file.getValue(), ufdo.getDefaultChunkSize(username, file.getKey())));
 			}
 		} catch (me.prettyprint.hector.api.exceptions.HectorException ex) {

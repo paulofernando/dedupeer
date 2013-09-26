@@ -214,14 +214,18 @@ public class MainPanel extends JPanel {
 						contextmenu.show(e.getComponent(), e.getX(), e.getY());
 					}
 				} else if (e.getButton() == MouseEvent.BUTTON1) {
-					if(table.getSelectedRow() != -1) {
-						btRehydrate.setEnabled(true);
-						btDeduplicate.setEnabled(true);
-						btAnalyze.setEnabled(true);
-					} else {
-						btRehydrate.setEnabled(false);
-						btDeduplicate.setEnabled(false);
-						btAnalyze.setEnabled(false);
+					if (e.getClickCount() == 2) {
+						((StoredFileDataModel) table.getModel()).getStoredFileByRow(table.getSelectedRow()).open();
+					} else if (e.getClickCount() == 1) {
+						if(table.getSelectedRow() != -1) {
+							btRehydrate.setEnabled(true);
+							btDeduplicate.setEnabled(true);
+							btAnalyze.setEnabled(true);
+						} else {
+							btRehydrate.setEnabled(false);
+							btDeduplicate.setEnabled(false);
+							btAnalyze.setEnabled(false);
+						}
 					}
 				}
 			}
@@ -271,7 +275,7 @@ public class MainPanel extends JPanel {
 			backup = new DFile(fileToBackup, newFileName, "");
 		}
 		
-		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
+		((StoredFileDataModel) table.getModel()).addNavigable(backup);
 		BackupQueue.getInstance().addBackup(backup);
 	}
 	
@@ -290,7 +294,7 @@ public class MainPanel extends JPanel {
 			backup = new DFile(fileToBackup, newFileName, "");
 		}
 		
-		((StoredFileDataModel) table.getModel()).addStoredFile(backup);
+		((StoredFileDataModel) table.getModel()).addNavigable(backup);
 		BackupQueue.getInstance().addBackup(backup, deduplicateWith);
 	}
 	

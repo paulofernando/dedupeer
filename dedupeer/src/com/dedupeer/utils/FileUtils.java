@@ -165,6 +165,10 @@ public class FileUtils {
 		}
 	}
 	
+	public static ImageIcon getFolderIcon() {
+		return new ImageIcon("resources/images/folder.png");
+	}
+	
 	public static void storeFileLocally(byte[] data, long index, String path) {
 		RandomAccessFile newFile = null;
 		try {			

@@ -7,6 +7,8 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import com.dedupeer.gui.component.model.StoredFileDataModel;
+import com.dedupeer.navigation.DFolder;
 import com.dedupeer.utils.FileUtils;
 
 
@@ -21,10 +23,19 @@ public class IconLabelRenderer extends DefaultTableCellRenderer {
 	public Component getTableCellRendererComponent(JTable table, Object value,
 			boolean isSelected, boolean hasFocus, int row, int column) {
 		
+		ImageIcon icon = null;
+		
 		JLabel iconLabel = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
 				row, column);
 		
-		ImageIcon icon = FileUtils.getIconByFileType((String) value);
+		if(((StoredFileDataModel) table.getModel()).getStoredFileByRow(row) instanceof DFolder) {
+			if(column == 0) { //icon must appear only in the first column
+				icon = (String) value != null ? FileUtils.getFolderIcon() : null;
+			}				
+		} else {
+			icon = FileUtils.getIconByFileType((String) value);
+		}		
+		
 		iconLabel.setIcon(icon);
 		
 		if(isSelected) {

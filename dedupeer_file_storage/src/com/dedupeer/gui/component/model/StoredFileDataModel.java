@@ -79,9 +79,11 @@ public class StoredFileDataModel extends AbstractTableModel implements Observer 
 		return navigablesList.get(row);
 	}
 	
-	public void addStoredFile(DFile backup) {
-		backup.addObserver(this);
-		navigablesList.add(backup);
+	public void addNavigable(Navigable navigable) {
+		if(navigable instanceof DFile) { 
+			((DFile)(navigable)).addObserver(this);
+		}
+		navigablesList.add(navigable);
 		fireTableRowsInserted(getRowCount() - 1, getRowCount() - 1);
 	}
 	

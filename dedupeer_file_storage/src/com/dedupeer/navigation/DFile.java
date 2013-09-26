@@ -42,7 +42,7 @@ import com.dedupeer.utils.Range;
 /**
  * @author Paulo Fernando (pf@paulofernando.net.br)
  */
-public class DFile extends Observable implements StoredFileFeedback, Navigable {
+public class DFile extends Navigable implements StoredFileFeedback{
 		
 	private static final int CHUNKS_TO_LOAD = 20;
 	
@@ -51,10 +51,9 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 	public int defaultChunkSize = Integer.parseInt(FileUtils.getPropertiesLoader().getProperties().getProperty("default.chunk.size"));
 		
 	private File file;
-	private ProgressInfo progressInfo = new ProgressInfo(0, ProgressInfo.TYPE_NONE);
+	
 	private String storageEconomy;
 	private JButton btRestore;
-	private String filename;	
 	private byte[] newchunk;	
 	private String pathToRestore;
 	private int smallestChunk = -1;
@@ -83,7 +82,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 	/** File with another name */
 	public DFile(File file, String newFilename, String storageEconomy) {
 		this.file = file;
-		this.filename = newFilename;
+		this.name = newFilename;
 		this.storageEconomy = storageEconomy;
 		
 		cdo = new ChunksDaoOperations("TestCluster", "Dedupeer", DFile.this);
@@ -92,7 +91,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 	}
 	
 	public DFile(String filename, String storageEconomy, long id, int defaultChunkSize) {
-		this.filename = filename;
+		this.name = filename;
 		this.storageEconomy = storageEconomy;
 		this.id = id;
 		this.defaultChunkSize = defaultChunkSize;
@@ -106,11 +105,6 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 		return file;
 	}
 	
-	@Override
-	public String getName() {
-		return filename;
-	}
-
 	public int getProgress() {
 		return progressInfo.getProgress();
 	}
@@ -420,7 +414,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 				long initialChunkToLoad = 0;
 				
 				//--- retrieving the id ----
-				HColumn<String, String> columnFileID = ufdo.getValues(System.getProperty("username"), filename).get().getSubColumnByName("file_id");
+				HColumn<String, String> columnFileID = ufdo.getValues(System.getProperty("username"), name).get().getSubColumnByName("file_id");
 				String fileID = columnFileID.getValue();				
 				//-------------------------				
 				
@@ -432,7 +426,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 						if(chunk.getSubColumnByName("content") != null) {
 							log.info(chunk.getName() + "[index = " + chunk.getSubColumnByName("index").getValue() + "] "/*[length = " + BytesArraySerializer.get().fromByteBuffer(chunk.getSubColumnByName("content").getValueBytes()).length + "]"*/);							
 							FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.getSubColumnByName("content").getValueBytes()), Long.parseLong(chunk.getSubColumnByName("index").getValue())
-									, pathToRestore + "\\" + filename);							
+									, pathToRestore + "\\" + name);							
 							amountChunksWithContentLoaded++;
 						}
 						initialChunkToLoad++;						
@@ -448,7 +442,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 				initialChunkToLoad = 0;
 				while(amountChunksWithoutContent - amountChunksWithoutContentLoaded > 0) {
 					int amountChunksToLoad = (int)(amountChunksWithoutContent - amountChunksWithoutContentLoaded  >= CHUNKS_TO_LOAD ? CHUNKS_TO_LOAD : amountChunksWithoutContent - amountChunksWithoutContentLoaded);
-					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), filename, initialChunkToLoad, amountChunksToLoad);
+					Vector<QueryResult<HSuperColumn<String, String, String>>> chunksReference = cdo.getValuesWithoutContent(System.getProperty("username"), name, initialChunkToLoad, amountChunksToLoad);
 					
 					for(QueryResult<HSuperColumn<String, String, String>> chunkReference: chunksReference) {
 						//Retrieves by reference
@@ -458,7 +452,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 						log.info(chunkReference.get().getName() + " [index = " + chunkReference.get().getSubColumnByName("index").getValue() + 
 								"] [length = " + BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()).length + "]");
 						FileUtils.storeFileLocally(BytesArraySerializer.get().fromByteBuffer(chunk.get().getSubColumnByName("content").getValueBytes()), Long.parseLong(chunkReference.get().getSubColumnByName("index").getValue())
-								, pathToRestore + "\\" + filename);	
+								, pathToRestore + "\\" + name);	
 						
 						count++;
 						int prog = (int)(Math.ceil((((double)(count + amountChunksWithContentLoaded)) * 100) / amountTotalChunks));
@@ -504,7 +498,7 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 	}
 
 	public void setFilename(String filename) {
-		this.filename = filename;		 
+		this.name = filename;		 
 		valueChanged();
 	}
 
@@ -557,9 +551,9 @@ public class DFile extends Observable implements StoredFileFeedback, Navigable {
 					@Override
 					public void run() {
 						new AnalyzeDialog(null, rangesList, fileLength, getName(), 
-								ufdo.getChunksWithContentCount(System.getProperty("username"), filename),
-								ufdo.getChunksWithoutContentCount(System.getProperty("username"), filename),
-								ufdo.getDefaultChunkSize(System.getProperty("username"), filename));						
+								ufdo.getChunksWithContentCount(System.getProperty("username"), name),
+								ufdo.getChunksWithoutContentCount(System.getProperty("username"), name),
+								ufdo.getDefaultChunkSize(System.getProperty("username"), name));						
 					}
 				});
 				progressInfo.setType(ProgressInfo.TYPE_NONE);

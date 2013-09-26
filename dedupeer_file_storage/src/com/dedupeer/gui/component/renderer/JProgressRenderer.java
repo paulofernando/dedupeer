@@ -37,7 +37,9 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 			boolean selected, boolean hasFocus, int row, int column) {
 		
 		progressInfo = (ProgressInfo) value;
-		this.setValue(progressInfo.getProgress());
+		if(progressInfo != null) {
+			this.setValue(progressInfo.getProgress());
+		}
 		
 		if(selected) {
 			background = table.getSelectionBackground();
@@ -50,10 +52,11 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	
 	public void paint(Graphics graphics) {
 		super.paint(graphics);
+		
 		if((this.getValue() == 0) || (this.getValue() == 100)) {
 			graphics.setColor(background);
 			graphics.fillRect(0, 0, this.getWidth(), this.getHeight());
-		} else {
+		} else if(progressInfo != null) {
 			Graphics2D g2 = (Graphics2D) graphics;
 	        Rectangle2D r = new Rectangle2D.Double(2, 1, (progressInfo.getProgress() * this.getWidth()) / 100, this.getHeight() - 2);
 	        GradientPaint gp = new GradientPaint(0, 0, colors[0], 0, this.getHeight(),
@@ -61,8 +64,10 @@ public class JProgressRenderer extends JProgressBar implements TableCellRenderer
 	        g2.setPaint(gp);
 	        g2.fill(r);
 		}
-		
-		graphics.setColor(textColor);
-		graphics.drawString(progressInfo.getTypeString(), 2, ((this.getHeight()>>1) + (graphics.getFontMetrics().getHeight()>>1)));
+				
+		if(progressInfo != null) {
+			graphics.setColor(textColor);
+			graphics.drawString(progressInfo.getTypeString(), 2, ((this.getHeight()>>1) + (graphics.getFontMetrics().getHeight()>>1)));
+		}
 	}
 }
