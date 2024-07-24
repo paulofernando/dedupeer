@@ -9,7 +9,7 @@ The Dedupeer Project was developed by Paulo Fernando, Master candidate in Comput
 Two algorithms were developed in the Academic Master, the first is a simple algorithm that loads the whole file in the memory to be processed, and the second splits the file in segments to be loaded into memory at a time. Both were based in the rysnc algorithm.
 
 <p align="center">
-   <img src="http://dedupeer.com/imgs/funcionamento_alg2-en.png"/>
+   <img src="https://github.com/user-attachments/assets/ead71238-5eba-4deb-8433-ab9efd3f4300"/>
 </p>
 
 ## Architecture
@@ -17,7 +17,7 @@ Two algorithms were developed in the Academic Master, the first is a simple algo
 The view of the interactions of the components that forms the Dedupeer File Storage.
 
 <p align="center">
-   <img src="http://dedupeer.com/imgs/component_diagram.png"/>
+   <img src="https://github.com/user-attachments/assets/7508dfe6-c368-4a54-b995-c796ad6d7a96"/>
 </p>
 
 ## For more information
